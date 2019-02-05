@@ -18,10 +18,7 @@ log_main = logging.getLogger(__name__)
 CAPTCHA = {"id": "", "addr": "", "code": ""}
 code_list = []
 USERS = set()
-try:
-    os.makedirs("captcha")
-except:
-    pass
+os.makedirs("captcha",exist_ok=True)
 
 log_main.info("Websockets Started")
 
