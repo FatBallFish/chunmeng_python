@@ -83,7 +83,7 @@ async def main(websocket, path):
                     "unsupported event: {}", data)
     finally:
         await unregistor(websocket)
-        log_main.info("Customer %s Disconnected",websocket_id)
+        log_main.info("Customer [%s] Disconnected",websocket_id)
 
 
 asyncio.get_event_loop().run_until_complete(
