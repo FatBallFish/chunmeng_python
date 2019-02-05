@@ -1,3 +1,4 @@
-/checkcode/checkcode/*
-!/checkcode/checkcode/placeholders
+/captcha/captcha/*
+!/captcha/captcha/placeholders
+__pycache__
 
