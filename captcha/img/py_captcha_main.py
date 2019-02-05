@@ -37,7 +37,7 @@ def CreatCode(font = "military_font.ttf"):
     print(code_str)
     # 把生成的图片保存为“pic.png”格式
     path = ".\\captcha\\%s.png" % code_str
-    webpath = "www.lcworkroom/captcha/captcha/%s.png" % code_str
+    webpath = ".\\captcha\\%s.png" % code_str
     try:
         with open(path, "wb") as f:
             try:

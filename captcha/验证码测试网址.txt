@@ -1,3 +1,0 @@
-http://www.lcworkroom.cn/captcha.html
-直接打开网站即可，已在服务器部署了服务
-重构结构，将功能封装成package

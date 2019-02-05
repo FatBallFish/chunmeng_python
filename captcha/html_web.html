@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebSocket demo</title>
+        <style type="text/css">
+            body {
+                font-family: "Courier New", sans-serif;
+                text-align: center;
+            }
+            .buttons {
+                font-size: 4em;
+                display: flex;
+                justify-content: center;
+            }
+            .code, .value {
+                line-height: 1;
+                padding: 2rem;
+                margin: 2rem;
+                border: medium solid;
+                min-height: 1em;
+                min-width: 1em;
+            }
+            .button {
+                cursor: pointer;
+                user-select: none;
+            }
+            .minus {
+                color: red;
+            }
+            .get {
+                color: green;
+            }
+            .code_input {
+                max-height: 30em;
+            }
+            .state {
+                font-size: 2em;
+            }
+            .phone_input{
+                max-height: 30em;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="buttons">
+            <input type="text" class="phone_input">
+            <img src="" class="code_img" width="240em" height="60em">
+            <input type="text" class="code_input">
+            <div class="code get">Get code again</div>
+        </div>
+        <div class="code check">Check code</div>
+        <div class="state">
+            <span class="users">?</span> online
+        </div>
+        <script>
+            var get = document.querySelector('.get'),
+                check = document.querySelector('.check'),
+                users = document.querySelector('.users'),
+                img = document.querySelector(".code_img"),
+                code_input = document.querySelector(".code_input"),
+                phone_input = document.querySelector(".phone_input"),
+                addr = '',
+                code = '',
+                websocket = new WebSocket("ws://127.0.0.1:10086/");
+            get.onclick = function (event) {
+                websocket.send(JSON.stringify({action: 'getcode'}));
+            }
+            check.onclick = function (event) {
+                //alert("the check input's value is:"+input.value)
+                if (code_input.value == code) {
+                    alert("True,Send sms to this phone number!")
+                    websocket.send(JSON.stringify({action:'sms',phone:phone_input.value}))
+                }else{
+                    alert("False,the ture code is:" + code)
+                }
+                //websocket.send(JSON.stringify({action: 'checkcode'}));
+            }
+            websocket.onmessage = function (event) {
+                data = JSON.parse(event.data);
+                switch (data.type) {
+                    case 'getcode':
+                        addr = data.addr;
+                        code = data.code;
+                        img.src = addr;
+                        //alert("code:"+code+"\naddr:"+addr)
+                        //value.textContent = data.value;
+                        break;
+                    case 'users':
+                        users.textContent = (
+                            data.count.toString() + " user" +
+                            (data.count == 1 ? "" : "s"));
+                        break;
+                    case 'sms_back':
+                        if(data.result == '0'){
+                            alert("Successful!")
+                        }else{
+                            alert("Error:"+data.result+",Message:"+data.errmsg)
+                        }
+                        break;
+                        //TODO wait
+                    default:
+                        console.error(
+                            "unsupported event", data);
+                }
+            };
+        </script>
+    </body>
+</html>
