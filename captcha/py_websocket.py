@@ -5,6 +5,7 @@ import websockets
 import json
 import logging
 import random
+import os
 
 ID = 0
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -17,6 +18,11 @@ log_main = logging.getLogger(__name__)
 CAPTCHA = {"id": "", "addr": "", "code": ""}
 code_list = []
 USERS = set()
+try:
+    os.makedirs("captcha")
+except:
+    pass
+
 log_main.info("Websockets Started")
 
 def event_getcode():
@@ -81,6 +87,8 @@ async def main(websocket, path):
             else:
                 logging.error(
                     "unsupported event: {}", data)
+    except Exception as err:
+        log_main.error(err)
     finally:
         await unregistor(websocket)
         log_main.info("Customer [%s] Disconnected",websocket_id)

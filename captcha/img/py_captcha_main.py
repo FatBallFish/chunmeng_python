@@ -21,6 +21,7 @@ def CreatCode(font = "military_font.ttf"):
         log_img.error("Failed to load font [%s]",font)
         print("Failed to load font [%s]"%font)
         return "Error"
+
     for i in range(5):
         # 每循环一次，从a到z中随机生成一个字母或数字
         # 使用ASCII码，A-Z为65-90，a-z为97-122，0-9为48-57,使用chr把生成的ASCII码转换成字符
@@ -34,10 +35,10 @@ def CreatCode(font = "military_font.ttf"):
         if random.randint(0,1):
             draw1.line((0,random.randint(0,30),120,random.randint(0,30)),color1,0)
         draw1.text([i*20+10,5],char1,color1,font1)
-    print(code_str)
+    #print(code_str)
     # 把生成的图片保存为“pic.png”格式
-    path = ".\\captcha\\%s.png" % code_str
-    webpath = ".\\captcha\\%s.png" % code_str
+    path = r".\captcha\%s.png" % code_str
+    webpath = r".\captcha\%s.png" % code_str
     try:
         with open(path, "wb") as f:
             try:
