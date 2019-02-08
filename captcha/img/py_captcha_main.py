@@ -37,8 +37,8 @@ def CreatCode(font = "military_font.ttf"):
         draw1.text([i*20+10,5],char1,color1,font1)
     #print(code_str)
     # 把生成的图片保存为“pic.png”格式
-    path = r".\captcha\%s.png" % code_str
-    webpath = r".\captcha\%s.png" % code_str
+    path = r"./captcha/%s.png" % code_str
+    webpath = r"./captcha/%s.png" % code_str
     try:
         with open(path, "wb") as f:
             try:
