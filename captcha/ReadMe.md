@@ -2,17 +2,14 @@
 
 ### Json的通用格式：
 
-```Json
-    {
-        "id":"",
-        "status":"",
-        "type":"",
-        "subtype":"",
-        "data":{
-            "message":"",
-            ...
-            }
-    }
+```python
+{
+  "id":"",
+  "status":"",
+  "type":"",
+  "subtype":"",
+  "data":{"message":""}
+}
 ```
 **所需参数介绍：**
 
@@ -28,78 +25,78 @@
 > ## **用户操作类**
  + ### **登录图片验证码**
     + **Java端发送请求**
-   ```JSON
-        {
-            "id":"事件ID"
-            "status":"",
-            "type":"captcha",
-            "subtype"："img",
-            "data":{
-                "action":"generate" # 生成img验证码
-                }
-        }
+   ```python
+   {
+       "id":"事件ID",
+       "status":"",
+       "type":"captcha",
+       "subtype":"img",
+       "data":{
+           "action":"generate" # 生成img验证码
+       }
+   }
    ```
    + **Python端返回成功处理情况**
-   ```JSON
-       {
-            "id":"请求时的ID",
-            "status"："0",
-            "errmsg":"successful",
-            "data":{
-                "title":"N4Fsx", # 验证码内容
-                "addr":"1ed39d9793fdddb95ac32512ce0089cb.png"
-                }
+   ```python
+   {
+       "id":"请求时的ID",
+       "status":"0",
+       "errmsg":"successful",
+       "data":{
+           "title":"N4Fsx", # 验证码内容
+           "addr":"1ed39d9793fdddb95ac32512ce0089cb.png"
        }
+   }
    ```
    > 注意：Python成功返回时的addr为验证码文件名，由MD5加盐加密获得。
    
    + **Python端返回失败处理情况**
-   ```JSON
-        {
-            "id":"请求时的ID"，
-            "status":1000, # 错误码
-            "errmsg":"验证码文件创建失败",
-            "data":{},
-        }
+   ```python
+   {
+     "id":"请求时的ID",
+     "status":1000, # 错误码
+     "errmsg":"验证码文件创建失败",
+     "data":{},
+   }
    ```
    > status传递的错误码类型为整型。具体的错误码详见最下方表格。
 ---
 + ### **注册手机验证码**
     + **Java端发送请求**
-    ```JSON
-        {
-            "id":"事件ID"
-            "status":"",
-            "type":"captcha",
-            "subtype"："sms",
-            "data":{
-                "action":"generate", # 生成sms验证码
-                "phone":"137XXXXXXXX"
-                }
-        }
+    ```python
+    {
+        "id":"事件ID",
+        "status":"",
+        "type":"captcha",
+        "subtype":"sms",
+        "data":{
+            "action":"generate", # 生成sms验证码
+            "phone":"137XXXXXXXX"
+            }
+    }
     ```
     > phone 字段需用文本型传递，且只能为中国大陆手机号，不支持国外手机号
    + **Python端返回成功处理情况**
-   ```JSON
-       {
-            "id":"请求时的ID",
-            "status"："0",
-            "errmsg":"successful",
-            "data":{
-                "title":"8846" # 验证码内容
-                }
-       }
+   ```python
+   {
+      "id":"请求时的ID",
+      "status":"0",
+      "errmsg":"successful",
+      "data":{
+          "title":"8846" # 验证码内容
+      }
+   }
    ```
    > 注意：Python成功返回时的addr为验证码文件名，由MD5加盐加密获得。
    
    + **Python端返回失败处理情况**
-   ```JSON
-        {
-            "id":"请求时的ID"，
-            "status":1000, # 错误码
-            "errmsg":"手机号不存在",
-            "data":{},
-        }
+   ```python
+   {
+        "id":"请求时的ID",
+        "status":1000,  #错误码
+        "errmsg":"手机号不存在",
+        "data":{},
+   }
    ```
    > status传递的错误码类型为整型。具体的错误码参照**腾讯云短信服务API文档**。
    > [短信错误码](https://cloud.tencent.com/document/product/382/3771 "腾讯云短信API文档")
