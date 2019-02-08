@@ -1,4 +1,3 @@
-/captcha/captcha/*
-!/captcha/captcha/placeholders
+.idea
 __pycache__
 
