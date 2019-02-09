@@ -5,7 +5,7 @@
 ```python
 {
   "id":"",
-  "status":"",
+  "status":0,
   "type":"",
   "subtype":"",
   "data":{"message":""}
@@ -16,7 +16,7 @@
 |参数|介绍|调用方|样例|
 |:--:|:--:|:--:|:--:|
 |id|事件处理id，请求端发送，接收端返回时原样返回|请求、返回|"id":"123456"|
-|status|返回请求处理状态，请求时可不填。默认返回0时为请求处理成功，若失败返回错误码|请求、返回|"status":""|
+|status|返回请求处理状态，请求时可不填。默认返回0时为请求处理成功，若失败返回错误码|请求、返回|"status":0|
 |message|状态简略信息，若成功调用则显示"successful"|返回|"message":"successful"|
 |type|请求类型|请求|"type":"user"|
 |subtype|请求子类型|请求|"subtype":"login|
@@ -28,7 +28,7 @@
    ```python
    {
        "id":"事件ID",
-       "status":"",
+       "status":0,
        "type":"captcha",
        "subtype":"img",
        "data":{
@@ -40,8 +40,8 @@
    ```python
    {
        "id":"请求时的ID",
-       "status":"0",
-       "errmsg":"successful",
+       "status":0,
+       "message":"successful",
        "data":{
            "title":"N4Fsx", # 验证码内容
            "addr":"1ed39d9793fdddb95ac32512ce0089cb.png"
@@ -55,7 +55,7 @@
    {
      "id":"请求时的ID",
      "status":1000, # 错误码
-     "errmsg":"验证码文件创建失败",
+     "message":"验证码文件创建失败",
      "data":{},
    }
    ```
@@ -66,7 +66,7 @@
     ```python
     {
         "id":"事件ID",
-        "status":"",
+        "status":0,
         "type":"captcha",
         "subtype":"sms",
         "data":{
@@ -80,8 +80,8 @@
    ```python
    {
       "id":"请求时的ID",
-      "status":"0",
-      "errmsg":"successful",
+      "status":0,
+      "message":"successful",
       "data":{
           "title":"8846" # 验证码内容
       }
@@ -94,7 +94,7 @@
    {
         "id":"请求时的ID",
         "status":1000,  #错误码
-        "errmsg":"手机号不存在",
+        "message":"手机号不存在",
         "data":{},
    }
    ```

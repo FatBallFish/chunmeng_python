@@ -1,14 +1,28 @@
 # 导入图形模块，随机数模块
 from PIL import Image,ImageDraw,ImageFont
+import MD5
 import random
 import logging
+import os,configparser
+path=""
 code_str = ""
 webpath = ""
 log_img = logging.getLogger("ImgCaptcha")
 
+def Initialize():
+    global path
+    cf = configparser.ConfigParser()
+    cf.read("./config.ini")
+    path = cf.get("Main","ImgCaptchaAddr")
+    if path == "":
+        os.makedirs("captcha", exist_ok=True)
+        path = "./captcha"
+        log_img.info("ImgCaptchaAddr not located,use the default config")
+    log_img.info("Module ImgCaptcha loaded")
+
 def CreatCode(font = "military_font.ttf"):
     global code_str
-    global webpath
+    global webpath,path
     code_str = ""
     # 定义使用image类实例化一个长为120px，宽为30px，基于RGB的（255，255，255）颜色的图片
     img1 = Image.new(mode="RGB",size=(120,30),color=(255,255,255))
@@ -36,18 +50,19 @@ def CreatCode(font = "military_font.ttf"):
             draw1.line((0,random.randint(0,30),120,random.randint(0,30)),color1,0)
         draw1.text([i*20+10,5],char1,color1,font1)
     #print(code_str)
-    # 把生成的图片保存为“pic.png”格式
-    path = r"./captcha/%s.png" % code_str
-    webpath = r"./captcha/%s.png" % code_str
+    # 把生成的图片保存为“pic.png”格式，文件名通过加盐获得
+
+    file_name = "%s.png"%MD5.md5(code_str)
+    file_path = os.path.join(path,file_name)
     try:
-        with open(path, "wb") as f:
+        with open(file_path, "wb") as f:
             try:
                 img1.save(f, format="png")
             except:
                 log_img.error("Failed to save captcha img [%s]",path)
                 return "Error"
         log_img.info("Created a captcha [%s]",code_str)
-        return (code_str,webpath)
+        return (code_str,file_name)
     except:
         log_img.error("Failed to open/write captcha img [%s]",path)
         return "Error"
@@ -55,7 +70,7 @@ def GetCodeText():
     return code_str
 
 def GetCodePath():
-    return webpath
+    return path
 
 if __name__ == "__main__":
     CreatCode()

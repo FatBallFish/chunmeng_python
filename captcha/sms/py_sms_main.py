@@ -1,16 +1,31 @@
 from qcloudsms_py import SmsSingleSender
 from qcloudsms_py.httpclient import HTTPError
+from configparser import ConfigParser
 import logging
 import random
 
 # 短信应用SDK AppID
-appid = 1400097031
+appid=""
 # 短信应用SDK AppKey
-appkey = '417a2a23700289bf50f6cff4fdefa467'
+appkey=""
 # 定义单发信息组件
 ssender = SmsSingleSender(appid, appkey)
 # 定义log对象
 log_sms = logging.getLogger("SmsCaptcha")
+def Initialize():
+    global appid,appkey,ssender
+    cf = ConfigParser()
+    cf.read("./config.ini")
+    try:
+        appid = str(cf.get("Main","appid"))
+    except Exception as e:
+        log_sms.error(e)
+    try:
+        appkey = str(cf.get("Main","appkey"))
+    except Exception as e:
+        log_sms.error(e)
+    ssender = SmsSingleSender(appid, appkey)
+    log_sms.info("Module SmsCaptcha loaded")
 def SendCaptchaCode(phone_number, captcha,ext=""):
     """
     向指定手机号发送指定验证码，返回证验证结果

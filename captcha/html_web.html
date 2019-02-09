@@ -63,39 +63,49 @@
                 code = '',
                 websocket = new WebSocket("ws://127.0.0.1:10086/");
             get.onclick = function (event) {
-                websocket.send(JSON.stringify({action: 'getcode'}));
+                websocket.send(JSON.stringify({
+                    id:'imgcaptcha',type:"captcha",subtype:"img",
+                    data:{action: 'generate'}
+                }));
             }
             check.onclick = function (event) {
                 //alert("the check input's value is:"+input.value)
-                if (code_input.value == code) {
-                    alert("True,Send sms to this phone number!")
-                    websocket.send(JSON.stringify({action:'sms',phone:phone_input.value}))
-                }else{
-                    alert("False,the ture code is:" + code)
+                if (code_input.value != code) {
+                    alert("False,the ture code is:" + code);
+                } else {
+                    alert("True,Send sms to this phone number!");
+                    websocket.send(JSON.stringify({
+                        id: 'smscaptcha', type: "captcha", subtype: "sms",
+                        data: {action: 'generate', phone: phone_input.value}
+                    }));
                 }
                 //websocket.send(JSON.stringify({action: 'checkcode'}));
             }
             websocket.onmessage = function (event) {
-                data = JSON.parse(event.data);
-                switch (data.type) {
-                    case 'getcode':
-                        addr = data.addr;
-                        code = data.code;
-                        img.src = addr;
+                info = JSON.parse(event.data);
+                data = info.data
+                switch (info.id) {
+                    case 'imgcaptcha':
+                        if(info.status == 0){
+                            addr = data.addr;
+                            code = data.title;
+                            img.src = "./captcha/"+addr;
+                        }else{alert(info.message);}
+                        break;
                         //alert("code:"+code+"\naddr:"+addr)
                         //value.textContent = data.value;
                         break;
-                    case 'users':
-                        users.textContent = (
+                    case 'sys':
+                        if(info.status == 0){
+                            users.textContent = (
                             data.count.toString() + " user" +
                             (data.count == 1 ? "" : "s"));
+                        }else{alert(info.message);}
                         break;
-                    case 'sms_back':
-                        if(data.result == '0'){
-                            alert("Successful!")
-                        }else{
-                            alert("Error:"+data.result+",Message:"+data.errmsg)
-                        }
+                    case 'smscaptcha':
+                        if(info.status == 0){
+                            alert(info.message);
+                        }else{alert(info.message);}
                         break;
                         //TODO wait
                     default:
