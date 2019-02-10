@@ -24,8 +24,9 @@ def Initialize(argv):
             sys.exit()
         elif opt in ("-i","--imgaddr"):
             ImgCaptchaAddr = str(arg)
-            log_main.info("Located ImgCaptcha address:[%s]",ImgCaptchaAddr)
+            # log_main.info("Located ImgCaptcha address:[%s]",ImgCaptchaAddr)
         else:
+            log_main.error("Error argv:[%s|%s]",opt,arg)
             print("Error argv")
             sys.exit()
     cf = ConfigParser()

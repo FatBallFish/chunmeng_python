@@ -18,6 +18,12 @@ def Initialize():
         os.makedirs("captcha", exist_ok=True)
         path = "./captcha"
         log_img.info("ImgCaptchaAddr not located,use the default config")
+    else:
+        try:
+            os.makedirs(path, exist_ok=True)
+            log_img.info("Located ImgCaptcha address:[%s]",path)
+        except Exception as e:
+            log_img.error(e)
     log_img.info("Module ImgCaptcha loaded")
 
 def CreatCode(font = "military_font.ttf"):
