@@ -13,20 +13,23 @@ ssender = SmsSingleSender(appid, appkey)
 # 定义log对象
 log_sms = logging.getLogger("SmsCaptcha")
 def Initialize():
+    """
+SmsCaptcha 模块初始化，此函数应在所有函数之前调用
+    """
     global appid,appkey,ssender
     cf = ConfigParser()
     cf.read("./config.ini")
     try:
         appid = str(cf.get("Main","appid"))
     except Exception as e:
-        log_sms.error(e)
+        log_sms.error("【Initialize】UnkownError:",e)
     try:
         appkey = str(cf.get("Main","appkey"))
     except Exception as e:
-        log_sms.error(e)
+        log_sms.error("【Initialize】UnkownError:",e)
     ssender = SmsSingleSender(appid, appkey)
-    log_sms.info("Module SmsCaptcha loaded")
-def SendCaptchaCode(phone_number, captcha,ext=""):
+    log_sms.info("【Initialize】Module SmsCaptcha loaded")
+def SendCaptchaCode(phone_number:str, captcha:str,ext:str=""):
     """
     向指定手机号发送指定验证码，返回证验证结果
 
@@ -49,19 +52,28 @@ def SendCaptchaCode(phone_number, captcha,ext=""):
         # 签名参数未提供或者为空时，会使用默认签名发送短信
     except HTTPError as e:
         # print(e)
-        log_sms.error(e)
+        log_sms.error("【SendCaptchaCode】HTTPError:",e)
         return e
     except Exception as e:
         # print(e)
-        log_sms.error(e)
+        log_sms.error("【SendCaptchaCode】UnkownError:",e)
         return e
     print(result)
-    if result["result"] == 0:
-        log_sms.info("Successful send captcha to [%s],fee:[%s]",phone_number,result["fee"])
-        print("Successful send captcha to [%s],fee:[%s]"%(phone_number,result["fee"]))
-    else:
-        log_sms.info("Failed to send captcha to [%s]:Error:%d,%s",phone_number,result["result"],result["errmsg"])
-        print("Failed to send captcha to [%s]:Error:%d,%s"%(phone_number,result["result"],result["errmsg"]))
+    try:
+        if result["result"] == 0:
+            log_sms.info("【SendCaptchaCode】Successful send captcha to [%s],fee:[%s]",phone_number,result["fee"])
+            print("【SendCaptchaCode】Successful send captcha to [%s],fee:[%s]"%(phone_number,result["fee"]))
+        else:
+            log_sms.info("【SendCaptchaCode】Failed to send captcha to [%s]:Error:%d,%s",phone_number,result["result"],result["errmsg"])
+            print("【SendCaptchaCode】Failed to send captcha to [%s]:Error:%d,%s"%(phone_number,result["result"],result["errmsg"]))
+    except KeyError as e:
+        try:
+            ErrorInfo = result["ErrorInfo"]
+            log_sms.error("【SendCaptchaCode】Failed to send captcha to [%s]:ErrorInfo:%s",phone_number,ErrorInfo)
+            print("【SendCaptchaCode】Failed to send captcha to [%s]:ErrorInfo:%s"%(phone_number,ErrorInfo))
+        except Exception as e:
+            log_sms.error("【SendCaptchaCode】UnkonwnError:",e)
+            print("【SendCaptchaCode】UnkonwnError:"%e)
     # log_sms.info(result)
     return result
 
