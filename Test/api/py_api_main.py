@@ -1,22 +1,23 @@
 import requests
 import json
-import sys
-# head = "http://private.lcworkroom.cn/api/user/login"
-# headers = {'content-type': "application/json"}
-# body = {"credential":"2234175792","password":"asswecan"}
-# response = requests.post(url=head,data=json.dumps(body),headers=headers)
-# print(response.text)
-# response_dict = json.loads(response.text)
-# if 'status' not in response_dict.keys():
-#     print("用户登录发生未知错误")
-#     sys.exit()
-# if response_dict["status"] == 0:
-#     token = response_dict["token"]
-# else:
-#     print("登录失败！")
-#     sys.exit()
+import sys,time
+time_start = time.time()
+head = "http://private.lcworkroom.cn/api/user/login"
+headers = {'content-type': "application/json"}
+body = {"credential":"2234175792","password":"asswecan","enduring":False}
+response = requests.post(url=head,data=json.dumps(body),headers=headers)
+print(response.text)
+response_dict = json.loads(response.text)
+if 'status' not in response_dict.keys():
+    print("用户登录发生未知错误")
+    sys.exit()
+if response_dict["status"] == 0:
+    token = response_dict["token"]
+else:
+    print("登录失败！")
+    sys.exit()
 
-token="c01678de09e77a4ab07dc25ecff15f4b2c6f1f7fcf154e5bb8c1c486a50c7301"
+# token="30151fb7e4ae7dbbae5852708b61e598e2fa7a207420b84e382d335ac16a5fb0"
 print(token)
 head = "http://private.lcworkroom.cn/api/user/info"
 body = {"token":token}
@@ -39,3 +40,5 @@ if response_dict["status"] == 0:
     print(id,"\t",name,"\t",phone,"\t",email,"\t",nickname,"\t",permissionGroup)
 else:
     print("用户信息读取失败，估计是token无效")
+time_end = time.time()
+print('totally cost',time_end-time_start)

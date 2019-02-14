@@ -155,10 +155,10 @@ async def main(websocket, path):
 if __name__ == '__main__':
     # -------------------主程序初始化-------------------
     ImgCaptchaAddr = ""
-    LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - 【%(funcName)s】 - %(lineno)s - %(message)s"
     DATA_FORMAT = "%Y.%m.%d %H:%M:%S %p "
     logging.basicConfig(filename="my.log", level=logging.INFO,
-                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                        format=LOG_FORMAT,
                         datefmt=DATA_FORMAT)
     log_main = logging.getLogger(__name__)
 
