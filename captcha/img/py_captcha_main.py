@@ -20,14 +20,14 @@ ImgCaptcha 模块初始化，此函数应在所有函数之前调用
     if path == "":
         os.makedirs("captcha", exist_ok=True)
         path = "./captcha"
-        log_img.info("【Initialize】ImgCaptchaAddr not located,use the default config")
+        log_img.info("ImgCaptchaAddr not located,use the default config")
     else:
         try:
             os.makedirs(path, exist_ok=True)
-            log_img.info("【Initialize】Located ImgCaptcha address:[%s]",path)
+            log_img.info("Located ImgCaptcha address:[%s]",path)
         except Exception as e:
-            log_img.error("【Initialize】UnknownError:",e)
-    log_img.info("【Initialize】Module ImgCaptcha loaded")
+            log_img.error("UnknownError:",e)
+    log_img.info("Module ImgCaptcha loaded")
 
 def CreatCode(font:str = "military_font.ttf")->tuple:
     """
@@ -46,7 +46,7 @@ def CreatCode(font:str = "military_font.ttf")->tuple:
     try:
         font1 = ImageFont.truetype(font,28)
     except:
-        log_img.error("【CreatCode】Failed to load font [%s]",font)
+        log_img.error("Failed to load font [%s]",font)
         print("Failed to load font [%s]"%font)
         return "Error"
 
@@ -73,12 +73,12 @@ def CreatCode(font:str = "military_font.ttf")->tuple:
             try:
                 img1.save(f, format="png")
             except:
-                log_img.error("【CreatCode】Failed to save captcha img [%s]",path)
+                log_img.error("Failed to save captcha img [%s]",path)
                 return "Error"
-        log_img.info("【CreatCode】Created a captcha [%s]",code_str)
+        log_img.info("Created a captcha [%s]",code_str)
         return (code_str,file_name)
     except:
-        log_img.error("【CreatCode】Failed to open/write captcha img [%s]",path)
+        log_img.error("Failed to open/write captcha img [%s]",path)
         return "Error"
 def GetCodeText()->str:
     """

@@ -30,7 +30,7 @@ websockets 模块初始化，此函数应在所有命令之前调用
             ImgCaptchaAddr = str(arg)
             # log_main.info("Located ImgCaptcha address:[%s]",ImgCaptchaAddr)
         else:
-            log_main.error("【Initialize】Error argv:[%s|%s]",opt,arg)
+            log_main.error("Error argv:[%s|%s]",opt,arg)
             print("Error argv")
             sys.exit()
     cf = ConfigParser()
@@ -53,7 +53,7 @@ def event_img_generate(subid)->str:
     :param subid: 事件id，由服务端传递，原样返回
     :return: json类文本。模版：{"id": subid,"status":0,"message":"Successful","data":{**CAPTCHA}}
     """
-    log_main.info("【event_img_generate】Get Imgcaptcha")
+    log_main.info("Get Imgcaptcha")
     code, addr = ImgCaptcha.CreatCode()
     CAPTCHA["title"] = code
     CAPTCHA["addr"] = addr
@@ -71,7 +71,7 @@ def event_users()->str:
 返回用户在线数量
     :return: json类文本，用户在线数量。模版：{"id": "sys", "status": 0, "message": "Successful", "data": {"count":len(USERS)}}
     """
-    log_main.info("【event_users】Get users information")
+    log_main.info("Get users information")
     return json.dumps({"id": "sys", "status": 0, "message": "Successful", "data": {"count":len(USERS)}})
 
 def event_sms_generate(subid,phone:str) -> str:
@@ -82,7 +82,7 @@ def event_sms_generate(subid,phone:str) -> str:
     :param phone: 手机号码
     :return: json类文本。模版：{"id":subid,"status":result["result"],"message":result["errmsg"],"data":{}}
     """
-    log_main.info("【event_sms_generate】Get Smscaptcha")
+    log_main.info("Get Smscaptcha")
     captcha = str(random.randint(1000,9999))
     result = SmsCaptcha.SendCaptchaCode(phone,captcha)
     back = {"id":subid,"status":result["result"],"message":result["errmsg"],"data":{}}
@@ -124,7 +124,7 @@ async def main(websocket, path):
     """
     websocket_str = str(websocket)
     websocket_id = websocket_str.partition("at ")[2].partition(">")[0]
-    log_main.info("【main】Customer [%s] Connected",websocket_id)
+    log_main.info("Customer [%s] Connected",websocket_id)
     await registor(websocket)
     try:
         await websocket.send(event_img_generate("imgcaptcha"))
@@ -145,27 +145,27 @@ async def main(websocket, path):
                 #         await websocket.send(event_captcha(data))
             else:
                 logging.error(
-                    "【main】unsupported event: %s", info)
+                    "unsupported event: %s", info)
     except Exception as err:
-        log_main.error("【main】UnknownError:",err)
+        log_main.error("UnknownError:",err)
     finally:
         await unregistor(websocket)
-        log_main.info("【main】Customer [%s] Disconnected",websocket_id)
+        log_main.info("Customer [%s] Disconnected",websocket_id)
 
 if __name__ == '__main__':
     # -------------------主程序初始化-------------------
     ImgCaptchaAddr = ""
-    LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - 【%(funcName)s】 - %(lineno)s - %(message)s"
+    LOG_FORMAT = "[%(asctime)-15s] - [%(name)10s]\t- [%(levelname)s]\t- [%(funcName)-20s:%(lineno)3s]\t- [%(message)s]"
     DATA_FORMAT = "%Y.%m.%d %H:%M:%S %p "
     logging.basicConfig(filename="my.log", level=logging.INFO,
-                        format=LOG_FORMAT,
+                        format=LOG_FORMAT.center(30),
                         datefmt=DATA_FORMAT)
     log_main = logging.getLogger(__name__)
 
     CAPTCHA = {"id": "", "addr": "", "code": ""}
     code_list = []
     USERS = set()
-    log_main.info("【system】Websockets Started")
+    log_main.info("Websockets Started")
     # --------------------------------------------------
     Initialize(sys.argv[1:])
 
