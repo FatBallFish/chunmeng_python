@@ -170,4 +170,4 @@ if __name__ == '__main__':
                         datefmt=DATA_FORMAT)
     log_main = logging.getLogger(__name__)
     Initialize(sys.argv[1:])
-    app.run("127.0.0.1",port=8080,debug=True)
+    app.run("0.0.0.0",port=8080,debug=True)
