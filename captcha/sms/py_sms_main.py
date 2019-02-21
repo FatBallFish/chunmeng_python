@@ -23,6 +23,8 @@ SmsCaptcha 模块初始化，此函数应在所有函数之前调用
     try:
         appid = str(cf.get("SmsCaptcha","appid"))
         appkey = str(cf.get("SmsCaptcha","appkey"))
+        print("appid:",appid)
+        print("addkey:",appkey)
     except Exception as e:
         log_sms.error("UnkownError:",e)
         print("UnkownError:",e)
@@ -30,7 +32,7 @@ SmsCaptcha 模块初始化，此函数应在所有函数之前调用
         sys.exit()
     ssender = SmsSingleSender(appid, appkey)
     log_sms.info("Module SmsCaptcha loaded")
-def SendCaptchaCode(phone_number:str, captcha:str,ext:str=""):
+def SendCaptchaCode(phone_number:str, captcha:str,ext:str="")->dict:
     """
     向指定手机号发送指定验证码，返回证验证结果
 

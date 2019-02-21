@@ -14,15 +14,11 @@ websockets 模块初始化，此函数应在所有命令之前调用
     :param argv: 命令行参数表
     """
     # print("Enter the function")
-    global Redis,config_addr
-    r_host = "localhost"
-    r_port = 6379
-    r_db = 0
-    r_pass = ""
+    global r,config_addr
     try:
-        opts,args = getopt.getopt(argv,"hi:",["imgaddr=","help"])
+        opts,args = getopt.getopt(argv,"hc:",["config","help"])
     except getopt.GetoptError:
-        print("test.py -i <ImgCaptchaAddr> -s <SmsCaptchaAddr>")
+        print("test.py -c <ConfigFilePath> -h <help>")
         sys.exit(2)
     for opt,arg in opts:
         # print("opt,arg",opt,arg)
@@ -33,7 +29,8 @@ websockets 模块初始化，此函数应在所有命令之前调用
             print("-"*80)
             sys.exit()
         elif opt in("-c","--config"):
-            config_addr = str(opt)
+            config_addr = str(arg)
+            print("config_addr:",config_addr)
             break
         else:
             log_main.warning("Useless argv:[%s|%s]",opt,arg)
@@ -73,20 +70,21 @@ websockets 模块初始化，此函数应在所有命令之前调用
         sys.exit()
 
     try:
-        Redis = redis.Redis(host=r_host,port=r_port,db=r_db,password=r_pass)
+        r = redis.Redis(host=r_host,port=r_port,db=r_db,password=r_pass)
     except Exception as e:
         log_main.error(e)
         print(e)
         log_main.info("Program Ended")
         sys.exit()
     # ------模块初始化------
-    ImgCaptcha.Initialize()
-    SmsCaptcha.Initialize()
+    ImgCaptcha.Initialize(config_addr)
+    SmsCaptcha.Initialize(config_addr)
 
 
-@app.route("/api/captcha",methods=["POST"])
+@app.route("/captcha",methods=["POST"])
 def captcha():
     data = request.json
+    print(data)
     # 先获取json里id的值，若不存在，默认值为-1
     if "id" in data.keys():
         id = data["id"]
@@ -101,28 +99,57 @@ def captcha():
     if data["type"] == "img":
         if data["subtype"] == "generate":
             data = data["data"]
-            title,addr = ImgCaptcha.CreatCode()
+            code,addr = ImgCaptcha.CreatCode()
             rand_str = ""
             for i in range(5):
                 char1 = random.choice(
                     [chr(random.randint(65, 90)), chr(random.randint(48, 57)), chr(random.randint(97, 122))])
                 rand_str += char1
             # status 0 ImgCaptcha生成成功
-
+            # r.sadd("ImgCaptcha",title)
             return json.dumps({
                 "id":id,
                 "status":0,
                 "message":"Successful",
-                "data":{"title":title,"addr":addr,"rand":rand_str}
+                "data":{"code":code,"addr":addr,"rand":rand_str}
             })
         elif data["subtype"] == "delete":
             pass
         else:
             # status -2 json的value错误。
-            return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
+            return json.dumps({"id": id, "status":-2, "message": "Error JSON value", "data": {}})
     elif data["type"] == "sms":
         if data["subtype"] == "generate":
-            pass
+            data = data["data"]
+            phone = str(data["phone"])
+            code = random.randint(10000,99999)
+            result = SmsCaptcha.SendCaptchaCode(phone,code,ext=str(id))
+            status = result["result"]
+            message = result["errmsg"]
+            if message == "OK":
+                message = "Successful"
+            rand_str = ""
+            if status == 0:
+                for i in range(5):
+                    char1 = random.choice(
+                        [chr(random.randint(65, 90)), chr(random.randint(48, 57)), chr(random.randint(97, 122))])
+                    rand_str += char1
+                # status 0 SmsCaptcha生成成功
+                # r.sadd("SmsCaptcha",title)
+                return json.dumps({
+                    "id": id,
+                    "status": status,
+                    "message": message,
+                    "data": {"code": code,"rand": rand_str}
+                })
+            else:
+                # status=result["result"] 遇到错误原样返回腾讯云信息
+                return json.dumps({
+                    "id": id,
+                    "status": status,
+                    "message": message,
+                    "data": {}
+                })
         elif data["subtype"] == "delete":
             pass
         else:
@@ -143,3 +170,4 @@ if __name__ == '__main__':
                         datefmt=DATA_FORMAT)
     log_main = logging.getLogger(__name__)
     Initialize(sys.argv[1:])
+    app.run("127.0.0.1",port=8080,debug=True)

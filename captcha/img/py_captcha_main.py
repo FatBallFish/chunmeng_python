@@ -19,6 +19,7 @@ ImgCaptcha 模块初始化，此函数应在所有函数之前调用
     cf.read(cfg_path)
     try:
         path = cf.get("ImgCaptcha","addr")
+        print("ImgCaptchaPath:",path)
     except Exception as e:
         log_img.error(e)
         print(e)
@@ -29,6 +30,7 @@ ImgCaptcha 模块初始化，此函数应在所有函数之前调用
         os.makedirs("captcha", exist_ok=True)
         path = "./captcha"
         log_img.info("ImgCaptchaAddr not located,use the default config")
+        print("ImgCaptchaAddr not located,use the default config")
     else:
         try:
             os.makedirs(path, exist_ok=True)
