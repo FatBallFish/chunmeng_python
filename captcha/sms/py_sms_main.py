@@ -1,7 +1,7 @@
 from qcloudsms_py import SmsSingleSender
 from qcloudsms_py.httpclient import HTTPError
 from configparser import ConfigParser
-import logging
+import logging,sys
 import random
 
 # 短信应用SDK AppID
@@ -12,21 +12,22 @@ appkey=""
 ssender = SmsSingleSender(appid, appkey)
 # 定义log对象
 log_sms = logging.getLogger("SmsCaptcha")
-def Initialize():
+def Initialize(cfg_path):
     """
 SmsCaptcha 模块初始化，此函数应在所有函数之前调用
+    :param cfg_path: 配置文件地址。
     """
     global appid,appkey,ssender
     cf = ConfigParser()
-    cf.read("./config.ini")
+    cf.read(cfg_path)
     try:
-        appid = str(cf.get("Main","appid"))
+        appid = str(cf.get("SmsCaptcha","appid"))
+        appkey = str(cf.get("SmsCaptcha","appkey"))
     except Exception as e:
         log_sms.error("UnkownError:",e)
-    try:
-        appkey = str(cf.get("Main","appkey"))
-    except Exception as e:
-        log_sms.error("UnkownError:",e)
+        print("UnkownError:",e)
+        log_sms.info("Program Ended")
+        sys.exit()
     ssender = SmsSingleSender(appid, appkey)
     log_sms.info("Module SmsCaptcha loaded")
 def SendCaptchaCode(phone_number:str, captcha:str,ext:str=""):

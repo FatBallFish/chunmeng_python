@@ -4,7 +4,7 @@ import time
 # 创建客户端
 redis = redis.StrictRedis(password="wlc570Q0")
 
-# r.srt(name,value) 设置普通键值对
+# r.set(name,value) 设置普通键值对
 response = redis.set("name","王凌超")
 print(response)
 # r.get(name) 取键对应的值

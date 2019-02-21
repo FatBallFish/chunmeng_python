@@ -2,21 +2,29 @@
 from PIL import Image,ImageDraw,ImageFont
 import MD5
 import random
-import logging
+import logging,sys
 import os,configparser
 path=""
 code_str = ""
 webpath = ""
 log_img = logging.getLogger("ImgCaptcha")
 
-def Initialize():
+def Initialize(cfg_path:str):
     """
 ImgCaptcha 模块初始化，此函数应在所有函数之前调用
+    :param cfg_path: 配置文件地址。
     """
     global path
     cf = configparser.ConfigParser()
-    cf.read("./config.ini")
-    path = cf.get("Main","ImgCaptchaAddr")
+    cf.read(cfg_path)
+    try:
+        path = cf.get("ImgCaptcha","addr")
+    except Exception as e:
+        log_img.error(e)
+        print(e)
+        log_img.info("Program Ended")
+        sys.exit()
+    # 默认情况上面section不存在应该是会报错的.
     if path == "":
         os.makedirs("captcha", exist_ok=True)
         path = "./captcha"
@@ -27,6 +35,9 @@ ImgCaptcha 模块初始化，此函数应在所有函数之前调用
             log_img.info("Located ImgCaptcha address:[%s]",path)
         except Exception as e:
             log_img.error("UnknownError:",e)
+            print("UnknownError:",e)
+            log_img.info("Program Ended")
+            sys.exit()
     log_img.info("Module ImgCaptcha loaded")
 
 def CreatCode(font:str = "military_font.ttf")->tuple:
