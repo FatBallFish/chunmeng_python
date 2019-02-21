@@ -6,8 +6,12 @@ import random,MD5
 import json,redis
 import logging
 import sys,getopt
+import threading,time
 
 app = Flask(__name__)
+imgcaptcha_list = []
+smscaptcha_list = []
+
 def Initialize(argv:list):
     """
 websockets 模块初始化，此函数应在所有命令之前调用
@@ -70,7 +74,7 @@ websockets 模块初始化，此函数应在所有命令之前调用
         sys.exit()
 
     try:
-        r = redis.Redis(host=r_host,port=r_port,db=r_db,password=r_pass)
+        r = redis.StrictRedis(host=r_host,port=r_port,db=r_db,password=r_pass)
     except Exception as e:
         log_main.error(e)
         print(e)
@@ -79,6 +83,45 @@ websockets 模块初始化，此函数应在所有命令之前调用
     # ------模块初始化------
     ImgCaptcha.Initialize(config_addr)
     SmsCaptcha.Initialize(config_addr)
+
+class MyThread (threading.Thread):
+    def __init__(self, threadID, name, counter):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.counter = counter
+    def run(self):
+        log_main.info("Start thread 【%s】 to auto del outtime code"%self.name)
+        print ("开始线程：" + self.name)
+        auto_del_code()
+        log_main.info("End thread 【%s】 to auto del outtime code"%self.name)
+        print ("退出线程：" + self.name)
+
+def auto_del_code():
+    while True:
+        for imgcaptcha in imgcaptcha_list:
+            if imgcaptcha["TTL"] <= 0:
+                try:
+                    r.srem("captcha_authentication",imgcaptcha["hash"])
+                except Exception as e:
+                    log_main.error(e)
+                index = imgcaptcha_list.index(imgcaptcha)
+                imgcaptcha_list.pop(index)
+                continue
+            imgcaptcha["TTL"] -= 3
+            print(imgcaptcha["hash"],imgcaptcha["TTL"])
+        for smscaptcha in smscaptcha_list:
+            if smscaptcha["TTL"] <= 0:
+                try:
+                    r.srem("sms_authentication",smscaptcha["hash"])
+                except Exception as e:
+                    log_main.error(e)
+                index = smscaptcha_list.index(smscaptcha)
+                smscaptcha_list.pop(index)
+                continue
+            smscaptcha["TTL"] -= 3
+            print(smscaptcha["hash"], smscaptcha["TTL"])
+        time.sleep(3)
 
 
 @app.route("/captcha",methods=["POST"])
@@ -105,8 +148,21 @@ def captcha():
                 char1 = random.choice(
                     [chr(random.randint(65, 90)), chr(random.randint(48, 57)), chr(random.randint(97, 122))])
                 rand_str += char1
+            hash = MD5.md5(code,salt=rand_str)
+            try:
+                r.sadd("captcha_authentication",hash)
+                imgcaptcha_list.append({"hash":hash,"TTL":180})
+                # todo 加入验证机制
+            except Exception as e:
+                log_main.error(e)
+                # status 404 Unkown Error
+                return json.dumps({
+                    "id": id,
+                    "status": -404,
+                    "message": "Unknown Error",
+                    "data":{}
+                })
             # status 0 ImgCaptcha生成成功
-            # r.sadd("ImgCaptcha",title)
             return json.dumps({
                 "id":id,
                 "status":0,
@@ -134,8 +190,21 @@ def captcha():
                     char1 = random.choice(
                         [chr(random.randint(65, 90)), chr(random.randint(48, 57)), chr(random.randint(97, 122))])
                     rand_str += char1
+                hash = MD5.md5(code, salt=rand_str)
+                try:
+                    r.sadd("captcha_authentication",hash)
+                    smscaptcha_list.append({"hash": hash, "TTL": 180})
+                    # todo 加入验证机制
+                except Exception as e:
+                    log_main.error(e)
+                    # status 404 Unkown Error
+                    return json.dumps({
+                        "id": id,
+                        "status": -404,
+                        "message": "Unknown Error",
+                        "data": {}
+                    })
                 # status 0 SmsCaptcha生成成功
-                # r.sadd("SmsCaptcha",title)
                 return json.dumps({
                     "id": id,
                     "status": status,
@@ -170,4 +239,6 @@ if __name__ == '__main__':
                         datefmt=DATA_FORMAT)
     log_main = logging.getLogger(__name__)
     Initialize(sys.argv[1:])
+    thread_auto = MyThread(1,"AutoRemoveExpireCode",1)
+    thread_auto.start()
     app.run("0.0.0.0",port=8080,debug=True)
