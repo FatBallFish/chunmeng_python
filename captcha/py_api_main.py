@@ -129,6 +129,11 @@ def captcha():
     data = request.json
     print(data)
     # 先获取json里id的值，若不存在，默认值为-1
+    try:
+        keys = data.keys()
+    except Exception as e:
+        # status -1 json的key错误。
+        return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
     if "id" in data.keys():
         id = data["id"]
     else:

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>电子创新俱乐部报名</title>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
+    <script>
+         function sendinfo(){
+
+             $.ajax({
+                 url:'/api/login',
+                 data:{
+                     'id': $('#id').val(),
+                     'name': $('#name').val(),
+                     'phone': $('#phone').val()
+                },
+                 dataType: "json",
+                 //jsonp:"callback",
+                 //contentType: 'application/json',
+                 type:'post',
+                 success:function(data){ //后端返回的json数据（此处data为json对象）
+                     alert(data["id"]+"\n"+data["name"]+"\n"+data["phone"]);
+                     setCookie("id",data["id"]);
+                     setCookie("name",data["name"]);
+                     setCookie("phone",data["phone"]);
+                     $(location).attr("href","/user");//?name="+data["name"]+"&id="+data["id"]+"&phone="+data["phone"]
+              },
+              error:function () {
+                  alert('异常')
+              }})
+         };
+         function setCookie(name,value){
+            var hour = 30;
+            var exp = new Date();
+            exp.setTime(exp.getTime() + hour*60*60*1000);
+            document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString();
+         }
+    </script>
+</head>
+ <body>
+    <table border="1px" cellpadding="10px" cellspacing="0px"
+            style="width: 30%;margin:auto;background:rgb(195,195,195)"
+            bordercolor="red" >
+        <caption><h2>电子创新俱乐部报名</h2></caption>
+        <form action="#" method="get">
+
+            <tr>
+                <th>学号:</th>
+                <td><input type="text" name="id" id="id"></th>
+            </tr>
+            <tr>
+                <th>姓名:</th>
+                <td><input type="text" name="name" id="name"></td>
+            </tr>
+            <tr>
+                <th>联系方式：</th>
+                <td><input type="text" name="phone" id="phone"></td>
+            </tr>
+            <tr>
+                <th>头像:</th>
+                <td><input type="file" name="img"></td>
+            </tr>
+            <tr>
+                <th colspan="2">
+                    <input type="button" value="提交" id="send" onclick="sendinfo()">
+                    <input type="reset" value="重置">
+                </th>
+            </tr>
+        </form>
+    </table>
+
+ </body>
+</html>
