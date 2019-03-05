@@ -1,9 +1,10 @@
 import hashlib
-def md5(str,salt='bluezone'):
+def md5(string,salt='bluezone'):
     #satl是盐值，默认是123456
-    str=str+salt
+    string = str(string)
+    string = string+salt
     md = hashlib.md5()  # 构造一个md5对象
-    md.update(str.encode())
+    md.update(string.encode())
     res = md.hexdigest()
     return res
 if __name__ == "__main__":

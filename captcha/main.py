@@ -67,12 +67,16 @@ websockets 模块初始化，此函数应在所有命令之前调用
         r_port = cf.get("Redis","port")
         r_db = cf.get("Redis", "db")
         r_pass = cf.get("Redis","pass")
+        global r_imgsetname,r_smssetname
+        r_imgsetname = cf.get("Redis","img_setname")  #TODO global setname
+        r_smssetname = cf.get("Redis","sms_setname")
     except Exception as e:
         log_main.error(e)
         print(e)
         log_main.info("Program Ended")
         sys.exit()
 
+    # 启动Redis 并初始化验证码库
     try:
         r = redis.StrictRedis(host=r_host,port=r_port,db=r_db,password=r_pass)
     except Exception as e:
@@ -80,6 +84,16 @@ websockets 模块初始化，此函数应在所有命令之前调用
         print(e)
         log_main.info("Program Ended")
         sys.exit()
+    try:
+        r.delete(r_imgsetname)
+        print("Delete Redis's set [%s]" % r_imgsetname)
+    except Exception as e:
+        pass
+    try:
+        r.delete(r_smssetname)
+        print("Delete Redis's set [%s]" % r_smssetname)
+    except Exception as e:
+        pass
     # ------模块初始化------
     ImgCaptcha.Initialize(config_addr)
     SmsCaptcha.Initialize(config_addr)
@@ -102,25 +116,27 @@ def auto_del_code():
         for imgcaptcha in imgcaptcha_list:
             if imgcaptcha["TTL"] <= 0:
                 try:
-                    r.srem("captcha_authentication",imgcaptcha["hash"])
+                    print("Try to remove hash [%s]" % imgcaptcha["hash"])
+                    r.srem(r_imgsetname,imgcaptcha["hash"])
                 except Exception as e:
                     log_main.error(e)
                 index = imgcaptcha_list.index(imgcaptcha)
                 imgcaptcha_list.pop(index)
                 continue
             imgcaptcha["TTL"] -= 3
-            print(imgcaptcha["hash"],imgcaptcha["TTL"])
+            # print(imgcaptcha["hash"],imgcaptcha["TTL"])
         for smscaptcha in smscaptcha_list:
             if smscaptcha["TTL"] <= 0:
                 try:
-                    r.srem("sms_authentication",smscaptcha["hash"])
+                    print("Try to remove hash [%s]" % smscaptcha["hash"])
+                    r.srem(r_smssetname,smscaptcha["hash"])
                 except Exception as e:
                     log_main.error(e)
                 index = smscaptcha_list.index(smscaptcha)
                 smscaptcha_list.pop(index)
                 continue
             smscaptcha["TTL"] -= 3
-            print(smscaptcha["hash"], smscaptcha["TTL"])
+            # print(smscaptcha["hash"], smscaptcha["TTL"])
         time.sleep(3)
 
 
@@ -147,7 +163,8 @@ def captcha():
     if data["type"] == "img":
         if data["subtype"] == "generate":
             data = data["data"]
-            code,addr = ImgCaptcha.CreatCode()
+            # code,addr = ImgCaptcha.CreatCode()
+            code, b64_data = ImgCaptcha.CreatCode()
             rand_str = ""
             for i in range(5):
                 char1 = random.choice(
@@ -155,7 +172,7 @@ def captcha():
                 rand_str += char1
             hash = MD5.md5(code,salt=rand_str)
             try:
-                r.sadd("captcha_authentication",hash)
+                r.sadd(r_imgsetname,hash)
                 imgcaptcha_list.append({"hash":hash,"TTL":180})
                 # todo 加入验证机制
             except Exception as e:
@@ -168,11 +185,16 @@ def captcha():
                     "data":{}
                 })
             # status 0 ImgCaptcha生成成功
+            # return json.dumps({
+            #     "id":id,
+            #     "status":0,
+            #     "message":"Successful",
+            #     "data":{"code":code,"addr":addr,"rand":rand_str}
             return json.dumps({
-                "id":id,
-                "status":0,
-                "message":"Successful",
-                "data":{"code":code,"addr":addr,"rand":rand_str}
+                "id": id,
+                "status": 0,
+                "message": "Successful",
+                "data": {"code": code, "imgdata": b64_data, "rand": rand_str}
             })
         elif data["subtype"] == "delete":
             pass
@@ -197,7 +219,7 @@ def captcha():
                     rand_str += char1
                 hash = MD5.md5(code, salt=rand_str)
                 try:
-                    r.sadd("captcha_authentication",hash)
+                    r.sadd(r_smssetname,hash)  #todo
                     smscaptcha_list.append({"hash": hash, "TTL": 180})
                     # todo 加入验证机制
                 except Exception as e:
