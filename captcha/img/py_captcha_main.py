@@ -5,7 +5,7 @@ import random
 import logging,sys
 import os,configparser
 import io,base64
-path=""
+# path=""
 code_str = ""
 webpath = ""
 fonts_list = []
@@ -16,32 +16,33 @@ def Initialize(cfg_path:str):
 ImgCaptcha 模块初始化，此函数应在所有函数之前调用
     :param cfg_path: 配置文件地址。
     """
-    global path
+    # global path
     cf = configparser.ConfigParser()
     cf.read(cfg_path)
-    try:
-        path = cf.get("ImgCaptcha","outpath")
-        print("ImgCaptchaPath:",path)
-    except Exception as e:
-        log_img.error(e)
-        print(e)
-        log_img.info("Program Ended")
-        sys.exit()
-    # 默认情况上面section不存在应该是会报错的.
-    if path == "":
-        os.makedirs("captcha", exist_ok=True)
-        path = "./captcha"
-        log_img.info("ImgCaptchaAddr not located,use the default config")
-        print("ImgCaptchaAddr not located,use the default config")
-    else:
-        try:
-            os.makedirs(path, exist_ok=True)
-            log_img.info("Located ImgCaptcha address:[%s]",path)
-        except Exception as e:
-            log_img.error("UnknownError:",e)
-            print("UnknownError:",e)
-            log_img.info("Program Ended")
-            sys.exit()
+    # # 下面代码原来是创建存验证码文件路径
+    # try:
+    #     path = cf.get("ImgCaptcha","outpath")
+    #     print("ImgCaptchaPath:",path)
+    # except Exception as e:
+    #     log_img.error(e)
+    #     print(e)
+    #     log_img.info("Program Ended")
+    #     sys.exit()
+    # # 默认情况上面section不存在应该是会报错的.
+    # if path == "":
+    #     os.makedirs("captcha", exist_ok=True)
+    #     path = "./captcha"
+    #     log_img.info("ImgCaptchaAddr not located,use the default config")
+    #     print("ImgCaptchaAddr not located,use the default config")
+    # else:
+    #     try:
+    #         os.makedirs(path, exist_ok=True)
+    #         log_img.info("Located ImgCaptcha address:[%s]",path)
+    #     except Exception as e:
+    #         log_img.error("UnknownError:",e)
+    #         print("UnknownError:",e)
+    #         log_img.info("Program Ended")
+    #         sys.exit()
     log_img.info("Module ImgCaptcha loaded")
 
 
@@ -121,12 +122,12 @@ def GetCodeText()->str:
     """
     return code_str
 
-def GetCodePath()->str:
-    """
-返回验证码保存目录
-    :return: 验证码保存目录
-    """
-    return path
+# def GetCodePath()->str:
+#     """
+# 返回验证码保存目录
+#     :return: 验证码保存目录
+#     """
+#     return path
 
 if __name__ == "__main__":
     CreatCode()

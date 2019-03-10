@@ -12,6 +12,9 @@ app = Flask(__name__)
 imgcaptcha_list = []
 smscaptcha_list = []
 
+LOG_FORMAT = "[%(asctime)-15s] - [%(name)10s]\t- [%(levelname)s]\t- [%(funcName)-20s:%(lineno)3s]\t- [%(message)s]"
+DATA_FORMAT = "%Y.%m.%d %H:%M:%S %p "
+log_outpath = "./my.log"
 def Initialize(argv:list):
     """
 websockets 模块初始化，此函数应在所有命令之前调用
@@ -37,31 +40,56 @@ websockets 模块初始化，此函数应在所有命令之前调用
             print("config_addr:",config_addr)
             break
         else:
-            log_main.warning("Useless argv:[%s|%s]",opt,arg)
+            # log_main.warning("Useless argv:[%s|%s]",opt,arg)
             print("Useless argv:[%s|%s]"%(opt,arg))
     else:
-        log_main.error("missing config argv")
+        # log_main.error("missing config argv")
         print("missing config argv")
-        log_main.info("Program Ended")
+        # log_main.info("Program Ended")
         sys.exit()
     cf = ConfigParser()
     try:
         cf.read(config_addr)
     except Exception as e:
-        log_main.error("Error config file path")
+        ##log_main.error("Error config file path")
         print("Error config file path")
-        log_main.info("Program Ended")
+        ##log_main.info("Program Ended")
         sys.exit()
     sections = cf.sections()
     for section in sections:
-        if section in ["ImgCaptcha","Redis","SmsCaptcha"]:
+        if section in ["Log","Redis","SmsCaptcha"]:
             break
     else:
-        log_main.error("Config file missing some necessary sections")
+        ##log_main.error("Config file missing some necessary sections")
         print("Config file missing some necessary sections")
-        log_main.info("Program Ended")
+        ##log_main.info("Program Ended")
         sys.exit()
 
+    # 读main配置
+    # TODO CONFIG
+    global log_main
+    try:
+        global log_outpath, webhost, webport, webdebug
+        log_outpath = cf.get("Main", "logoutpath")
+        webhost = cf.get("Main", "webhost")
+        webport = cf.get("Main", "webport")
+        intdebug = cf.get("Main", "webdebug")
+        if intdebug == 1:
+            webdebug = True
+        else:
+            webdebug = False
+        print("log_outpath:",log_outpath)
+        print("webhost:",webhost)
+        print("webport:", webport)
+        print("webdebug:", webdebug)
+    except Exception as e:
+        print("Error")
+    logging.basicConfig(filename=log_outpath, level=logging.INFO,
+                        format=LOG_FORMAT.center(30),
+                        datefmt=DATA_FORMAT)
+    log_main = logging.getLogger(__name__)
+
+    # 读Redis配置
     try:
         r_host = cf.get("Redis","host")
         r_port = cf.get("Redis","port")
@@ -258,14 +286,7 @@ def captcha():
 
 if __name__ == '__main__':
     # -------------------主程序初始化-------------------
-    ImgCaptchaAddr = ""
-    LOG_FORMAT = "[%(asctime)-15s] - [%(name)10s]\t- [%(levelname)s]\t- [%(funcName)-20s:%(lineno)3s]\t- [%(message)s]"
-    DATA_FORMAT = "%Y.%m.%d %H:%M:%S %p "
-    logging.basicConfig(filename="my.log", level=logging.INFO,
-                        format=LOG_FORMAT.center(30),
-                        datefmt=DATA_FORMAT)
-    log_main = logging.getLogger(__name__)
     Initialize(sys.argv[1:])
     thread_auto = MyThread(1,"AutoRemoveExpireCode",1)
     thread_auto.start()
-    app.run("0.0.0.0",port=8080,debug=True)
+    app.run(webhost,port=webport,debug=webdebug)
