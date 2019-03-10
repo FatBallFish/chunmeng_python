@@ -1,4 +1,0 @@
-DELETE FROM book_text T1
-    USING   book_text T2
-WHERE   T1.ctid < T2.ctid
-    AND T1.md5  = T2.md5; 
