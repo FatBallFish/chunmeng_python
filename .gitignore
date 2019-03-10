@@ -1,4 +1,4 @@
 .idea
 __pycache__
 captcha/captcha/*.png
-my.log
+*.log
