@@ -101,6 +101,10 @@ websockets 模块初始化，此函数应在所有命令之前调用
         global r_imgsetname,r_smssetname
         r_imgsetname = cf.get("Redis","img_setname")  #TODO global setname
         r_smssetname = cf.get("Redis","sms_setname")
+        print("RedisHost:",r_host)
+        print("RedisPort:", r_port)
+        print("RedisDB:", r_db)
+        print("RedisPass:", r_pass)
     except Exception as e:
         log_main.error(e)
         print(e)
@@ -151,6 +155,7 @@ def auto_del_code():
                     r.srem(r_imgsetname,imgcaptcha["hash"])
                 except Exception as e:
                     log_main.error(e)
+                    print(e)
                 index = imgcaptcha_list.index(imgcaptcha)
                 imgcaptcha_list.pop(index)
                 continue
@@ -163,6 +168,7 @@ def auto_del_code():
                     r.srem(r_smssetname,smscaptcha["hash"])
                 except Exception as e:
                     log_main.error(e)
+                    print(e)
                 index = smscaptcha_list.index(smscaptcha)
                 smscaptcha_list.pop(index)
                 continue
