@@ -20,7 +20,7 @@
 |status|返回请求处理状态，请求时status填写0。默认返回0时为请求处理成功，若失败返回错误码|请求、返回|"status":0|
 |message|状态简略信息，若成功调用则返回"successful"，失败返回错误信息|返回|"message":"successful"|
 |type|请求类型|请求|"type":"user"|
-|subtype|请求子类型|请求|"subtype":"login|
+|subtype|请求子类型|请求|"subtype":"login"|
 |data|传送数据|请求、返回|"data":{"token":"xxxxxxxxxxxxx"}|
 
 > ## **用户操作类**
