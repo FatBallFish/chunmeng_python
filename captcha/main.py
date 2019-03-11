@@ -104,7 +104,8 @@ websockets 模块初始化，此函数应在所有命令之前调用
         print("RedisHost:",r_host)
         print("RedisPort:", r_port)
         print("RedisDB:", r_db)
-        print("RedisPass:", r_pass)
+        print("RedisImgsetname:", r_imgsetname)
+        print("RRedisSmssetname:", r_smssetname)
     except Exception as e:
         log_main.error(e)
         print(e)
