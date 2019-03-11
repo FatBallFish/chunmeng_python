@@ -11,7 +11,7 @@ webpath = ""
 fonts_list = []
 log_img = logging.getLogger("ImgCaptcha")
 
-def Initialize(cfg_path:str):
+def Initialize(cfg_path:str,main_path:str):
     """
 ImgCaptcha 模块初始化，此函数应在所有函数之前调用
     :param cfg_path: 配置文件地址。
@@ -43,6 +43,10 @@ ImgCaptcha 模块初始化，此函数应在所有函数之前调用
     #         print("UnknownError:",e)
     #         log_img.info("Program Ended")
     #         sys.exit()
+
+    global Main_filepath
+    Main_filepath = main_path
+    # print(Main_filepath)
     log_img.info("Module ImgCaptcha loaded")
 
 
@@ -53,7 +57,8 @@ def LoadFontsFile(filepath):
     for filename in path_list:
         if os.path.splitext(filename)[1] in ['.ttf',".TTF",".otf",".OTF"]:
             # print("Fonts:",filename)
-            fonts_list.append("./fonts/"+filename)
+            fonts_list.append(os.path.join(filepath,filename))
+            # print(os.path.join(filepath,filename))
 
 def CreatCode()->tuple:
     """
@@ -64,13 +69,14 @@ def CreatCode()->tuple:
     global code_str
     global webpath,path
     try:
-        LoadFontsFile("./fonts")
+        LoadFontsFile(os.path.join(Main_filepath,"fonts"))
     except Exception as e:
         log_img.error(e)
         print("UnknownError:",e)
         log_img.info("Program Ended")
         sys.exit()
     font_num = len(fonts_list)
+    # print("字体个数总共有",font_num,"个")
     font = fonts_list[random.randint(0,font_num-1)]
     code_str = ""
     # 定义使用image类实例化一个长为120px，宽为30px，基于RGB的（255，255，255）颜色的图片

@@ -12,7 +12,7 @@ appkey=""
 ssender = SmsSingleSender(appid, appkey)
 # 定义log对象
 log_sms = logging.getLogger("SmsCaptcha")
-def Initialize(cfg_path):
+def Initialize(cfg_path,main_path):
     """
 SmsCaptcha 模块初始化，此函数应在所有函数之前调用
     :param cfg_path: 配置文件地址。
@@ -31,6 +31,9 @@ SmsCaptcha 模块初始化，此函数应在所有函数之前调用
         log_sms.info("Program Ended")
         sys.exit()
     ssender = SmsSingleSender(appid, appkey)
+
+    global Main_filepath
+    Main_filepath = main_path
     log_sms.info("Module SmsCaptcha loaded")
 def SendCaptchaCode(phone_number:str, captcha:str,ext:str="")->dict:
     """

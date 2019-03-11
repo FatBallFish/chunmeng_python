@@ -7,6 +7,7 @@ import json,redis
 import logging
 import sys,getopt
 import threading,time
+import os
 
 app = Flask(__name__)
 imgcaptcha_list = []
@@ -15,6 +16,9 @@ smscaptcha_list = []
 LOG_FORMAT = "[%(asctime)-15s] - [%(name)10s]\t- [%(levelname)s]\t- [%(funcName)-20s:%(lineno)3s]\t- [%(message)s]"
 DATA_FORMAT = "%Y.%m.%d %H:%M:%S %p "
 log_outpath = "./my.log"
+Main_filepath = os.path.dirname(os.path.abspath(__file__))
+print("Main FilePath:",Main_filepath)
+
 def Initialize(argv:list):
     """
 websockets 模块初始化，此函数应在所有命令之前调用
@@ -88,7 +92,6 @@ websockets 模块初始化，此函数应在所有命令之前调用
                         format=LOG_FORMAT.center(30),
                         datefmt=DATA_FORMAT)
     log_main = logging.getLogger(__name__)
-
     # 读Redis配置
     try:
         r_host = cf.get("Redis","host")
@@ -123,8 +126,8 @@ websockets 模块初始化，此函数应在所有命令之前调用
     except Exception as e:
         pass
     # ------模块初始化------
-    ImgCaptcha.Initialize(config_addr)
-    SmsCaptcha.Initialize(config_addr)
+    ImgCaptcha.Initialize(config_addr,Main_filepath)
+    SmsCaptcha.Initialize(config_addr,Main_filepath)
 
 class MyThread (threading.Thread):
     def __init__(self, threadID, name, counter):
