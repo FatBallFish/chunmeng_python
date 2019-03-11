@@ -208,6 +208,7 @@ def captcha():
                 # todo 加入验证机制
             except Exception as e:
                 log_main.error(e)
+                print(e)
                 # status 404 Unkown Error
                 return json.dumps({
                     "id": id,
@@ -255,6 +256,7 @@ def captcha():
                     # todo 加入验证机制
                 except Exception as e:
                     log_main.error(e)
+                    print(e)
                     # status 404 Unkown Error
                     return json.dumps({
                         "id": id,
