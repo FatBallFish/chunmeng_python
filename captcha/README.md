@@ -11,6 +11,7 @@
   "data":{"key":"value"}
 }
 ```
+
 **所需参数介绍：**
 
 |参数|介绍|调用方|样例|
@@ -24,10 +25,11 @@
 
 > ## **用户操作类**
 
-#API测试链接：https://www.lcworkroom.cn/api/captcha
+### API测试链接：https://www.zustservice.cn/api/external/captcha
 
  + ### **登录图片验证码**
     + **POST发送请求的json文本**
+
    ```python
    {
        "id":事件ID, # 整数型
@@ -37,25 +39,29 @@
        "data":{}
    }
    ```
+
    + **Python端返回成功处理情况**
+
    ```python
    {
        "id":请求时的ID, # 整数型
        "status":0,
        "message":"successful",
        "data":{
-           "code":"N4Fsx", # 验证码内容
            "imgdata":"iVBORw0yrfmx5m7975n32/23Y+cdf1Rv9oA6.....(以下省略)",
            "rand":"CST43"  #随机文本
        }
    }
    ```
+
    > ## 注意
-   > 1.id字段需是整型数据。若是文本型数字数据，返回时自动转换成整数型数据；若是非数字型文本，则返回-1。id用于让前端在服务繁忙时能够对应服务;\
-   > 2.Python成功返回时的imgdata为验证码base64图片数据，前端获得数据后进行转码再显示;\
-   > 3.rand 为随机字符串，前端获得验证码后需要将验证码和rand文本一并传给java端进行验证。
+   > 新版本里将返回数据`data`中的`code`字段删除了。  
+   > 1.`id`字段需是整型数据。若是文本型数字数据，返回时自动转换成整数型数据；若是非数字型文本，则返回`-1`。`id`用于让前端在服务繁忙时能够对应服务;  
+   > 2.Python成功返回时的`imgdata`为验证码base64图片数据，前端获得数据后进行转码再显示;  
+   > 3.`rand`为随机字符串，前端获得验证码后需要将验证码和`rand`文本一并传给java端进行验证，`hash = MD5(code+rand)`。  
 
    + **Python端返回失败处理情况**
+
    ```python
    {
      "id":"请求时的ID",
@@ -64,10 +70,12 @@
      "data":{},
    }
    ```
-   > status传递的错误码类型为整型。具体的错误码详见最下方表格。
+
+   > `status`传递的错误码类型为整型。具体的错误码详见最下方表格。
 ---
 + ### **注册手机验证码**
     + **POST发送请求的json文本**
+
     ```python
     {
         "id":事件ID,
@@ -79,26 +87,31 @@
             }
     }
     ```
+
     > ## 注意
-    > phone 字段需用文本型传递，且只能为中国大陆手机号，不支持国外手机号
+    > `phone`字段需用文本型传递，且只能为中国大陆手机号，不支持国外手机号
+
    + **Python端返回成功处理情况**
+
    ```python
    {
       "id":请求时的ID,
       "status":0,
       "message":"successful",
       "data":{
-          "code":"88464", # 验证码内容
           "rand":"DSf4s"
       }
    }
    ```
+
    > ## 注意：
-   > 1.Python成功返回时的addr为验证码文件名，由MD5加盐加密获得。\
-   > 2.rand 为随机字符串，前端获得验证码后需要将验证码和rand文本一并传给java端进行验证。\
+   > 新版本里将返回数据`data`中的`code`字段删除了。  
+   > 1.Python成功返回时的addr为验证码文件名，由MD5加盐加密获得。  
+   > 2.`rand`为随机字符串，前端获得验证码后需要将验证码和rand文本一并传给java端进行验证，`hash = MD5(code+rand)`。  
    > **3.手机验证码的时效为5min，具体怎么实现还没想好**
    
    + **Python端返回失败处理情况**
+
    ```python
    {
         "id":"请求时的ID",
@@ -108,22 +121,23 @@
    }
    ```
    > ## 注意
-   > status传递的错误码类型为整型。具体的错误码参照**腾讯云短信服务API文档**。
+   > `status`传递的错误码类型为整型。具体的错误码参照**腾讯云短信服务API文档**。
    > [短信错误码](https://cloud.tencent.com/document/product/382/3771 "腾讯云短信API文档")
 
 ---
+
 ## status表
 |参数|Message|内容|
 |:--:|:--:|:--:|
 |0|OK|函数处理正确|
 |-1|Error JSON key|json文本必需key缺失|
 |-2|Error JSON value|json文本value错误|
-|-404|Unknown Error|未知的错误|
+|-404|Unknown Error|未知的Redis错误|
 
 ---
 
 > ## Others
-> github里的例程已设置成本地测试。\
-> 若要修改成网络测试，将“py_api.main.py”第最后一行的host和port进行相应修改。\
+> github里的例程已设置成本地测试。  
+> 若要修改成网络测试，将“main.py”第最后一行的host和port进行相应修改。  
 > 网络测试直接打开下列网址即可，已在服务器部署了服务。
-> [测试链接](http://www.lcworkroom.cn/api/captcha "本小宅")
+> [测试链接](https://www.zustservice.cn/api/external/captcha "码三秃")

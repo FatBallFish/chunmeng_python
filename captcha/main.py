@@ -233,7 +233,8 @@ def captcha():
                 "id": id,
                 "status": 0,
                 "message": "Successful",
-                "data": {"code": code, "imgdata": b64_data, "rand": rand_str}
+                "data": {"imgdata": b64_data, "rand": rand_str}
+                # 改动：将code字段删除
             })
         elif data["subtype"] == "delete":
             pass
@@ -276,8 +277,9 @@ def captcha():
                     "id": id,
                     "status": status,
                     "message": message,
-                    "data": {"code": code,"rand": rand_str}
+                    "data": {"rand": rand_str}
                 })
+                # 改动：将code字段删除
             else:
                 # status=result["result"] 遇到错误原样返回腾讯云信息
                 return json.dumps({
