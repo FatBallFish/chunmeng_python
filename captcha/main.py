@@ -10,8 +10,8 @@ import threading,time
 import os
 
 app = Flask(__name__)
-imgcaptcha_list = []
-smscaptcha_list = []
+imgcaptcha_list = []  #{"hash":hash,"TTL":180}
+smscaptcha_list = []  #{"hash":hash,"TTL":180}
 
 LOG_FORMAT = "[%(asctime)-15s] - [%(name)10s]\t- [%(levelname)s]\t- [%(funcName)-20s:%(lineno)3s]\t- [%(message)s]"
 DATA_FORMAT = "%Y.%m.%d %H:%M:%S %p "
@@ -150,6 +150,11 @@ class MyThread (threading.Thread):
 def auto_del_code():
     while True:
         for imgcaptcha in imgcaptcha_list:
+            if r.sismember(r_imgsetname, imgcaptcha["hash"]) == False:
+                print("imghash:[%s]had deleted" % imgcaptcha["hash"])
+                imgcaptcha_list.remove(imgcaptcha)
+                continue
+            # print("imghash:", imgcaptcha["hash"], "sis:", )
             if imgcaptcha["TTL"] <= 0:
                 try:
                     print("Try to remove hash [%s]" % imgcaptcha["hash"])
@@ -163,6 +168,10 @@ def auto_del_code():
             imgcaptcha["TTL"] -= 3
             # print(imgcaptcha["hash"],imgcaptcha["TTL"])
         for smscaptcha in smscaptcha_list:
+            if r.sismember(r_imgsetname, smscaptcha["hash"]) == False:
+                print("smshash:[%s]had deleted" % smscaptcha["hash"])
+                smscaptcha_list.remove(smscaptcha)
+                continue
             if smscaptcha["TTL"] <= 0:
                 try:
                     print("Try to remove hash [%s]" % smscaptcha["hash"])
@@ -177,32 +186,60 @@ def auto_del_code():
             # print(smscaptcha["hash"], smscaptcha["TTL"])
         time.sleep(3)
 
-
+def SafeCheck(hash):
+    """
+    Check imgcaptcha hash
+    :param hash:
+    :return: int 0 as success , -1 as failed
+    """
+    flag = False
+    for imgcaptcha in imgcaptcha_list :
+        if imgcaptcha["hash"] == hash:
+            flag = True
+            imgcaptcha["TTL"] = 180
+        else:
+            pass
+    for smscaptcha in smscaptcha_list :
+        if smscaptcha["hash"] == hash:
+            flag = True
+            smscaptcha["TTL"] = 180
+        else:
+            pass
+    if flag == True:
+        return 0
+    else:
+        return -1
 @app.route("/captcha",methods=["POST"])
+
 def captcha():
     data = request.json
     print(data)
+
     # 先获取json里id的值，若不存在，默认值为-1
     try:
         keys = data.keys()
     except Exception as e:
         # status -1 json的key错误。
         return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+
     if "id" in data.keys():
         id = data["id"]
     else:
         id = -1
+
     # 判断指定所需字段是否存在，若不存在返回status -1 json。
     for key in ["type","subtype","data"]:
         if not key in data.keys():
             # status -1 json的key错误。
             return json.dumps({"id":id,"status":-1,"message":"Error JSON key","data":{}})
+
     # 处理json
     if data["type"] == "img":
         if data["subtype"] == "generate":
             data = data["data"]
             # code,addr = ImgCaptcha.CreatCode()
             code, b64_data = ImgCaptcha.CreatCode()
+            code = code.lower()  # 将所有的验证码转成小写
             rand_str = ""
             for i in range(5):
                 char1 = random.choice(
@@ -216,7 +253,7 @@ def captcha():
             except Exception as e:
                 log_main.error(e)
                 print(e)
-                # status 404 Unkown Error
+                # status -404 Unkown Error
                 return json.dumps({
                     "id": id,
                     "status": -404,
@@ -236,14 +273,53 @@ def captcha():
                 "data": {"imgdata": b64_data, "rand": rand_str}
                 # 改动：将code字段删除
             })
-        elif data["subtype"] == "delete":
-            pass
+        elif data["subtype"] == "validate":
+            data = data["data"]
+            for key in data.keys():
+                if key not in ["hash"]:
+                    # status -3 json的value错误。
+                    return json.dumps({"id": id, "status": -3, "message": "Error data key", "data": {}})
+            hash = data["hash"]
+            result = SafeCheck(hash)
+            if result == 0:
+                # status 0 校验成功。
+                return json.dumps({
+                    "id":id,
+                    "status":0,
+                    "message":"successful",
+                    "data":{}
+                })
+            elif result == -1:
+                # status -1 验证码hash值不匹配(包括验证码过期)。
+                return json.dumps({
+                    "id": id,
+                    "status": -1,
+                    "message": "Error captcha hash",
+                    "data": {}
+                })
+            else:
+                # status -404 Unkown Error
+                return json.dumps({
+                    "id": id,
+                    "status": -404,
+                    "message": "Unknown Error",
+                    "data": {}
+                })
         else:
             # status -2 json的value错误。
             return json.dumps({"id": id, "status":-2, "message": "Error JSON value", "data": {}})
     elif data["type"] == "sms":
         if data["subtype"] == "generate":
             data = data["data"]
+            for key in data.keys():
+                if key not in ["phone","hash"]:
+                    # status -3 json的value错误。
+                    return json.dumps({"id": id, "status": -3, "message": "Error data key", "data": {}})
+            hash = data["hash"]
+            result = SafeCheck(hash)
+            if result != 0:
+                # status -4 json的value错误。
+                return json.dumps({"id": id, "status": -4, "message": "Error Hash", "data": {}})
             phone = str(data["phone"])
             code = random.randint(10000,99999)
             result = SmsCaptcha.SendCaptchaCode(phone,code,ext=str(id))
@@ -265,7 +341,7 @@ def captcha():
                 except Exception as e:
                     log_main.error(e)
                     print(e)
-                    # status 404 Unkown Error
+                    # status -404 Unkown Error
                     return json.dumps({
                         "id": id,
                         "status": -404,
