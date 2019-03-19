@@ -46,7 +46,7 @@ def SendCaptchaCode(phone_number:str, captcha:str,ext:str="")->dict:
     # 需要发送短信的手机号码
     # phone_numbers = ["13750687010","13958565395"]
     # 短信模板ID，需要在短信应用中申请
-    template_id = 292229  # 验证码模版id
+    template_id = 176189  # 验证码模版id
     # 签名
     # NOTE: 这里的签名"腾讯云"只是一个示例，真实的签名需要在短信控制台中申请，另外签名参数使用的是`签名内容`，而不是`签名ID`
     sms_sign = "码三秃"
