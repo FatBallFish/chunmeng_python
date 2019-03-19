@@ -54,7 +54,7 @@ def SendCaptchaCode(phone_number:str, captcha:str,ext:str="")->dict:
     # 模版参数，具体根据短信模版中定义的参数进行
     params = ["注册账号", captcha, 3]
     try:
-        result = ssender.send_with_param(86, phone_number, template_id, params, sign=sms_sign, extend="", ext=ext)
+        result = ssender.send_with_param(86, phone_number, params, sign=sms_sign, extend="", ext=ext)
         # 签名参数未提供或者为空时，会使用默认签名发送短信
     except HTTPError as e:
         # print(e)
