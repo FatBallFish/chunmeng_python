@@ -219,8 +219,8 @@ def captcha():
     try:
         keys = data.keys()
     except Exception as e:
-        # status -1 json的key错误。
-        return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+        # status -1 json的key错误。此处id是因为没有进行读取，所以返回默认的-1。
+        return json.dumps({"id": -1, "status": -1, "message": "Error JSON key", "data": {}})
 
     if "id" in data.keys():
         id = data["id"]
