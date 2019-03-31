@@ -21,7 +21,7 @@ print("Main FilePath:",Main_filepath)
 
 def Initialize(argv:list):
     """
-websockets 模块初始化，此函数应在所有命令之前调用
+模块初始化，此函数应在所有命令之前调用
     :param argv: 命令行参数表
     """
     # print("Enter the function")
@@ -168,7 +168,7 @@ def auto_del_code():
             imgcaptcha["TTL"] -= 3
             # print(imgcaptcha["hash"],imgcaptcha["TTL"])
         for smscaptcha in smscaptcha_list:
-            if r.sismember(r_imgsetname, smscaptcha["hash"]) == False:
+            if r.sismember(r_smssetname, smscaptcha["hash"]) == False:
                 print("smshash:[%s]had deleted" % smscaptcha["hash"])
                 smscaptcha_list.remove(smscaptcha)
                 continue
