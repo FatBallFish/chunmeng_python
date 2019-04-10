@@ -416,9 +416,9 @@ def portrait():
         elif subtype == "updata":
             pass
 
-@app.route("/")
-def index():
-    return render_template("img.html")
+# @app.route("/")
+# def index():
+#     return render_template("img.html")
 
 if __name__ == '__main__':
     # -------------------主程序初始化-------------------
