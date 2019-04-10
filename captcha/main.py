@@ -1,4 +1,4 @@
-from flask import Flask,request
+from flask import Flask,request,render_template
 from img import py_captcha_main as ImgCaptcha
 from sms import py_sms_main as SmsCaptcha
 from configparser import ConfigParser
@@ -8,6 +8,7 @@ import logging
 import sys,getopt
 import threading,time
 import os
+import base64
 
 app = Flask(__name__)
 imgcaptcha_list = []  #{"hash":hash,"TTL":180}
@@ -209,8 +210,8 @@ def SafeCheck(hash):
         return 0
     else:
         return -1
-@app.route("/captcha",methods=["POST"])
 
+@app.route("/captcha",methods=["POST"])
 def captcha():
     data = request.json
     print(data)
@@ -373,6 +374,51 @@ def captcha():
         # status -2 json的value错误。
         return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
 
+@app.route("/portrait",methods=["POST"])
+def portrait():
+    data = request.json
+    try:
+        keys = data.keys()
+    except Exception as e:
+        # status -1 json的key错误。此处id是因为没有进行读取，所以返回默认的-1。
+        return json.dumps({"id": -1, "status": -1, "message": "Error JSON key", "data": {}})
+
+    if "id" in data.keys():
+        id = data["id"]
+    else:
+        id = -1
+
+    # 判断指定所需字段是否存在，若不存在返回status -1 json。
+    for key in ["type", "subtype", "data"]:
+        if not key in data.keys():
+            # status -1 json的key错误。
+            return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+    type = data["type"]
+    subtype = data["subtype"]
+
+    # 处理json
+    if type == "portrait":
+        if subtype == "upload":
+            data = data["data"]
+            name = data["name"]
+            id = data["id"]
+            img_base64 = str(data["base64"])
+            img_base64 = img_base64.partition(";base64,")[2]
+            # print("-------接收到数据-------\n", img_base64, "\n-------数据结构尾-------")
+            type = data["type"]
+            img_file = base64.b64decode(img_base64)
+            # with open("./{}_{}.{}".format(id,name,type),"wb") as f:
+            #     f.write(img_file)
+            #     print("{}_{}.{}".format(id,name,type),"写出成功！")
+            # status 0 成功。
+            return json.dumps({"id": id, "status": 0, "message": "Successful", "data": {
+                "url": "https://www.baidu.com/img/xinshouye_46cc6be3783724af1729ba51cfcde494.png"}})
+        elif subtype == "updata":
+            pass
+
+@app.route("/")
+def index():
+    return render_template("img.html")
 
 if __name__ == '__main__':
     # -------------------主程序初始化-------------------

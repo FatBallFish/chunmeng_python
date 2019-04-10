@@ -23,9 +23,9 @@
 |subtype|请求子类型|请求|"subtype":"login"|
 |data|传送数据|请求、返回|"data":{"token":"xxxxxxxxxxxxx"}|
 
-> ## **用户操作类**
+## **验证码类**
 
-### API测试链接：https://www.zustservice.cn/api/external/captcha
+### 验证码API地址：https://www.zustservice.cn/api/external/captcha
 
 ### **登录图片验证码**
 + **POST发送请求的json文本**
@@ -181,24 +181,93 @@
 ```
 > ## 注意
 > `status`传递的错误码类型为整型。具体的错误码参照**腾讯云短信服务API文档**。
-> [短信错误码](https://cloud.tencent.com/document/product/382/3771 "腾讯云短信API文档")
+> [短信错误码
+
+
 
 ---
 
-## status表
-|参数|Message|内容|
-|:--:|:--:|:--:|
-|0|OK|函数处理正确|
-|-1|Error JSON key|json文本必需key缺失|
-|-2|Error JSON value|json文本value错误|
+
+
+## **头像类**
+
+### 头像API地址：https://www.zustservice.cn/api/external/portrait
+
+### **上传头像API**
+
+- **POST发送请求的json文本**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"portrait",
+    "subtype":"upload",
+    "data":{
+        "name":"string"
+        "id":"string"
+        "base64":"string"
+        "type":"string"
+    }
+}
+```
+
+- **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":{
+        "url":"https://www.zustservice.cn/XXX/XXX.png",
+    }
+}
+```
+
+> ## 注意
+>
+> 1. 目前所有的图片是放在与网站同服务器中，之后可能会放在专门的的文件服务器里
+> 2. 图片文件大小限制在1024kb以下
+> 3. type字段要准确
+> 4. 目前的api不会返回上传的图片路径，如果处理成功会返回百度的logo图片地址
+
+- **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":1000, # 错误码
+  "message":"验证码文件创建失败",
+  "data":{},
+}
+```
+
+
+
+------
+
+## Status表
+
+| 参数 |     Message      |         内容          |
+| :--: | :--------------: | :-------------------: |
+|  0   |        OK        |     函数处理正确      |
+|  -1  |  Error JSON key  |  json文本必需key缺失  |
+|  -2  | Error JSON value |   json文本value错误   |
 |  -3  |  Error data key  | data数据中必需key缺失 |
 |  -4  |    Error Hash    |   Hash校验文本错误    |
-|-404|Unknown Error|未知的Redis错误|
+| -404 |  Unknown Error   |    未知的Redis错误    |
 
----
+------
+
+> `status`传递的错误码类型为整型。
+>
+> 验证码相关的错误码详见最下方表格。[短信错误码表](https://cloud.tencent.com/document/product/382/3771 "腾讯云短信API文档")
+
+
 
 > ## Others
-> github里的例程已设置成本地测试。  
-> 若要修改成网络测试，将“main.py”第最后一行的host和port进行相应修改。  
-> 网络测试直接打开下列网址即可，已在服务器部署了服务。
-> [测试链接](https://www.zustservice.cn/api/external/captcha "码三秃")
+>
+> 头像API仅测试使用。
+>
+> 
