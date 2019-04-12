@@ -191,7 +191,7 @@
 
 ## **头像类**
 
-### 头像API地址：https://www.zustservice.cn/api/external/portrait
+### 头像上传API地址：https://www.zustservice.cn/api/external/portrait
 
 ### **上传头像API**
 
@@ -227,7 +227,7 @@
 
 > ## 注意
 >
-> 1. 目前所有的图片是放在与网站同服务器中，之后可能会放在专门的的文件服务器里
+> 1. 目前所有的头像图片是专门的COS对象储存服务器里
 > 2. 图片文件大小限制在1024kb以下
 > 3. type字段要准确
 > 4. 目前的api不会返回上传的图片路径，如果处理成功会返回百度的logo图片地址
@@ -241,6 +241,39 @@
   "message":"验证码文件创建失败",
   "data":{},
 }
+```
+
+
+
+### 头像获取API地址：https://www.zustservice.cn/api/external/get/portrait/<id>
+
+### **获取头像API**
+
+- **GET发送请求的链接参数**
+
+```python
+https://www.zustservice.cn/api/external/get/portrait/<id>
+    <id>:账号id
+```
+
+- **Python端返回成功处理情况**
+
+```python
+返回图片的bytes数据
+```
+
+> ## 注意
+>
+> 1. 目前所有的头像图片是放在专门的COS对象储存服务器里，非码三秃的域名无法获取图片
+> 2. id参数不正确将会返回error图片
+> 3. 若无任何返回则是后端炸了。
+
+- **Python端返回失败处理情况**
+
+```python
+1.非码三秃域名获取图片时：返回ban图片
+2.id参数不正确或者指定id图片不存在：返回error图片
+3.如果没有返回任何东西，就是后端炸了
 ```
 
 

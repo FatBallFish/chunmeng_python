@@ -15,6 +15,7 @@ def Initialize(cfg_path:str,main_path:str):
     """
 ImgCaptcha 模块初始化，此函数应在所有函数之前调用
     :param cfg_path: 配置文件地址。
+    :param main_path: 程序主目录地址。
     """
     # global path
     cf = configparser.ConfigParser()

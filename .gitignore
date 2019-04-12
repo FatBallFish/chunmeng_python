@@ -2,3 +2,5 @@
 __pycache__
 captcha/captcha/*.png
 *.log
+Api_Function
+templates

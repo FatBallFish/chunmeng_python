@@ -1,6 +1,7 @@
 from flask import Flask,request,render_template
 from img import py_captcha_main as ImgCaptcha
 from sms import py_sms_main as SmsCaptcha
+from COS import py_cos_main as COS
 from configparser import ConfigParser
 import random,MD5
 import json,redis
@@ -134,6 +135,8 @@ def Initialize(argv:list):
     # ------模块初始化------
     ImgCaptcha.Initialize(config_addr,Main_filepath)
     SmsCaptcha.Initialize(config_addr,Main_filepath)
+    COS.Initialize(config_addr,Main_filepath)
+
 
 class MyThread (threading.Thread):
     def __init__(self, threadID, name, counter):
@@ -401,12 +404,19 @@ def portrait():
         if subtype == "upload":
             data = data["data"]
             name = data["name"]
-            id = data["id"]
+            id2 = data["id"]  # 账号id
             img_base64 = str(data["base64"])
             img_base64 = img_base64.partition(";base64,")[2]
             # print("-------接收到数据-------\n", img_base64, "\n-------数据结构尾-------")
             type = data["type"]
             img_file = base64.b64decode(img_base64)
+            try:
+                COS.bytes_upload(img_file,"portrait/{}".format(id2))
+            except Exception as e:
+                print(e)
+                log_main.error(e)
+
+
             # with open("./{}_{}.{}".format(id,name,type),"wb") as f:
             #     f.write(img_file)
             #     print("{}_{}.{}".format(id,name,type),"写出成功！")
@@ -415,7 +425,36 @@ def portrait():
                 "url": "https://www.baidu.com/img/xinshouye_46cc6be3783724af1729ba51cfcde494.png"}})
         elif subtype == "updata":
             pass
-
+@app.route("/get/portrait/<id>")
+def get_portrait(id):
+    ip = request.remote_addr
+    # print("The client ip is :",ip)
+    # srchead = "data:;base64,"
+    # import base64
+    print("id:", id)
+    id = str(id)
+    if id.isdigit():
+        # print("Try to get portrait data:{}".format(id))
+        try:
+            data = COS.bytes_download("portrait/{}".format(id))
+        except Exception as e:
+            print(e)
+            log_main.error(e)
+            try:
+                data = COS.bytes_download("portrait/error")
+            except Exception as e:
+                print("Error:Can't load the error img.")
+                log_main.error("Error:Can't load the error img.")
+                data = ""
+        return data
+    else:
+        try:
+            data = COS.bytes_download("portrait/error")
+        except Exception as e:
+            print("Error:Can't load the error img.")
+            log_main.error("Error:Can't load the error img.")
+            data = ""
+        return data
 # @app.route("/")
 # def index():
 #     return render_template("img.html")
