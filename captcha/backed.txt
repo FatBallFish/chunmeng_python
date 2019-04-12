@@ -1,3 +1,0 @@
-/proc/self/fd/0
-
-./my.log
