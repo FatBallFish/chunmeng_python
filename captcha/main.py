@@ -422,7 +422,7 @@ def portrait():
             #     print("{}_{}.{}".format(id,name,type),"写出成功！")
             # status 0 成功。
             return json.dumps({"id": id, "status": 0, "message": "Successful", "data": {
-                "url": "https://www.baidu.com/img/xinshouye_46cc6be3783724af1729ba51cfcde494.png"}})
+                "url": "./api/external/get/portrait/{}".format(id2)}})
         elif subtype == "updata":
             pass
 @app.route("/get/portrait/<id>")
