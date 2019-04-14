@@ -412,8 +412,10 @@ def portrait():
             img_file = base64.b64decode(img_base64)
             try:
                 COS.bytes_upload(img_file,"portrait/{}".format(id2))
+                log_main.info("Add portrait for id:{}".format(id2))
             except Exception as e:
                 print(e)
+                log_main.error("Failed to add portrait for id:{}".format(id2))
                 log_main.error(e)
 
 
@@ -427,11 +429,11 @@ def portrait():
             pass
 @app.route("/get/portrait/<id>")
 def get_portrait(id):
-    ip = request.remote_addr
-    cookies = request.cookies
+    headers = request.headers
+    # access_route = request.access_route
     print("-"*10)
-    print("ip:",ip)
-    print("cookies:",cookies)
+    print("ip:",headers)
+    # print("access_route:",access_route)
     print("-"*10)
     # print("The client ip is :",ip)
     # srchead = "data:;base64,"
