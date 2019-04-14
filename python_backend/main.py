@@ -428,6 +428,11 @@ def portrait():
 @app.route("/get/portrait/<id>")
 def get_portrait(id):
     ip = request.remote_addr
+    cookies = request.cookies
+    print("-"*10)
+    print("ip:",ip)
+    print("cookies:",cookies)
+    print("-"*10)
     # print("The client ip is :",ip)
     # srchead = "data:;base64,"
     # import base64

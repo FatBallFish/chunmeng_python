@@ -2,4 +2,4 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-exec python -u $DIR/captcha/main.py "$@"
+exec python -u $DIR/python_backend/main.py "$@"
