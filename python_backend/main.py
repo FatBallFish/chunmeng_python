@@ -434,12 +434,26 @@ def get_portrait(id):
     print("-" * 10)
     try:
         realip = request.headers.get("X-Real-Ip")
-        print("real ip:{},type:{}".format(realip,type(realip)))
+        # print("real ip:{},type:{}".format(realip,type(realip)))
     except Exception as e:
         print(e)
     try:
-        referer = request.headers.get("Referer")
-        print("referer:{},type:{}".format(referer,type(referer)))
+        referer = str(request.headers.get("Referer"))
+        # print("referer:{},type:{}".format(referer, type(referer)))
+        index = referer.find("https://www.zustservice.cn/")
+        if index == -1:
+            print("External Domain Name : {} Reference Pictures Prohibited".format(referer))
+            try:
+                path = os.path.join(Main_filepath, "data/image/ban.jpg")
+                with open(path, "rb") as f:
+                    data = f.read()
+                # data = COS.bytes_download("portrait/error")
+            except Exception as e:
+                print("Error:Can't load the ban img.")
+                log_main.error("Error:Can't load the ban img.")
+                data = ""
+        return data
+
     except Exception as e:
         print(e)
 
