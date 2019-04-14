@@ -441,7 +441,8 @@ def get_portrait(id):
             print(e)
             log_main.error(e)
             try:
-                with open("./data/image/default.jpg","rb") as f :
+                path = os.path.join(Main_filepath,"data/image/default.jpg")
+                with open(path,"rb") as f :
                     data = f.read()
                 # data = COS.bytes_download("portrait/error")
             except Exception as e:
@@ -451,7 +452,8 @@ def get_portrait(id):
         return data
     else:
         try:
-            with open("./data/image/error.jpg","rb") as f:
+            path = os.path.join(Main_filepath, "data/image/error.jpg")
+            with open(path,"rb") as f:
                 data = f.read()
             # data = COS.bytes_download("portrait/error")
         except Exception as e:
