@@ -441,15 +441,19 @@ def get_portrait(id):
             print(e)
             log_main.error(e)
             try:
-                data = COS.bytes_download("portrait/error")
+                with open("./data/image/default.jpg","rb") as f :
+                    data = f.read()
+                # data = COS.bytes_download("portrait/error")
             except Exception as e:
-                print("Error:Can't load the error img.")
-                log_main.error("Error:Can't load the error img.")
+                print("Error:Can't load the default img.")
+                log_main.error("Error:Can't load the default img.")
                 data = ""
         return data
     else:
         try:
-            data = COS.bytes_download("portrait/error")
+            with open("./data/image/error.jpg","rb") as f:
+                data = f.read()
+            # data = COS.bytes_download("portrait/error")
         except Exception as e:
             print("Error:Can't load the error img.")
             log_main.error("Error:Can't load the error img.")
