@@ -440,8 +440,9 @@ def get_portrait(id):
     try:
         referer = str(request.headers.get("Referer"))
         # print("referer:{},type:{}".format(referer, type(referer)))
-        index = referer.find("https://www.zustservice.cn/")
-        if index == -1:
+        index1 = referer.find("https://www.zustservice.cn/")
+        index2 = referer.find("http://localhost/")
+        if index1 == -1 and index2 == -1:
             print("External Domain Name : {} Reference Pictures Prohibited".format(referer))
             try:
                 path = os.path.join(Main_filepath, "data/image/ban.jpg")
