@@ -245,7 +245,7 @@
 
 
 
-### 头像获取API地址：https://www.zustservice.cn/api/external/get/portrait/<id>
+### 头像获取API地址：https://www.zustservice.cn/api/external/get/portrait/< id >
 
 ### **获取头像API**
 
@@ -264,9 +264,10 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 > ## 注意
 >
-> 1. 目前所有的头像图片是放在专门的COS对象储存服务器里，非码三秃的域名无法获取图片
-> 2. id参数不正确将会返回error图片
-> 3. 若无任何返回则是后端炸了。
+> 1. 目前所有的头像图片是放在专门的COS对象储存服务器里，非码三秃的域名引用图片返回ban图片
+> 2. id参数类型正确但不存在，返回默认头像
+> 3. id参数类型不正确，返回error图片
+> 4. 若无任何返回则是后端炸了。
 
 - **Python端返回失败处理情况**
 
