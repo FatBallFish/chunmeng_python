@@ -32,10 +32,10 @@ COS 模块初始化，此函数应在所有函数之前调用
         region = str(cf.get("COS","region"))  # 替换为用户的region
         token = None  # 使用临时秘钥需要传入Token，默认为空,可不填
         bucket =  str(cf.get("COS","bucket"))
-        print("secret_id:",secret_id)
-        print("secret_key:",secret_key)
-        print("region:", region)
-        print("bucket:", bucket)
+        print("[COS]secret_id:",secret_id)
+        print("[COS]secret_key:",secret_key)
+        print("[COS]region:", region)
+        print("[COS]bucket:", bucket)
         config = CosConfig(Region=region, SecretId=secret_id, SecretKey=secret_key, Token=token)  # 获取配置对象
         client = CosS3Client(config)
     except Exception as e:

@@ -23,8 +23,8 @@ SmsCaptcha 模块初始化，此函数应在所有函数之前调用
     try:
         appid = str(cf.get("SmsCaptcha","appid"))
         appkey = str(cf.get("SmsCaptcha","appkey"))
-        print("appid:",appid)
-        print("addkey:",appkey)
+        print("[SmsCaptcha]appid:",appid)
+        print("[SmsCaptcha]addkey:",appkey)
     except Exception as e:
         log_sms.error("UnkownError:",e)
         print("UnkownError:",e)

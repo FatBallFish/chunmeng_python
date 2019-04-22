@@ -1,0 +1,26 @@
+CREATE TABLE lostproperty
+(
+    id bigint NOT NULL ,
+    state integer NOT NULL ,
+    lab character varying(50) NOT NULL ,
+    title character varying(20) NOT NULL ,
+    content character varying(200)  NOT NULL,
+    find_time timestamp NOT NULL,
+    finder_name character varying(20) NOT NULL,
+    finder_phone character varying(15) NOT NULL,
+    finder_qq character varying(15) NOT NULL,
+    loser_id character varying(15),
+    loser_name character varying(10) NOT NULL,
+    loser_phone character varying(15),
+    loser_qq character varying(15),
+    user_id character varying(15) NOT NULL,
+    publish_time timestamp  NOT NULL,
+    update_time timestamp  NOT NULL,
+    PRIMARY KEY (id)
+)
+WITH (
+    OIDS = FALSE
+);
+
+ALTER TABLE lostproperty
+    OWNER to postgres;

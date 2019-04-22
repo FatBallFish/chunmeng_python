@@ -2,6 +2,7 @@ from flask import Flask,request,render_template
 from img import py_captcha_main as ImgCaptcha
 from sms import py_sms_main as SmsCaptcha
 from COS import py_cos_main as COS
+from psql import py_postgresql as PSQL
 from configparser import ConfigParser
 import random,MD5
 import json,redis
@@ -10,6 +11,7 @@ import sys,getopt
 import threading,time
 import os
 import base64
+
 
 app = Flask(__name__)
 imgcaptcha_list = []  #{"hash":hash,"TTL":180}
@@ -84,10 +86,10 @@ def Initialize(argv:list):
             webdebug = True
         else:
             webdebug = False
-        print("log_outpath:",log_outpath)
-        print("webhost:",webhost)
-        print("webport:", webport)
-        print("webdebug:", webdebug)
+        print("[Main]log_outpath:",log_outpath)
+        print("[Main]webhost:",webhost)
+        print("[Main]webport:", webport)
+        print("[Main]webdebug:", webdebug)
     except Exception as e:
         print("Error")
     logging.basicConfig(filename=log_outpath, level=logging.INFO,
@@ -103,11 +105,11 @@ def Initialize(argv:list):
         global r_imgsetname,r_smssetname
         r_imgsetname = cf.get("Redis","img_setname")  #TODO global setname
         r_smssetname = cf.get("Redis","sms_setname")
-        print("RedisHost:",r_host)
-        print("RedisPort:", r_port)
-        print("RedisDB:", r_db)
-        print("RedisImgsetname:", r_imgsetname)
-        print("RRedisSmssetname:", r_smssetname)
+        print("[Redis]Host:",r_host)
+        print("[Redis]Port:", r_port)
+        print("[Redis]DB:", r_db)
+        print("[Redis]Imgsetname:", r_imgsetname)
+        print("[Redis]Smssetname:", r_smssetname)
     except Exception as e:
         log_main.error(e)
         print(e)
@@ -136,6 +138,7 @@ def Initialize(argv:list):
     ImgCaptcha.Initialize(config_addr,Main_filepath)
     SmsCaptcha.Initialize(config_addr,Main_filepath)
     COS.Initialize(config_addr,Main_filepath)
+    PSQL.Initialize(config_addr,Main_filepath)
 
 
 class MyThread (threading.Thread):
@@ -431,6 +434,11 @@ def portrait():
             pass
 @app.route("/get/portrait/<id>")
 def get_portrait(id):
+    """
+获取头像API。GET请求。
+    :param id: 用户id
+    :return: 见开发文档
+    """
     print("-" * 10)
     try:
         realip = request.headers.get("X-Real-Ip")
@@ -492,6 +500,161 @@ def get_portrait(id):
             log_main.error("Error:Can't load the error img.")
             data = ""
         return data
+@app.route("/property/find",methods=["POST"])
+def findproperty():
+    try:
+        token = request.args["token"]
+    except Exception as e:
+        print("Missing necessary args")
+        log_main.error("Missing necessary agrs")
+        # status -100 缺少必要的参数
+        return json.dumps({"id":-100,"status":1,"message":"Missing necessary args","data":{}})
+    token_check_result = PSQL.CheckToken(token)
+    if token_check_result == False:
+        # status -101 token不正确
+        return json.dumps({"id": -101, "status": 0, "message": "Error token", "data": {}})
+    # 验证身份完成，处理数据
+    data = request.json
+    print(data)
+
+    # 先获取json里id的值，若不存在，默认值为-1
+    try:
+        keys = data.keys()
+    except Exception as e:
+        # status -1 json的key错误。此处id是因为没有进行读取，所以返回默认的-1。
+        return json.dumps({"id": -1, "status": -1, "message": "Error JSON key", "data": {}})
+
+    if "id" in data.keys():
+        id = data["id"]
+    else:
+        id = -1
+
+    # 判断指定所需字段是否存在，若不存在返回status -1 json。
+    for key in ["type", "subtype", "data"]:
+        if not key in data.keys():
+            # status -1 json的key错误。
+            return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+    type = data["type"]
+    subtype = data["subtype"]
+    if type == "property":
+        if subtype == "add":
+            data = data["data"]
+            find_dict={
+                "id":-1,
+                "state":-1,
+                "lab":"",
+                "title":"",
+                "content":"",
+                "lost_time":"",
+                "loser_name":"",
+                "loser_phone":"",
+                "loser_qq":"",
+                "finder_id":"",
+                "finder_name":"",
+                "finder_phone":"",
+                "finder_qq":"",
+                "user_id":"",
+                "publish_time":"",
+                "update_time":"",
+            }
+            # -------定义缺省字段初始值-------
+            find_dict["state"] = 0
+            uid = int(time.time())
+            print("uid:", uid)
+            find_dict["id"] = uid
+            user_id = PSQL.GetUserID(token)
+            print("user_id:",user_id)
+            if user_id == None or user_id == "":
+                # status -102 Necessary args can't be empty
+                return json.dumps(
+                    {"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
+            else:
+                find_dict["user_id"] = user_id
+            find_dict["update_time"] = time.localtime()
+            # -------开始读取其他信息-------
+            for key in data.keys():
+                if key not in find_dict.keys():
+                    # status -1 json的key错误。
+                    return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+
+                if key == "lab":
+                    if data["lab"] == "":
+                        # status -201 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    find_dict["lab"] = data["lab"]
+                elif key == "title":
+                    if data["title"] == "":
+                        # status -201 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    find_dict["title"] = data["title"]
+                elif key == "content":
+                    if data["content"] == "":
+                        # status -201 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    find_dict["content"] = data["content"]
+                elif key == "lost_time":
+                    if data["lost_time"] == "":
+                        data["lost_time"] = time.localtime()
+                    find_dict["lost_time"] = data["lost_time"]
+                elif key == "loser_name":
+                    if data["loser_name"] == "":
+                        # status -201 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    find_dict["loser_name"] = data["loser_name"]
+                elif key == "loser_phone":
+                    find_dict["loser_phone"] = data["loser_phone"]
+                elif key == "loser_qq":
+                    find_dict["loser_qq"] = data["loser_qq"]
+                elif key == "finder_name":
+                    find_dict["finder_name"] = data["finder_name"]
+                elif key == "finder_phone":
+                    find_dict["finder_phone"] = data["finder_phone"]
+                elif key == "finder_qq":
+                    find_dict["finder_qq"] = data["finder_qq"]
+                elif key == "user_id":
+                    if data["user_id"] == "":
+                        # status -201 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    find_dict["user_id"] = data["user_id"]
+                elif key == "publish_time":
+                    if data["publish_time"] == "":
+                        data["publish_time"] = time.localtime()
+                    find_dict["publish_time"] = data["publish_time"]
+                elif key == "update_time":
+                    if data["update_time"] == "":
+                        data["update_time"] = data["publish_time"]
+                    find_dict["update_time"] = data["update_time"]
+                else:
+                    find_dict[key] = data[key]
+                    print("Unkown key and value:[{},{}]".format(key,data[key]))
+                    log_main.warning("Unkown key and value:[{},{}]".format(key,data[key]))
+
+            try:
+                result = PSQL.InsertFindProperty(**find_dict)
+            except:
+                # status -200 数据库操作失败。
+                return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
+            if result == True :
+                # status 0 添加记录成功
+                return json.dumps({"id": id, "status": 0, "message": "successful", "data": {}})
+            else:
+                # status -200 数据库操作失败。
+                return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
+
+            #todo 读寻物启事信息
+        elif subtype == "update":
+            pass
+        elif subtype == "delete":
+            pass
+        else:
+            # status -2 json的value错误。
+            return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
+    else:
+        # status -2 json的value错误。
+        return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
+
+
+
 # @app.route("/")
 # def index():
 #     return render_template("img.html")
