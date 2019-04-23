@@ -379,7 +379,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 ### GET寻物启事API地址：
 
-> https://www.zustservice.cn/api/external/property/find
+> https://www.zustservice.cn/api/external/get/property/find
 
 > **默认按照更新时间的降序排列**
 

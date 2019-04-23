@@ -654,8 +654,8 @@ def findproperty():
         # status -2 json的value错误。
         return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
 
-@app.route("/get/proerty/find",methods=["GET"])
-def get_findperty():
+@app.route("/get/property/find",methods=["GET"])
+def get_findproperty():
     try:
         token = request.args["token"]
     except Exception as e:
