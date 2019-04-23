@@ -26,7 +26,7 @@ data={
         "publish_time":"",
     }}
 token = "9763393e42ef2b8f051caefbec8a522f31a38663a7180d69d1a9cb1addaa76ac"
-response = requests.post(url="http://127.0.0.1:4081/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
 
 
 print(response.text)

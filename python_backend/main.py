@@ -256,7 +256,7 @@ def captcha():
             try:
                 r.sadd(r_imgsetname,hash)
                 imgcaptcha_list.append({"hash":hash,"TTL":180})
-                # todo 加入验证机制
+                # todo 优化验证机制
             except Exception as e:
                 log_main.error(e)
                 print(e)
@@ -342,9 +342,9 @@ def captcha():
                     rand_str += char1
                 hash = MD5.md5(code, salt=rand_str)
                 try:
-                    r.sadd(r_smssetname,hash)  #todo
+                    r.sadd(r_smssetname,hash)
                     smscaptcha_list.append({"hash": hash, "TTL": 180})
-                    # todo 加入验证机制
+                    # todo 优化验证机制
                 except Exception as e:
                     log_main.error(e)
                     print(e)
@@ -508,11 +508,11 @@ def findproperty():
         print("Missing necessary args")
         log_main.error("Missing necessary agrs")
         # status -100 缺少必要的参数
-        return json.dumps({"id":-100,"status":1,"message":"Missing necessary args","data":{}})
+        return json.dumps({"id":-1,"status":-100,"message":"Missing necessary args","data":{}})
     token_check_result = PSQL.CheckToken(token)
     if token_check_result == False:
         # status -101 token不正确
-        return json.dumps({"id": -101, "status": 0, "message": "Error token", "data": {}})
+        return json.dumps({"id": -1, "status": -101, "message": "Error token", "data": {}})
     # 验证身份完成，处理数据
     data = request.json
     print(data)
@@ -641,10 +641,11 @@ def findproperty():
                 # status -200 数据库操作失败。
                 return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
 
-            #todo 读寻物启事信息
         elif subtype == "update":
+            # todo 设计数据更新api
             pass
         elif subtype == "delete":
+            # todo 设计数据删除api
             pass
         else:
             # status -2 json的value错误。
@@ -652,6 +653,78 @@ def findproperty():
     else:
         # status -2 json的value错误。
         return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
+
+@app.route("/get/proerty/find",methods=["GET"])
+def get_findperty():
+    try:
+        token = request.args["token"]
+    except Exception as e:
+        print("Missing necessary args")
+        log_main.error("Missing necesxsary agrs")
+        # status -100 缺少必要的参数
+        return json.dumps({"id": -1, "status": -100, "message": "Missing necessary args", "data": {}})
+    token_check_result = PSQL.CheckToken(token)
+    if token_check_result == False:
+        # status -101 token不正确
+        return json.dumps({"id": -1, "status": -101, "message": "Error token", "data": {}})
+    # 验证身份完成，处理数据
+    find_dict = {
+        "id": -1,
+        "state": -1,
+        "lab": "",
+        "title": "",
+        "content": "",
+        "lost_time": "",
+        "loser_name": "",
+        "loser_phone": "",
+        "loser_qq": "",
+        "finder_id": "",
+        "finder_name": "",
+        "finder_phone": "",
+        "finder_qq": "",
+        "user_id": "",
+        "publish_time": "",
+        "update_time": "",
+    }
+    args_dict = dict(request.args)
+    # print("value:",args_dict.keys(),"type:",type(args_dict))
+    num = len(args_dict.keys())
+    print("have {} args".format(num))
+    if num == 1 :
+        record_num, data_list = PSQL.GetFindProperty("")
+        print("GET find proerty all,totally: {} record".format(record_num))
+        # status 0 成功处理数据
+        return json.dumps({"id":-1,"status":0,"message":"successful","data":data_list},ensure_ascii=False)
+    else:
+        # 情况一
+        if num == 2 and "key" in args_dict.keys():
+            record_num, data_list = PSQL.GetFindProperty(args_dict["key"])
+            print("GET find proerty,totally: {} record".format(record_num))
+            # status 0 成功处理数据
+            return json.dumps({"id": -1, "status": 0, "message": "successful", "data": data_list}, ensure_ascii=False)
+        # 情况二
+        if num > 2 and "key" in args_dict.keys():
+            # status -103 Args conflict
+            return json.dumps({"id": -1, "status": -103, "message": "Args conflict", "data": {}})
+        # 情况三
+        sql_dict = {}
+        for key in args_dict.keys():
+            if key == "token":
+                continue
+            if key not in find_dict.keys():
+                # status -100 Args Error
+                return json.dumps({"id":-1,"status":-100,"message":"Args Error","data":{}})
+            sql_dict[key] = str(args_dict[key])
+            if key == "id" or key == "state":
+                if sql_dict[key].isdigit():
+                    sql_dict[key] = int(sql_dict[key])
+                else:
+                    # status -101 Args Type Error
+                    return json.dumps({"id": -1, "status": -101, "message": "Args Type Error", "data": {}})
+        record_num, data_list = PSQL.GetFindProperty("",**sql_dict)
+        print("GET find proerty,totally: {} record".format(record_num))
+        # status 0 成功处理数据
+        return json.dumps({"id": -1, "status": 0, "message": "successful", "data": data_list},ensure_ascii=False)
 
 
 

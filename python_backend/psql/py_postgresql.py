@@ -141,26 +141,91 @@ def GetUserID(token)->str:
         print("[CheckToken]Illegal quantity of token")
         return ""
 
+def GetFindProperty(key:str,**find_dict)->tuple:
+    if key == None or key == "":
+        if len(find_dict.keys()) == 0:
+            sql = "SELECT * FROM findproperty ORDER BY update_time DESC "
+        else:
+            sql = "SELECT * FROM findproperty WHERE "
+            for key in find_dict.keys():
+                if type(find_dict[key]) == int:
+                    sql = sql + key + "=" + str(find_dict[key]) + " AND "
+                elif type(find_dict[key]) == str:
+                    sql = sql + key + " LIKE '%" + find_dict[key] + "%' AND "
+                elif type(find_dict[key]) == time.struct_time:
+                    sql = sql + key + "='" + time.strftime("%Y-%m-%d %H:%M:%S", find_dict[key]) + "' AND "
+                else:
+                    print("key:", key, "type:", type(find_dict[key]))
+            else:
+                sql = sql.rpartition("AND")[0]
+                sql = sql + "ORDER BY update_time DESC"
+    else:
+        if len(find_dict.keys()) != 0:
+            print("Error,key can't be used when other args appeared.")
+            return (-1,"")
+        sql = "SELECT * FROM findproperty WHERE lab LIKE '%{0}%' OR title LIKE '%{0}%' OR content LIKE '%{0}%' " \
+              "ORDER BY update_time DESC".format(key)
+    print("GetFindProperty_SQL:",sql)
+    cur = conn.cursor()
+    cur.execute(sql)
+    rows = cur.fetchall()
+    num = len(rows)
+    # print("总共有{}条记录".format(len(rows)))
+    date_list = []
+    for row in rows:
+        # print(row)
+        find_dict = {
+            "id": -1,
+            "state": -1,
+            "lab": "",
+            "title": "",
+            "content": "",
+            "lost_time": "",
+            "loser_name": "",
+            "loser_phone": "",
+            "loser_qq": "",
+            "finder_id": "",
+            "finder_name": "",
+            "finder_phone": "",
+            "finder_qq": "",
+            "user_id": "",
+            "publish_time": "",
+            "update_time": "",
+        }
+        i = 0
+        for key in find_dict:
+            if key == "lost_time" or key == "publish_time" or key == "update_time":
+                find_dict[key] = str(row[i])
+                i += 1
+                continue
+            find_dict[key] = row[i]
+            i += 1
+        date_list.append(find_dict)
+        # print("datalist：",date_list)
+    print("datalist：", date_list)
+    return (num,date_list)
 
 if __name__ == '__main__':
     Initialize("../config.ini",os.path.dirname(os.path.abspath(__file__)))
     result = CheckToken("9763393e42ef2b8f051caefbec8a522f31a38663a7180d69d1a9cb1addaa76ac")
-    find_dict = {
-        "state": -1,
-        "lab": "a",
-        "title": "b",
-        "content": "c",
-        "find_time": "d",
-        "loser_name": "e",
-        "loser_phone": "f",
-        "loser_qq": "g",
-        "finder_name": "h",
-        "finder_phone": "i",
-        "finder_qq": "j",
-        "user_id": "k",
-        "publish_time": time.localtime(),
-        "update_time": "m",
-    }
-    InsertFindProperty(**find_dict)
     print(result)
+    # find_dict = {
+    #     "state": -1,
+    #     "lab": "a",
+    #     "title": "b",
+    #     "content": "c",
+    #     "find_time": "d",
+    #     "loser_name": "e",
+    #     "loser_phone": "f",
+    #     "loser_qq": "g",
+    #     "finder_name": "h",
+    #     "finder_phone": "i",
+    #     "finder_qq": "j",
+    #     "user_id": "k",
+    #     "publish_time": time.localtime(),
+    #     "update_time": "m",
+    # }
+    # InsertFindProperty(**find_dict)
+    print(GetFindProperty("我丢了个许淳皓"))
+
     conn.close()

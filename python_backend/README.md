@@ -295,7 +295,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 ## **寻物启事·失物招领类**
 
-### 寻物启事API地址：
+### POST寻物启事API地址：
 
 > https://www.zustservice.cn/api/external/property/find?token={token值}
 
@@ -322,9 +322,11 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 }
 ```
 
++ data字段表
+
 |     参数     | 可否为空 | 可否缺省 |    数据类型     |         例子          |                     备注                      |
 | :----------: | :------: | -------- | :-------------: | :-------------------: | :-------------------------------------------: |
-|      id      |    √     | √        |     bigint      |                       |         文章id，唯一性，后端自动生成          |
+|      id      |    √     | √        |     bigint      |                       |          文章id，主键，后端自动生成           |
 |    state     |    √     | √        |       int       |                       |            0为正在进行，1为已结束             |
 |     lab      |          |          |     string      |        "测试"         |                                               |
 |    title     |          |          |     string      |      "测试标题"       |                                               |
@@ -375,7 +377,61 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 | -200   | Connect Database Failed            | 数据库操作失败，检查SQL语句是否正确 |
 | -201   | Necessary key-value can't be empty | 关键键值对值不可为空                |
 
+### GET寻物启事API地址：
 
+> https://www.zustservice.cn/api/external/property/find
+
+> **默认按照更新时间的降序排列**
+
++ 参数表
+
+| 参数  |   缺省   |                           说明                            |        备注        |
+| :---: | :------: | :-------------------------------------------------------: | :----------------: |
+| token | 必要参数 |                         用户token                         |                    |
+|  key  | 可选参数 | 关键词检索，检索的字段包括id,lab，title，content，user_id | 不可与下方参数共用 |
+|  id   | 可选参数 |                      寻物启事id检索                       | 不可与key参数共用  |
+| state | 可选参数 |                     寻物启事state检索                     | 不可与key参数共用  |
+|  lab  | 可选参数 |                     寻物启事标签检索                      | 不可与key参数共用  |
+|  ...  | 可选参数 |            其他字段详情请参照上方的data字段表             | 不可与key参数共用  |
+
+- **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":[{"id": 1555943163, "state": 0, "lab": "测试", "title": "测试标题", "content": "我找到一件东西", "lost_time": "2019-04-22 16:17:42", "loser_name": "王凌超", "loser_phone": "", "loser_qq": "893721708", "finder_id": "", "finder_name": "", "finder_phone": "", "finder_qq": "", "user_id": "1180310086", "publish_time": "2019-04-22 22:26:03", "update_time": "2019-04-22 22:26:03"}]
+}
+```
+
+- **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
+> 1. 与其他api返回的数据不同的是，data返回的是一个列表，而非一个字典，注意区分处理。
+>
+> 2. 语法正确但数据库无记录的话，data返回一个空列表，即`data:[]`
+> 3. 此查询语句可进行关键字查询、精确查询
+>    1. 关键字查询：在`lab`、`title`、`content`中模糊查找符合关键字的数据
+>    2. 精确查询，在指定的字段进行查询，其中`id`，`status`以及`lost_time`、`publish_time`、`update_time`等字段为精确查找，其余字段为模糊查找
+
+
+
++ 局部status表
+
+| status |     message     |                内容                |
+| :----: | :-------------: | :--------------------------------: |
+|  -100  |   Args Error    |       GET请求中参数名不正确        |
+|  -101  | Args Type Error |           参数值类型错误           |
+|  -103  |  Args conflict  | 同时使用了key参数和其他非token参数 |
 
 ------
 
