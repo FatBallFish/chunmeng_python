@@ -324,24 +324,24 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 + data字段表
 
-|     参数     | 可否为空 | 可否缺省 |    数据类型     |         例子          |                     备注                      |
-| :----------: | :------: | -------- | :-------------: | :-------------------: | :-------------------------------------------: |
-|      id      |    √     | √        |     bigint      |                       |          文章id，主键，后端自动生成           |
-|    state     |    √     | √        |       int       |                       |            0为正在进行，1为已结束             |
-|     lab      |          |          |     string      |        "测试"         |                                               |
-|    title     |          |          |     string      |      "测试标题"       |                                               |
-|   content    |          |          |     string      |   "我找到一件东西"    |                                               |
-|  lost_time   |    √     |          | datetime-string | "2019-04-22 16:17:42" | 需要是日期时间型文本，为空默认为信息发布时间  |
-|  loser_name  |          |          |     string      |       "王凌超"        |                                               |
-| loser_phone  |    √     |          |     string      |       "123456"        |                                               |
-|   loser_qq   |    √     |          |     string      |      "893721708"      |                                               |
-|  finder_id   |    √     | √        |     string      |                       |              找到者id，该api不用              |
-| finder_name  |    √     | √        |     string      |                       |             找到者姓名，该api不用             |
-| finder_phone |    √     | √        |     string      |                       |             找到者手机，该api不用             |
-|  finder_qq   |    √     | √        |     string      |                       |              找到者qq，该api不用              |
-|   user_id    |    √     | √        |     string      |     "1180310086"      |      发起者用户id，后端自动通过token获取      |
-| publish_time |    √     |          | datetime-string | "2019-04-22 16:17:42" |      建议为空。为空自动为服务器当前时间       |
-| update_time  |    √     | √        | datetime-string | "2019-04-22 16:17:42" | 更新时间，该api不用，且创建时默认等于发布时间 |
+|     参数     | 可否为空 | 可否缺省 |    数据类型     |         例子          | 字段长度限制 |                     备注                      |
+| :----------: | :------: | -------- | :-------------: | :-------------------: | :----------: | :-------------------------------------------: |
+|      id      |    √     | √        |     bigint      |                       |  -2^31~2^31  |          文章id，主键，后端自动生成           |
+|    state     |    √     | √        |       int       |                       |  -2^15~2^15  |            0为正在进行，1为已结束             |
+|     lab      |          |          |     string      |        "测试"         |      50      |                                               |
+|    title     |          |          |     string      |      "测试标题"       |      20      |                                               |
+|   content    |          |          |     string      |   "我找到一件东西"    |     200      |                                               |
+|  lost_time   |    √     |          | datetime-string | "2019-04-22 16:17:42" |              | 需要是日期时间型文本，为空默认为信息发布时间  |
+|  loser_name  |          |          |     string      |       "王凌超"        |      10      |                                               |
+| loser_phone  |    √     |          |     string      |       "123456"        |      15      |                                               |
+|   loser_qq   |    √     |          |     string      |      "893721708"      |      15      |                                               |
+|  finder_id   |    √     | √        |     string      |                       |      15      |              找到者id，该api不用              |
+| finder_name  |    √     | √        |     string      |                       |      20      |             找到者姓名，该api不用             |
+| finder_phone |    √     | √        |     string      |                       |      15      |             找到者手机，该api不用             |
+|  finder_qq   |    √     | √        |     string      |                       |      15      |              找到者qq，该api不用              |
+|   user_id    |    √     | √        |     string      |     "1180310086"      |      15      |      发起者用户id，后端自动通过token获取      |
+| publish_time |    √     |          | datetime-string | "2019-04-22 16:17:42" |              |      建议为空。为空自动为服务器当前时间       |
+| update_time  |    √     | √        | datetime-string | "2019-04-22 16:17:42" |              | 更新时间，该api不用，且创建时默认等于发布时间 |
 
 
 
@@ -378,6 +378,84 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 | -201   | Necessary key-value can't be empty | 关键键值对值不可为空                |
 | -202   | Missing necessary data key-value   | 缺少关键的键值对                    |
 | -203   | Arg's value type error             | 键值对数据类型错误                  |
+
+
+
+#### **更新寻物启事文章API**
+
+- **POST发送请求的json文本**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"property",
+    "subtype":"update",
+    "data":{
+        "id":12334567, # 文章id
+        "title":"测试标题", # 文章标题
+        "content":"我找到一件东西", # 文章内容
+    }
+}
+```
+
+- data字段表
+
+|     参数     | 可否为空 | 可否缺省 |    数据类型     |         例子          | 字段长度限制 |                           备注                           |
+| :----------: | :------: | -------- | :-------------: | :-------------------: | :----------: | :------------------------------------------------------: |
+|      id      |          |          |     bigint      |                       |  -2^31~2^31  |                     文章id，不可修改                     |
+|    state     |          | √        |       int       |                       |  -2^15~2^15  |                  0为正在进行，1为已结束                  |
+|     lab      |          | √        |     string      |    "卡类\|一卡通"     |      50      |               标签，用“ \| ” 进行分割文本                |
+|    title     |          | √        |     string      |      "测试标题"       |      20      |                           标题                           |
+|   content    |          | √        |     string      |   "我找到一件东西"    |     200      |                         丢失详情                         |
+|  lost_time   |    √     | √        | datetime-string | "2019-04-22 16:17:42" |              |     丢失时间，日期时间型文本，为空默认为信息发布时间     |
+|  loser_name  |          | √        |     string      |       "王凌超"        |      10      |                        丢失者姓名                        |
+| loser_phone  |    √     | √        |     string      |       "123456"        |      15      |                      丢失者手机号码                      |
+|   loser_qq   |    √     | √        |     string      |      "893721708"      |      15      |                         丢失者qq                         |
+|  finder_id   |    √     | √        |     string      |     “1180310085”      |      15      |                         找到者id                         |
+| finder_name  |    √     | √        |     string      |       “码三秃”        |      20      |                        找到者姓名                        |
+| finder_phone |    √     | √        |     string      |     “1216515656”      |      15      |                        找到者手机                        |
+|  finder_qq   |    √     | √        |     string      |      “15448486”       |      15      |                         找到者qq                         |
+|   user_id    |    √     | √        |     string      |     "1180310086"      |      15      |        发起者用户id，不填写后端自动读取，不可修改        |
+| update_time  |    √     | √        | datetime-string | "2019-04-22 16:17:42" |              | 更新时间，日期时间型文本，为空或缺省默认为服务器当前时间 |
+
+
+
+- **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":{"uid":文章uid # 长整数型}
+}
+```
+
+- **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-200, # 错误码
+  "message":"Connect Database Failed",
+  "data":{},
+}
+```
+
+#### 局部status表
+
+| status | message                            | 内容                                |
+| ------ | ---------------------------------- | ----------------------------------- |
+| -100   | Missing necessary args             | api地址中缺少token参数              |
+| -101   | Error token                        | token不正确                         |
+| -102   | Get userid failed for the token    | 使用该token获取userid失败           |
+| -200   | Connect Database Failed            | 数据库操作失败，检查SQL语句是否正确 |
+| -201   | Necessary key-value can't be empty | 关键键值对值不可为空                |
+| -202   | Missing necessary data key-value   | 缺少关键的键值对                    |
+| -203   | Arg's value type error             | 键值对数据类型错误                  |
+
+
 
 ### GET寻物启事API地址：
 

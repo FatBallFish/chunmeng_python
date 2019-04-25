@@ -29,6 +29,22 @@ headers = {'content-type': "application/json"}
 # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
 
 ## 更新寻物启事api
+# data={
+#     "id":0,
+#     "status":0,
+#     "type":"property",
+#     "subtype":"update",
+#     "data":{
+#         "id":1555943163,
+#         "lab":"一卡通",
+#         "title":"我丢了一张一卡通",
+#         "content":"在9#教学楼206丢失一个一卡通",
+#         "lost_time":"2019-04-26 0:18:30",
+#         "loser_name":"王凌超",
+#         "loser_phone":"13750687010",
+#         "loser_qq":"893721708",
+#         "publish_time":"",
+#     }}
 data={
     "id":0,
     "status":0,
@@ -36,17 +52,12 @@ data={
     "subtype":"update",
     "data":{
         "id":1555943163,
-        "lab":"卡类",
-        "title":"丢失一卡通",
-        "content":"在9#教学楼201丢失一个一卡通",
-        "lost_time":"2019-04-25 21:05:30",
-        "loser_name":"王凌超",
-        "loser_phone":"13750687010",
-        "loser_qq":"893721708",
-        "publish_time":"",
+        "title":"我丢了一张一卡通",
+        "content":"我丢了一张校园卡",
     }}
 token = "9763393e42ef2b8f051caefbec8a522f31a38663a7180d69d1a9cb1addaa76ac"
 response = requests.post(url="http://127.0.0.1:4081/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+# response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
 
 
 

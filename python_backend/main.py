@@ -649,7 +649,8 @@ def findproperty():
             # find_dict字典模版已放在外部
 
             # -------定义缺省字段初始值-------
-            find_dict["state"] = 0
+            update_dict = {}
+            # find_dict["state"] = 0
             user_id = PSQL.GetUserID(token)
             print("user_id:", user_id)
             if user_id == None or user_id == "":
@@ -657,22 +658,35 @@ def findproperty():
                 return json.dumps(
                     {"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
             else:
-                find_dict["user_id"] = user_id
-            find_dict["update_time"] = time.localtime()
+                # find_dict["user_id"] = user_id
+                update_dict["user_id"] = user_id
+            if "id" not in data.keys():
+                # status -202 Missing necessary data key-value
+                return json.dumps(
+                    {"id": id, "status": -202, "message": "Missing necessary data key-value", "data": {}})
+            # find_dict["update_time"] = time.localtime()
+            update_dict["update_time"] = time.localtime()
             # -------开始读取其他信息-------
             for key in data.keys():
                 if key not in find_dict.keys():
                     # status -1 json的key错误。
                     return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
-                if "id" not in data.keys():
-                    # status -202 Missing necessary data key-value
-                    return json.dumps(
-                        {"id": id, "status": -202, "message": "Missing necessary data key-value", "data": {}})
                 if key == "id":
                     uid = str(data["id"])
                     if uid.isdigit():
                         uid = int(uid)
-                        find_dict["id"] = uid
+                        # find_dict["id"] = uid
+                        update_dict["id"] = uid
+                    else:
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    continue
+                elif key == "state":
+                    state = str(data["state"])
+                    if state.isdigit():
+                        state = int(state)
+                        # find_dict["state"] = state
+                        update_dict["state"] = state
                     else:
                         # status -203 Arg's value type error
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
@@ -682,72 +696,79 @@ def findproperty():
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    find_dict["lab"] = data["lab"]
+                    # find_dict["lab"] = data["lab"]
+                    update_dict["lab"] = data["lab"]
                     continue
                 elif key == "title":
                     if data["title"] == "":
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    find_dict["title"] = data["title"]
+                    # find_dict["title"] = data["title"]
+                    update_dict["title"] = data["title"]
                     continue
                 elif key == "content":
                     if data["content"] == "":
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    find_dict["content"] = data["content"]
+                    # find_dict["content"] = data["content"]
+                    update_dict["content"] = data["content"]
                     continue
                 elif key == "lost_time":
                     if data["lost_time"] == "":
                         data["lost_time"] = time.localtime()
-                    find_dict["lost_time"] = data["lost_time"]
+                    # find_dict["lost_time"] = data["lost_time"]
+                    update_dict["lost_time"] = data["lost_time"]
                     continue
                 elif key == "loser_name":
                     if data["loser_name"] == "":
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    find_dict["loser_name"] = data["loser_name"]
+                    # find_dict["loser_name"] = data["loser_name"]
+                    update_dict["loser_name"] = data["loser_name"]
                     continue
                 elif key == "loser_phone":
-                    find_dict["loser_phone"] = data["loser_phone"]
+                    # find_dict["loser_phone"] = data["loser_phone"]
+                    update_dict["loser_phone"] = data["loser_phone"]
                     continue
                 elif key == "loser_qq":
-                    find_dict["loser_qq"] = data["loser_qq"]
+                    # find_dict["loser_qq"] = data["loser_qq"]
+                    update_dict["loser_qq"] = data["loser_qq"]
                     continue
                 elif key == "finder_name":
-                    find_dict["finder_name"] = data["finder_name"]
+                    # find_dict["finder_name"] = data["finder_name"]
+                    update_dict["finder_name"] = data["finder_name"]
                     continue
                 elif key == "finder_phone":
-                    find_dict["finder_phone"] = data["finder_phone"]
+                    # find_dict["finder_phone"] = data["finder_phone"]
+                    update_dict["finder_phone"] = data["finder_phone"]
                     continue
                 elif key == "finder_qq":
-                    find_dict["finder_qq"] = data["finder_qq"]
+                    # find_dict["finder_qq"] = data["finder_qq"]
+                    update_dict["finder_qq"] = data["finder_qq"]
                     continue
                 elif key == "user_id":
                     if data["user_id"] == "":
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    find_dict["user_id"] = data["user_id"]
-                    continue
-                elif key == "publish_time":
-                    if data["publish_time"] == "":
-                        data["publish_time"] = time.localtime()
-                    find_dict["publish_time"] = data["publish_time"]
+                    # find_dict["user_id"] = data["user_id"]
+                    update_dict["user_id"] = data["user_id"]
                     continue
                 elif key == "update_time":
                     if data["update_time"] == "":
                         data["update_time"] = data["publish_time"]
-                    find_dict["update_time"] = data["update_time"]
+                    # find_dict["update_time"] = data["update_time"]
+                    update_dict["update_time"] = data["update_time"]
                     continue
                 else:
                     find_dict[key] = data[key]
                     print("Unkown key and value:[{},{}]".format(key, data[key]))
                     log_main.warning("Unkown key and value:[{},{}]".format(key, data[key]))
             try:
-                result = PSQL.UpdateFindProperty(**find_dict)
+                result = PSQL.UpdateFindProperty(**update_dict)
             except Exception as e:
                 print("Unknown Error:",e)
                 log_main.error(e)

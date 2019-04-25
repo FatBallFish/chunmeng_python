@@ -114,10 +114,8 @@ def UpdateFindProperty(**find_dict)->bool:
     update_sql = ""
     condition_sql = ""
     # 最后检查关键字段信息
-    if find_dict["publish_time"] == "":
-        find_dict["publish_time"] = time.strftime("%Y-%m-%d %H:%M:%S", find_dict["publish_time"])
-    if find_dict["update_time"] == "":
-        find_dict["update_time"] = find_dict["publish_time"]
+    if find_dict["update_time"] == "" or "update_time" not in find_dict.keys():
+        find_dict["update_time"] = time.localtime()
     # 进行sql语句拼接
     for key in find_dict.keys():
         if key == "id":
