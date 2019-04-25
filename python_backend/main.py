@@ -534,29 +534,32 @@ def findproperty():
         if not key in data.keys():
             # status -1 json的key错误。
             return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+    find_dict = {
+        "id": -1,
+        "state": -1,
+        "lab": "",
+        "title": "",
+        "content": "",
+        "lost_time": "",
+        "loser_name": "",
+        "loser_phone": "",
+        "loser_qq": "",
+        "finder_id": "",
+        "finder_name": "",
+        "finder_phone": "",
+        "finder_qq": "",
+        "user_id": "",
+        "publish_time": "",
+        "update_time": "",
+    }
     type = data["type"]
     subtype = data["subtype"]
     if type == "property":
         if subtype == "add":
+            # todo add
             data = data["data"]
-            find_dict={
-                "id":-1,
-                "state":-1,
-                "lab":"",
-                "title":"",
-                "content":"",
-                "lost_time":"",
-                "loser_name":"",
-                "loser_phone":"",
-                "loser_qq":"",
-                "finder_id":"",
-                "finder_name":"",
-                "finder_phone":"",
-                "finder_qq":"",
-                "user_id":"",
-                "publish_time":"",
-                "update_time":"",
-            }
+            # find_dict字典模版已放在外部
+
             # -------定义缺省字段初始值-------
             find_dict["state"] = 0
             uid = int(time.time())
@@ -636,15 +639,131 @@ def findproperty():
                 return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
             if result == True :
                 # status 0 添加记录成功
-                return json.dumps({"id": id, "status": 0, "message": "successful", "data": {}})
+                return json.dumps({"id": id, "status": 0, "message": "successful", "data": {"uid":uid}})
             else:
                 # status -200 数据库操作失败。
                 return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
-
         elif subtype == "update":
+            # todo update
+            data = data["data"]
+            # find_dict字典模版已放在外部
+
+            # -------定义缺省字段初始值-------
+            find_dict["state"] = 0
+            user_id = PSQL.GetUserID(token)
+            print("user_id:", user_id)
+            if user_id == None or user_id == "":
+                # status -102 Necessary args can't be empty
+                return json.dumps(
+                    {"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
+            else:
+                find_dict["user_id"] = user_id
+            find_dict["update_time"] = time.localtime()
+            # -------开始读取其他信息-------
+            for key in data.keys():
+                if key not in find_dict.keys():
+                    # status -1 json的key错误。
+                    return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+                if "id" not in data.keys():
+                    # status -202 Missing necessary data key-value
+                    return json.dumps(
+                        {"id": id, "status": -202, "message": "Missing necessary data key-value", "data": {}})
+                if key == "id":
+                    uid = str(data["id"])
+                    if uid.isdigit():
+                        uid = int(uid)
+                        find_dict["id"] = uid
+                    else:
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    continue
+                elif key == "lab":
+                    if data["lab"] == "":
+                        # status -201 Necessary args can't be empty
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    find_dict["lab"] = data["lab"]
+                    continue
+                elif key == "title":
+                    if data["title"] == "":
+                        # status -201 Necessary args can't be empty
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    find_dict["title"] = data["title"]
+                    continue
+                elif key == "content":
+                    if data["content"] == "":
+                        # status -201 Necessary args can't be empty
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    find_dict["content"] = data["content"]
+                    continue
+                elif key == "lost_time":
+                    if data["lost_time"] == "":
+                        data["lost_time"] = time.localtime()
+                    find_dict["lost_time"] = data["lost_time"]
+                    continue
+                elif key == "loser_name":
+                    if data["loser_name"] == "":
+                        # status -201 Necessary args can't be empty
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    find_dict["loser_name"] = data["loser_name"]
+                    continue
+                elif key == "loser_phone":
+                    find_dict["loser_phone"] = data["loser_phone"]
+                    continue
+                elif key == "loser_qq":
+                    find_dict["loser_qq"] = data["loser_qq"]
+                    continue
+                elif key == "finder_name":
+                    find_dict["finder_name"] = data["finder_name"]
+                    continue
+                elif key == "finder_phone":
+                    find_dict["finder_phone"] = data["finder_phone"]
+                    continue
+                elif key == "finder_qq":
+                    find_dict["finder_qq"] = data["finder_qq"]
+                    continue
+                elif key == "user_id":
+                    if data["user_id"] == "":
+                        # status -201 Necessary args can't be empty
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    find_dict["user_id"] = data["user_id"]
+                    continue
+                elif key == "publish_time":
+                    if data["publish_time"] == "":
+                        data["publish_time"] = time.localtime()
+                    find_dict["publish_time"] = data["publish_time"]
+                    continue
+                elif key == "update_time":
+                    if data["update_time"] == "":
+                        data["update_time"] = data["publish_time"]
+                    find_dict["update_time"] = data["update_time"]
+                    continue
+                else:
+                    find_dict[key] = data[key]
+                    print("Unkown key and value:[{},{}]".format(key, data[key]))
+                    log_main.warning("Unkown key and value:[{},{}]".format(key, data[key]))
+            try:
+                result = PSQL.UpdateFindProperty(**find_dict)
+            except Exception as e:
+                print("Unknown Error:",e)
+                log_main.error(e)
+                # status -200 数据库操作失败。
+                return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
+            if result == True:
+                # status 0 更新记录成功
+                return json.dumps({"id": id, "status": 0, "message": "successful", "data": {}})
+            else:
+                print("操作失败")
+                # status -200 数据库操作失败。
+                return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
             # todo 设计数据更新api
             pass
         elif subtype == "delete":
+
             # todo 设计数据删除api
             pass
         else:

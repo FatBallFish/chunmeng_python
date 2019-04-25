@@ -109,6 +109,53 @@ def InsertFindProperty(**find_dict)->bool:
     else:
         return True
 
+def UpdateFindProperty(**find_dict)->bool:
+    cur = conn.cursor()
+    update_sql = ""
+    condition_sql = ""
+    # 最后检查关键字段信息
+    if find_dict["publish_time"] == "":
+        find_dict["publish_time"] = time.strftime("%Y-%m-%d %H:%M:%S", find_dict["publish_time"])
+    if find_dict["update_time"] == "":
+        find_dict["update_time"] = find_dict["publish_time"]
+    # 进行sql语句拼接
+    for key in find_dict.keys():
+        if key == "id":
+            if type(find_dict[key]) != str:
+                condition_sql = "id = " + str(find_dict[key])
+            else:
+                condition_sql = "id = " + find_dict[key]
+            continue
+        update_sql = update_sql + key + "="
+        if type(find_dict[key]) == int:
+            update_sql = update_sql + str(find_dict[key])
+        elif type(find_dict[key]) == str:
+            update_sql = update_sql + "'" + find_dict[key] + "'"
+        elif type(find_dict[key]) == time.struct_time:
+            update_sql = update_sql + "'" + time.strftime("%Y-%m-%d %H:%M:%S", find_dict[key]) + "'"
+        else:
+            print("Unknown key:", key, "type:", type(find_dict[key]))
+            continue
+        update_sql = update_sql + ","
+    else:
+        update_sql = update_sql.rpartition(",")[0]
+    # print("DICT:",find_dict)
+    condition_sql = condition_sql + " AND user_id = '" + str(find_dict["user_id"]) + "'"
+    # print("update_sql",update_sql)
+    # print("condition_sql:",condition_sql)
+    sql = "UPDATE findproperty SET {0} WHERE {1}".format(update_sql, condition_sql)
+    # print(find_dict)
+    print("更新寻物启事:\n", sql)
+    try:
+        cur.execute(sql)
+        conn.commit()
+    except Exception as e:
+        print("Database Error:",e)
+        log_psql.error(e)
+        return False
+    else:
+        return True
+
 def GetUserID(token)->str:
     """
     通过token获取用户id
