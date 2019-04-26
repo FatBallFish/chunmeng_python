@@ -416,8 +416,76 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 | finder_name  |    √     | √        |     string      |       “码三秃”        |      20      |                        找到者姓名                        |
 | finder_phone |    √     | √        |     string      |     “1216515656”      |      15      |                        找到者手机                        |
 |  finder_qq   |    √     | √        |     string      |      “15448486”       |      15      |                         找到者qq                         |
-|   user_id    |    √     | √        |     string      |     "1180310086"      |      15      |        发起者用户id，不填写后端自动读取，不可修改        |
+|   user_id    |          | √        |     string      |     "1180310086"      |      15      |        发起者用户id，不填写后端自动读取，不可修改        |
 | update_time  |    √     | √        | datetime-string | "2019-04-22 16:17:42" |              | 更新时间，日期时间型文本，为空或缺省默认为服务器当前时间 |
+
+> 1. update API中`id`字段和`user_id`不可进行修改，只能做查询的条件
+>
+> 2. update API执行成功的条件是`id`存在且id对应的`user_id`与传递的`user_id`或者`token`所对应的`user_id`一致，才能成功删除。若失败返回-200错误码。
+
+- **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":{"uid":文章uid # 长整数型}
+}
+```
+
+- **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-200, # 错误码
+  "message":"Connect Database Failed",
+  "data":{},
+}
+```
+
+#### 局部status表
+
+| status | message                            | 内容                                |
+| ------ | ---------------------------------- | ----------------------------------- |
+| -100   | Missing necessary args             | api地址中缺少token参数              |
+| -101   | Error token                        | token不正确                         |
+| -102   | Get userid failed for the token    | 使用该token获取userid失败           |
+| -200   | Connect Database Failed            | 数据库操作失败，检查SQL语句是否正确 |
+| -201   | Necessary key-value can't be empty | 关键键值对值不可为空                |
+| -202   | Missing necessary data key-value   | 缺少关键的键值对                    |
+| -203   | Arg's value type error             | 键值对数据类型错误                  |
+
+
+
+#### **删除寻物启事文章API**
+
+- **POST发送请求的json文本**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"property",
+    "subtype":"delete",
+    "data":{
+        "id":12334567, # 文章id
+        "user_id":"1180310086" # 用户id
+    }
+}
+```
+
+- data字段表
+
+|  参数   | 可否为空 | 可否缺省 | 数据类型 |     例子     | 字段长度限制 |                    备注                    |
+| :-----: | :------: | -------- | :------: | :----------: | :----------: | :----------------------------------------: |
+|   id    |          |          |  bigint  |              |  -2^31~2^31  |              文章id，不可修改              |
+| user_id |          | √        |  string  | "1180310086" |      15      | 发起者用户id，不填写后端自动读取，不可修改 |
+
+> 1. delete API 参数只能是以上两个，其他字段哪怕传递过来也自动忽略
+>
+> 2. delete API执行成功的条件是`id`存在且id对应的`user_id`与传递的`user_id`或者`token`所对应的`user_id`一致，才能成功删除。若失败返回-200错误码。
 
 
 

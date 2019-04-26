@@ -7,7 +7,13 @@ import datetime
 import time
 
 log_psql = logging.getLogger("Postgres")
-def Initialize(cfg_path,main_path):
+def Initialize(cfg_path:str,main_path:str):
+    """
+    初始化Postgresql模块
+    :param cfg_path: 配置文件路径
+    :param main_path: 主程序运行目录
+    :return:
+    """
     cf = ConfigParser()
     cf.read(cfg_path)
     global host,port,user,password,db,conn
@@ -42,7 +48,7 @@ def CheckToken(token:str)->bool:
     """
 检查token是否合法，只有当查询到token存在且唯一的时候返回True
     :param token: 用户登录凭证
-    :return: 返回判断结果
+    :return: 返回判断结果，token正确返回 True ，失败返回 False
     """
     cur = conn.cursor()
     try:
@@ -110,6 +116,11 @@ def InsertFindProperty(**find_dict)->bool:
         return True
 
 def UpdateFindProperty(**find_dict)->bool:
+    """
+    更新寻物启事信息。
+    :param find_dict: 寻物启事字典
+    :return: 成功返回 True ，失败返回 False
+    """
     cur = conn.cursor()
     update_sql = ""
     condition_sql = ""
@@ -154,7 +165,40 @@ def UpdateFindProperty(**find_dict)->bool:
     else:
         return True
 
-def GetUserID(token)->str:
+def DeleteProperty(**find_dict)->bool:
+    """
+    删除寻物启事信息，只需传递 id、user_id 字段,user_id可缺省。
+    :param find_dict: 寻物启事字典
+    :return: 成功返回 True ，失败返回 False。
+    """
+    cur = conn.cursor()
+    delete_sql = "DELETE FROM findproperty WHERE "
+    # 最后检查关键字段信息
+    if "id" and "user_id" not in find_dict.keys():
+        return False
+    for key in find_dict.keys():
+        if type(find_dict[key]) == int:
+            delete_sql = delete_sql + key + " = " + str(find_dict[key]) + " AND "
+        elif type(find_dict[key]) == str:
+            delete_sql = delete_sql + key + " = '" + find_dict[key] + "' AND "
+        else:
+            print("Unknown key:", key, "type:", type(find_dict[key]))
+            continue
+    else:
+        delete_sql = delete_sql.rpartition(" AND ")[0]
+    print("删除寻物启事:\n", delete_sql)
+
+    try:
+        cur.execute(delete_sql)
+        conn.commit()
+    except Exception as e:
+        print("Database Error:",e)
+        log_psql.error(e)
+        return False
+    else:
+        return True
+
+def GetUserID(token:str)->str:
     """
     通过token获取用户id
     :param token: 用户token
@@ -187,6 +231,12 @@ def GetUserID(token)->str:
         return ""
 
 def GetFindProperty(key:str,**find_dict)->tuple:
+    """
+    获取寻物启事信息
+    :param key: 关键字，不可与find_dict共存
+    :param find_dict: 寻物启事字典，不可与key共存
+    :return: 成功返回元组。（记录数，寻物启事信息列表），失败返回（0,[]）
+    """
     if key == None or key == "":
         if len(find_dict.keys()) == 0:
             sql = "SELECT * FROM findproperty ORDER BY update_time DESC "
@@ -249,6 +299,10 @@ def GetFindProperty(key:str,**find_dict)->tuple:
         # print("datalist：",date_list)
     print("datalist：", date_list)
     return (num,date_list)
+
+
+
+
 
 if __name__ == '__main__':
     Initialize("../config.ini",os.path.dirname(os.path.abspath(__file__)))

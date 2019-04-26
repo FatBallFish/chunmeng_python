@@ -504,6 +504,7 @@ def get_portrait(id):
 def findproperty():
     try:
         token = request.args["token"]
+        print("token:",token)
     except Exception as e:
         print("Missing necessary args")
         log_main.error("Missing necessary agrs")
@@ -529,7 +530,7 @@ def findproperty():
     else:
         id = -1
 
-    # 判断指定所需字段是否存在，若不存在返回status -1 json。
+    ## 判断指定所需字段是否存在，若不存在返回status -1 json。
     for key in ["type", "subtype", "data"]:
         if not key in data.keys():
             # status -1 json的key错误。
@@ -554,6 +555,7 @@ def findproperty():
     }
     type = data["type"]
     subtype = data["subtype"]
+    ## -------正式处理事务-------
     if type == "property":
         if subtype == "add":
             # todo add
@@ -782,11 +784,49 @@ def findproperty():
                 # status -200 数据库操作失败。
                 return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
             # todo 设计数据更新api
-            pass
         elif subtype == "delete":
+            data = data["data"]
+            # find_dict字典模版已放在外部
 
+            # -------定义缺省字段初始值-------
+            user_id = PSQL.GetUserID(token=token)
+            if user_id == "" or user_id == None:
+                # status -102 Get userid failed for the token
+                return json.dumps({"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
+            print("user_id:", user_id)
+            delete_dict = {}
+            # 获取字段信息
+            if "user_id" in data.keys():
+                delete_dict["user_id"] = str(data["user_id"])
+            else:
+                delete_dict["user_id"] = str(user_id)
+            if "id" in data.keys():
+                uid = str(data["id"])
+                if uid.isdigit():
+                    delete_dict["id"] = int(uid)
+                else:
+                    # status -203 Arg's value type error
+                    return json.dumps(
+                        {"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+            else:
+                # status -201 Necessary key-value can't be empty
+                return json.dumps(
+                    {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+            try:
+                result = PSQL.DeleteProperty(**delete_dict)
+            except Exception as e:
+                print("Unknown Error:",e)
+                log_main.error(e)
+                # status -200 数据库操作失败。
+                return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
+            if result == True:
+                # status 0 删除记录成功
+                return json.dumps({"id": id, "status": 0, "message": "successful", "data": {}})
+            else:
+                print("操作失败")
+                # status -200 数据库操作失败。
+                return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
             # todo 设计数据删除api
-            pass
         else:
             # status -2 json的value错误。
             return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
