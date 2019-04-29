@@ -10,24 +10,24 @@ headers = {'content-type': "application/json"}
 
 
 ## 添加寻物启事api
-# data={
-#     "id":0,
-#     "status":0,
-#     "type":"property",
-#     "subtype":"add",
-#     "data":{
-#         "type":2,
-#         "lab":"人类",
-#         "title":"代领一个许淳皓",
-#         "content":"我在路上捡到一个许淳皓",
-#         "occurrence_time":"2019-04-22 16:17:42",
-#         "user_name":"王凌超",
-#         "user_phone":"",
-#         "user_qq":"893721708",
-#         "publish_time":"",
-#     }}
-# token = "9763393e42ef2b8f051caefbec8a522f31a38663a7180d69d1a9cb1addaa76ac"
-# response = requests.post(url="http://127.0.0.1:4081/property?token={}".format(token),data=json.dumps(data),headers=headers)
+data={
+    "id":0,
+    "status":0,
+    "type":"property",
+    "subtype":"add",
+    "data":{
+        "type":2,
+        "lab":"人类",
+        "title":"代领一个许淳皓",
+        "content":"我在路上捡到一个许淳皓",
+        "occurrence_time":"2019-04-22 16:17:42",
+        "user_name":"王凌超",
+        "user_phone":"",
+        "user_qq":"893721708",
+        "publish_time":"",
+    }}
+token = "294c949e1573c562fd70ac12a58859d7a82e7c46a77c59d7c9f2559ff01cbe52"
+response = requests.post(url="https://www.zustservice.cn/api/external/property?token={}".format(token),data=json.dumps(data),headers=headers)
 
 ## 更新寻物启事api
 # data={
