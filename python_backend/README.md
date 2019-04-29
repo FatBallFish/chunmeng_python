@@ -295,11 +295,11 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 ## **寻物启事·失物招领类**
 
-### API地址：
+### POST启事API地址：
 
 > https://www.zustservice.cn/api/external/property?token={token值}
 
-#### **添加寻物启事文章API**
+#### **添加启事文章API**
 
 - **POST发送请求的json文本**
 
@@ -384,7 +384,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 
 
-#### **更新寻物启事文章API**
+#### **更新启事文章API**
 
 - **POST发送请求的json文本**
 
@@ -464,7 +464,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 
 
-#### **删除寻物启事文章API**
+#### **删除启事文章API**
 
 - **POST发送请求的json文本**
 
@@ -530,7 +530,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 
 
-### GET寻物启事API地址：
+### GET启事API地址：
 
 > https://www.zustservice.cn/api/external/get/property
 
