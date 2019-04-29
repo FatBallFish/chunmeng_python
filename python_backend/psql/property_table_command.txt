@@ -1,6 +1,7 @@
 CREATE TABLE property
 (
     id bigint NOT NULL ,
+    type integer NOT NULL,
     state integer NOT NULL ,
     lab character varying(50) NOT NULL ,
     title character varying(20) NOT NULL ,

@@ -1,6 +1,6 @@
 CREATE TABLE findproperty
 (
-    id integer NOT NULL ,
+    id bigint NOT NULL ,
     state integer NOT NULL ,
     lab character varying(50) NOT NULL,
     title character varying(20) NOT NULL ,

@@ -1,3 +1,4 @@
+# coding=utf-8
 from flask import Flask,request,render_template
 from img import py_captcha_main as ImgCaptcha
 from sms import py_sms_main as SmsCaptcha
@@ -500,8 +501,9 @@ def get_portrait(id):
             log_main.error("Error:Can't load the error img.")
             data = ""
         return data
-@app.route("/property/find",methods=["POST"])
-def findproperty():
+
+@app.route("/property",methods=["POST"])
+def property():
     try:
         token = request.args["token"]
         print("token:",token)
@@ -535,38 +537,58 @@ def findproperty():
         if not key in data.keys():
             # status -1 json的key错误。
             return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
-    find_dict = {
+    property_dict = {
         "id": -1,
+        "type":-1,
         "state": -1,
         "lab": "",
         "title": "",
         "content": "",
-        "lost_time": "",
-        "loser_name": "",
-        "loser_phone": "",
-        "loser_qq": "",
-        "finder_id": "",
-        "finder_name": "",
-        "finder_phone": "",
-        "finder_qq": "",
+        "occurrence_time": "",
         "user_id": "",
+        "user_name": "",
+        "user_phone": "",
+        "user_qq": "",
+        "user2_id": "",
+        "user2_name": "",
+        "user2_phone": "",
+        "user2_qq": "",
         "publish_time": "",
         "update_time": "",
     }
     type = data["type"]
     subtype = data["subtype"]
     ## -------正式处理事务-------
-    if type == "property":
+    data = data["data"]
+    if type == "property":  ## 失物招领api
         if subtype == "add":
             # todo add
-            data = data["data"]
-            # find_dict字典模版已放在外部
-
+            # property_dict 字典模版已放在外部
             # -------定义缺省字段初始值-------
-            find_dict["state"] = 0
+            # uid
             uid = int(time.time())
             print("uid:", uid)
-            find_dict["id"] = uid
+            property_dict["id"] = uid
+            # type
+            if "type" not in data.keys():
+                # status -202 Missing necessary data key-value
+                return json.dumps({"id": id, "status": -202, "message": "Missing necessary data key-value", "data": {}})
+            else:
+                property_type = str(data["type"])
+                if property_type.isdigit():
+                    int_property_type = int(property_type)
+                    if int_property_type not in [1,2]:
+                        # status -204 键值对数据错误
+                        return json.dumps(
+                            {"id": id, "status": -204, "message": "Arg's value error", "data": {}})
+                    property_dict["type"] = int_property_type  # 1表示寻物启事，2表示失物招领
+                else:
+                    # status -201 Necessary key-value can't be empty
+                    return json.dumps(
+                        {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+            # state
+            property_dict["state"] = 0
+            # user_id
             user_id = PSQL.GetUserID(token)
             print("user_id:",user_id)
             if user_id == None or user_id == "":
@@ -574,68 +596,83 @@ def findproperty():
                 return json.dumps(
                     {"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
             else:
-                find_dict["user_id"] = user_id
-            find_dict["update_time"] = time.localtime()
+                property_dict["user_id"] = user_id
+            property_dict["update_time"] = time.localtime()
             # -------开始读取其他信息-------
             for key in data.keys():
-                if key not in find_dict.keys():
+                if key not in property_dict.keys():
                     # status -1 json的key错误。
                     return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
-
+                if key == "type":
+                    continue
                 if key == "lab":
                     if data["lab"] == "":
                         # status -201 Necessary args can't be empty
                         return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    find_dict["lab"] = data["lab"]
+                    property_dict["lab"] = data["lab"]
+                    continue
                 elif key == "title":
                     if data["title"] == "":
                         # status -201 Necessary args can't be empty
                         return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    find_dict["title"] = data["title"]
+                    property_dict["title"] = data["title"]
+                    continue
                 elif key == "content":
                     if data["content"] == "":
                         # status -201 Necessary args can't be empty
                         return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    find_dict["content"] = data["content"]
-                elif key == "lost_time":
-                    if data["lost_time"] == "":
-                        data["lost_time"] = time.localtime()
-                    find_dict["lost_time"] = data["lost_time"]
-                elif key == "loser_name":
-                    if data["loser_name"] == "":
-                        # status -201 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    find_dict["loser_name"] = data["loser_name"]
-                elif key == "loser_phone":
-                    find_dict["loser_phone"] = data["loser_phone"]
-                elif key == "loser_qq":
-                    find_dict["loser_qq"] = data["loser_qq"]
-                elif key == "finder_name":
-                    find_dict["finder_name"] = data["finder_name"]
-                elif key == "finder_phone":
-                    find_dict["finder_phone"] = data["finder_phone"]
-                elif key == "finder_qq":
-                    find_dict["finder_qq"] = data["finder_qq"]
+                    property_dict["content"] = data["content"]
+                    continue
+                elif key == "occurrence_time":
+                    if data["occurrence_time"] == "":
+                        data["occurrence_time"] = time.localtime()
+                    property_dict["occurrence_time"] = data["occurrence_time"]
+                    continue
                 elif key == "user_id":
                     if data["user_id"] == "":
                         # status -201 Necessary args can't be empty
                         return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    find_dict["user_id"] = data["user_id"]
+                    property_dict["user_id"] = data["user_id"]
+                    continue
+                elif key == "user_name":
+                    if data["user_name"] == "":
+                        # status -201 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    property_dict["user_name"] = data["user_name"]
+                    continue
+                elif key == "user_phone":
+                    property_dict["user_phone"] = data["user_phone"]
+                    continue
+                elif key == "user_qq":
+                    property_dict["user_qq"] = data["user_qq"]
+                    continue
+                elif key == "user2_name":
+                    property_dict["user2_name"] = data["user2_name"]
+                    continue
+                elif key == "user2_phone":
+                    property_dict["user2_phone"] = data["user2_phone"]
+                    continue
+                elif key == "user2_qq":
+                    property_dict["user2_qq"] = data["user2_qq"]
+                    continue
                 elif key == "publish_time":
                     if data["publish_time"] == "":
                         data["publish_time"] = time.localtime()
-                    find_dict["publish_time"] = data["publish_time"]
+                    property_dict["publish_time"] = data["publish_time"]
+                    continue
                 elif key == "update_time":
                     if data["update_time"] == "":
                         data["update_time"] = data["publish_time"]
-                    find_dict["update_time"] = data["update_time"]
+                    property_dict["update_time"] = data["update_time"]
+                    continue
                 else:
-                    find_dict[key] = data[key]
+                    property_dict[key] = data[key]
                     print("Unkown key and value:[{},{}]".format(key,data[key]))
                     log_main.warning("Unkown key and value:[{},{}]".format(key,data[key]))
+                    continue
 
             try:
-                result = PSQL.InsertFindProperty(**find_dict)
+                result = PSQL.InsertProperty(**property_dict)
             except:
                 # status -200 数据库操作失败。
                 return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
@@ -647,12 +684,10 @@ def findproperty():
                 return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
         elif subtype == "update":
             # todo update
-            data = data["data"]
-            # find_dict字典模版已放在外部
-
+            # property_dict 字典模版已放在外部
             # -------定义缺省字段初始值-------
             update_dict = {}
-            # find_dict["state"] = 0
+            # lost_dict["state"] = 0
             user_id = PSQL.GetUserID(token)
             print("user_id:", user_id)
             if user_id == None or user_id == "":
@@ -660,25 +695,39 @@ def findproperty():
                 return json.dumps(
                     {"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
             else:
-                # find_dict["user_id"] = user_id
+                # lost_dict["user_id"] = user_id
                 update_dict["user_id"] = user_id
             if "id" not in data.keys():
                 # status -202 Missing necessary data key-value
                 return json.dumps(
                     {"id": id, "status": -202, "message": "Missing necessary data key-value", "data": {}})
-            # find_dict["update_time"] = time.localtime()
+            # lost_dict["update_time"] = time.localtime()
             update_dict["update_time"] = time.localtime()
             # -------开始读取其他信息-------
             for key in data.keys():
-                if key not in find_dict.keys():
+                if key not in property_dict.keys():
                     # status -1 json的key错误。
                     return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
                 if key == "id":
                     uid = str(data["id"])
                     if uid.isdigit():
                         uid = int(uid)
-                        # find_dict["id"] = uid
+                        # lost_dict["id"] = uid
                         update_dict["id"] = uid
+                    else:
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    continue
+                if key == "type":
+                    property_type = str(data["type"])
+                    if property_type.isdigit():
+                        int_property_type = int(property_type)
+                        if int_property_type not in [1,2]:
+                            # status -204 键值对数据错误
+                            return json.dumps(
+                                {"id": id, "status": -204, "message": "Arg's values error", "data": {}})
+                        # lost_dict["type"] = uid
+                        update_dict["type"] = int_property_type
                     else:
                         # status -203 Arg's value type error
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
@@ -687,7 +736,7 @@ def findproperty():
                     state = str(data["state"])
                     if state.isdigit():
                         state = int(state)
-                        # find_dict["state"] = state
+                        # lost_dict["state"] = state
                         update_dict["state"] = state
                     else:
                         # status -203 Arg's value type error
@@ -698,7 +747,7 @@ def findproperty():
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    # find_dict["lab"] = data["lab"]
+                    # lost_dict["lab"] = data["lab"]
                     update_dict["lab"] = data["lab"]
                     continue
                 elif key == "title":
@@ -706,7 +755,7 @@ def findproperty():
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    # find_dict["title"] = data["title"]
+                    # lost_dict["title"] = data["title"]
                     update_dict["title"] = data["title"]
                     continue
                 elif key == "content":
@@ -714,68 +763,70 @@ def findproperty():
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    # find_dict["content"] = data["content"]
+                    # lost_dict["content"] = data["content"]
                     update_dict["content"] = data["content"]
                     continue
-                elif key == "lost_time":
-                    if data["lost_time"] == "":
-                        data["lost_time"] = time.localtime()
-                    # find_dict["lost_time"] = data["lost_time"]
-                    update_dict["lost_time"] = data["lost_time"]
-                    continue
-                elif key == "loser_name":
-                    if data["loser_name"] == "":
-                        # status -201 Necessary args can't be empty
-                        return json.dumps(
-                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    # find_dict["loser_name"] = data["loser_name"]
-                    update_dict["loser_name"] = data["loser_name"]
-                    continue
-                elif key == "loser_phone":
-                    # find_dict["loser_phone"] = data["loser_phone"]
-                    update_dict["loser_phone"] = data["loser_phone"]
-                    continue
-                elif key == "loser_qq":
-                    # find_dict["loser_qq"] = data["loser_qq"]
-                    update_dict["loser_qq"] = data["loser_qq"]
-                    continue
-                elif key == "finder_name":
-                    # find_dict["finder_name"] = data["finder_name"]
-                    update_dict["finder_name"] = data["finder_name"]
-                    continue
-                elif key == "finder_phone":
-                    # find_dict["finder_phone"] = data["finder_phone"]
-                    update_dict["finder_phone"] = data["finder_phone"]
-                    continue
-                elif key == "finder_qq":
-                    # find_dict["finder_qq"] = data["finder_qq"]
-                    update_dict["finder_qq"] = data["finder_qq"]
+                elif key == "occurrence_time":
+                    if data["occurrence_time"] == "":
+                        data["occurrence_time"] = time.localtime()
+                    # lost_dict["occurrence_time"] = data["occurrence_time"]
+                    update_dict["occurrence_time"] = data["occurrence_time"]
                     continue
                 elif key == "user_id":
                     if data["user_id"] == "":
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    # find_dict["user_id"] = data["user_id"]
+                    # lost_dict["user_id"] = data["user_id"]
                     update_dict["user_id"] = data["user_id"]
                     continue
+                elif key == "user_name":
+                    if data["user_name"] == "":
+                        # status -201 Necessary args can't be empty
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    # lost_dict["user_name"] = data["user_name"]
+                    update_dict["user_name"] = data["user_name"]
+                    continue
+                elif key == "user_phone":
+                    # lost_dict["user_phone"] = data["user_phone"]
+                    update_dict["user_phone"] = data["user_phone"]
+                    continue
+                elif key == "user_qq":
+                    # lost_dict["user_qq"] = data["user_qq"]
+                    update_dict["user_qq"] = data["user_qq"]
+                    continue
+                elif key == "user2_name":
+                    # lost_dict["user2_name"] = data["user2_name"]
+                    update_dict["user2_name"] = data["user2_name"]
+                    continue
+                elif key == "user2_phone":
+                    # lost_dict["user2_phone"] = data["user2_phone"]
+                    update_dict["user2_phone"] = data["user2_phone"]
+                    continue
+                elif key == "user2_qq":
+                    # lost_dict["user2_qq"] = data["user2_qq"]
+                    update_dict["user2_qq"] = data["user2_qq"]
+                    continue
+
                 elif key == "update_time":
                     if data["update_time"] == "":
                         data["update_time"] = data["publish_time"]
-                    # find_dict["update_time"] = data["update_time"]
+                    # lost_dict["update_time"] = data["update_time"]
                     update_dict["update_time"] = data["update_time"]
                     continue
                 else:
-                    find_dict[key] = data[key]
+                    update_dict[key] = data[key]
                     print("Unkown key and value:[{},{}]".format(key, data[key]))
                     log_main.warning("Unkown key and value:[{},{}]".format(key, data[key]))
             try:
-                result = PSQL.UpdateFindProperty(**update_dict)
+                result = PSQL.UpdateProperty(**update_dict)
             except Exception as e:
                 print("Unknown Error:",e)
                 log_main.error(e)
                 # status -200 数据库操作失败。
                 return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
+
             if result == True:
                 # status 0 更新记录成功
                 return json.dumps({"id": id, "status": 0, "message": "successful", "data": {}})
@@ -785,8 +836,7 @@ def findproperty():
                 return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
             # todo 设计数据更新api
         elif subtype == "delete":
-            data = data["data"]
-            # find_dict字典模版已放在外部
+            # lost_dict字典模版已放在外部
 
             # -------定义缺省字段初始值-------
             user_id = PSQL.GetUserID(token=token)
@@ -833,36 +883,36 @@ def findproperty():
     else:
         # status -2 json的value错误。
         return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
-
-@app.route("/get/property/find",methods=["GET"])
-def get_findproperty():
+@app.route("/get/property",methods=["GET"])
+def get_property():
     try:
         token = request.args["token"]
     except Exception as e:
         print("Missing necessary args")
         log_main.error("Missing necesxsary agrs")
-        # status -100 缺少必要的参数
-        return json.dumps({"id": -1, "status": -100, "message": "Missing necessary args", "data": {}})
+        # status -104 缺少必要的参数
+        return json.dumps({"id": -1, "status": -104, "message": "Missing necessary args", "data": {}})
     token_check_result = PSQL.CheckToken(token)
     if token_check_result == False:
-        # status -101 token不正确
-        return json.dumps({"id": -1, "status": -101, "message": "Error token", "data": {}})
+        # status -105 token不正确
+        return json.dumps({"id": -105, "status": -101, "message": "Error token", "data": {}})
     # 验证身份完成，处理数据
-    find_dict = {
+    property_dict = {
         "id": -1,
+        "type": -1,
         "state": -1,
         "lab": "",
         "title": "",
         "content": "",
-        "lost_time": "",
-        "loser_name": "",
-        "loser_phone": "",
-        "loser_qq": "",
-        "finder_id": "",
-        "finder_name": "",
-        "finder_phone": "",
-        "finder_qq": "",
+        "occurrence_time": "",
         "user_id": "",
+        "user_name": "",
+        "user_phone": "",
+        "user_qq": "",
+        "user2_id": "",
+        "user2_name": "",
+        "user2_phone": "",
+        "user2_qq": "",
         "publish_time": "",
         "update_time": "",
     }
@@ -870,28 +920,62 @@ def get_findproperty():
     # print("value:",args_dict.keys(),"type:",type(args_dict))
     num = len(args_dict.keys())
     print("have {} args".format(num))
-    if num == 1 :
-        record_num, data_list = PSQL.GetFindProperty("")
-        print("GET find proerty all,totally: {} record".format(record_num))
+    if num == 1:
+        # status -104 缺少必要的参数
+        return json.dumps({"id": -1, "status": -104, "message": "Missing necessary args", "data": {}})
+    if num == 2 :
+        if "type" in args_dict.keys():
+            property_type = str(args_dict["type"])
+            if property_type.isdigit():
+                int_property_type = int(property_type)
+                if int_property_type not in [1,2]:
+                    # status -106 参数值错误
+                    return json.dumps({"id": -1, "status": -106, "message": "Args Error", "data": {}})
+                args_dict["type"] = int_property_type
+            else:
+                # status -101 参数值类型错误
+                return json.dumps({"id": -1, "status": -101, "message": "Args Type Error", "data": {}})
+        else:
+            # status -104 缺少必要的参数
+            return json.dumps({"id": -1, "status": -104, "message": "Missing necessary args", "data": {}})
+        record_num, data_list = PSQL.GetProperty(args_dict["type"],"")
+        print("GET proerty all,totally: {} record".format(record_num))
         # status 0 成功处理数据
-        return json.dumps({"id":-1,"status":0,"message":"successful","data":data_list},ensure_ascii=False)
+        try:
+            return json.dumps({"id":-1,"status":0,"message":"successful","data":data_list},ensure_ascii=False)
+        except Exception as e:
+            print(e)
+
     else:
-        # 情况一
-        if num == 2 and "key" in args_dict.keys():
-            record_num, data_list = PSQL.GetFindProperty(args_dict["key"])
+        # 情况一，只有token、type和key参数
+        if "type" in args_dict.keys():
+            property_type = str(args_dict["type"])
+            if property_type.isdigit():
+                args_dict["type"] = int(property_type)
+            else:
+                # status -101 参数值类型错误
+                return json.dumps({"id": -1, "status": -101, "message": "Args Type Error", "data": {}})
+        else:
+            # status -104 缺少必要的参数
+            return json.dumps({"id": -1, "status": -104, "message": "Missing necessary args", "data": {}})
+
+        if num == 3 and "key" in args_dict.keys():
+            record_num, data_list = PSQL.GetProperty(args_dict["type"],args_dict["key"])
             print("GET find proerty,totally: {} record".format(record_num))
             # status 0 成功处理数据
             return json.dumps({"id": -1, "status": 0, "message": "successful", "data": data_list}, ensure_ascii=False)
-        # 情况二
-        if num > 2 and "key" in args_dict.keys():
+        # 情况二，key与其他非token及type参数并存
+        if num > 3 and "key" in args_dict.keys():
             # status -103 Args conflict
             return json.dumps({"id": -1, "status": -103, "message": "Args conflict", "data": {}})
-        # 情况三
+        # 情况三，无key参数
         sql_dict = {}
         for key in args_dict.keys():
             if key == "token":
                 continue
-            if key not in find_dict.keys():
+            if key == "type":
+                continue
+            if key not in property_dict.keys():
                 # status -100 Args Error
                 return json.dumps({"id":-1,"status":-100,"message":"Args Error","data":{}})
             sql_dict[key] = str(args_dict[key])
@@ -901,11 +985,10 @@ def get_findproperty():
                 else:
                     # status -101 Args Type Error
                     return json.dumps({"id": -1, "status": -101, "message": "Args Type Error", "data": {}})
-        record_num, data_list = PSQL.GetFindProperty("",**sql_dict)
+        record_num, data_list = PSQL.GetProperty(args_dict["type"],"",**sql_dict)
         print("GET find proerty,totally: {} record".format(record_num))
         # status 0 成功处理数据
         return json.dumps({"id": -1, "status": 0, "message": "successful", "data": data_list},ensure_ascii=False)
-
 
 
 # @app.route("/")

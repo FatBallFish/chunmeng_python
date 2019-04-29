@@ -16,17 +16,18 @@ headers = {'content-type': "application/json"}
 #     "type":"property",
 #     "subtype":"add",
 #     "data":{
-#         "lab":"丢人",
-#         "title":"我丢人了",
-#         "content":"我丢了一个许淳皓",
-#         "lost_time":"2019-04-22 16:17:42",
-#         "loser_name":"王凌超",
-#         "loser_phone":"",
-#         "loser_qq":"893721708",
+#         "type":2,
+#         "lab":"人类",
+#         "title":"代领一个许淳皓",
+#         "content":"我在路上捡到一个许淳皓",
+#         "occurrence_time":"2019-04-22 16:17:42",
+#         "user_name":"王凌超",
+#         "user_phone":"",
+#         "user_qq":"893721708",
 #         "publish_time":"",
 #     }}
 # token = "9763393e42ef2b8f051caefbec8a522f31a38663a7180d69d1a9cb1addaa76ac"
-# response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+# response = requests.post(url="http://127.0.0.1:4081/property?token={}".format(token),data=json.dumps(data),headers=headers)
 
 ## 更新寻物启事api
 # data={
@@ -51,29 +52,30 @@ headers = {'content-type': "application/json"}
 #     "type":"property",
 #     "subtype":"update",
 #     "data":{
-#         "id":1555943163,
+#         "id":1556542860,
 #         "state":1,
+#         "lab":"卡类",
 #         "title":"我丢了一张一卡通",
 #         "content":"我在教学楼丢了一张校园卡",
-#         "finder_name":"wlc",
-#         "finder_phone":"13750687010",
+#         "user_name":"wlc",
+#         "user_phone":"13750687010",
 #     }}
 # token = "9763393e42ef2b8f051caefbec8a522f31a38663a7180d69d1a9cb1addaa76ac"
-# # response = requests.post(url="http://127.0.0.1:4081/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+# response = requests.post(url="http://127.0.0.1:4081/property?token={}".format(token),data=json.dumps(data),headers=headers)
 # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
 
 ## 删除寻物启事api
-data={
-    "id":0,
-    "status":0,
-    "type":"property",
-    "subtype":"delete",
-    "data":{
-        "id":1555945812,
-    }}
-token = "9763393e42ef2b8f051caefbec8a522f31a38663a7180d69d1a9cb1addaa76ac"
-response = requests.post(url="http://127.0.0.1:4081/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
-# response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+# data={
+#     "id":0,
+#     "status":0,
+#     "type":"property",
+#     "subtype":"delete",
+#     "data":{
+#         "id":1556543305,
+#     }}
+# token = "9763393e42ef2b8f051caefbec8a522f31a38663a7180d69d1a9cb1addaa76ac"
+# response = requests.post(url="http://127.0.0.1:4081/property?token={}".format(token),data=json.dumps(data),headers=headers)
+# # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
 
 
 
