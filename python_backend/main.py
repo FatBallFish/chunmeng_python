@@ -895,7 +895,7 @@ def get_property():
     token_check_result = PSQL.CheckToken(token)
     if token_check_result == False:
         # status -105 token不正确
-        return json.dumps({"id": -105, "status": -101, "message": "Error token", "data": {}})
+        return json.dumps({"id": -1, "status": -105, "message": "Error token", "data": {}})
     # 验证身份完成，处理数据
     property_dict = {
         "id": -1,
