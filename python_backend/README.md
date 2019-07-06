@@ -344,6 +344,10 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 |    **user2_qq**     |  **√**   | **√**    |     **string**      |                           |    **15**    |                  **找到者qq，该api不用**                   |
 |    publish_time     |    √     |          |   datetime-string   |   "2019-04-22 16:17:42"   |              |             建议为空。为空自动为服务器当前时间             |
 |     update_time     |    √     | √        |   datetime-string   |   "2019-04-22 16:17:42"   |              |       更新时间，该api不用，且创建时默认等于发布时间        |
+|     **pic_num**     |  **√**   | **√**    |       **int**       |           **2**           |   **0-3**    |                   **图片数量，最多三张**                   |
+|    **pic_url1**     |  **√**   | **√**    |     **string**      |                           |   **1024**   |                       **图片1地址**                        |
+|    **pic_url2**     |  **√**   | **√**    |     **string**      |                           |   **1024**   |                       **图片2地址**                        |
+|    **pic_url3**     |  **√**   | **√**    |     **string**      |                           |   **1024**   |                       **图片3地址**                        |
 
 
 
@@ -591,6 +595,19 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 |  -106  |       Args Error       |             参数值错误             |
 
 ------
+
+## 学生自营平台类
+
+|     name     | data type | length | not null | primary key |
+| :----------: | :-------: | ------ | -------- | ----------- |
+|   shop_id    |           |        |          |             |
+| shop_content |           |        |          |             |
+|  shop_level  |           |        |          |             |
+|  shop_type   |           |        |          |             |
+|              |           |        |          |             |
+|              |           |        |          |             |
+
+
 
 ## 全局Status表
 

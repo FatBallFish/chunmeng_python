@@ -223,13 +223,13 @@ def captcha():
     data = request.json
     print(data)
 
-    # 先获取json里id的值，若不存在，默认值为-1
+    # 判断键值对是否存在
     try:
         keys = data.keys()
     except Exception as e:
         # status -1 json的key错误。此处id是因为没有进行读取，所以返回默认的-1。
         return json.dumps({"id": -1, "status": -1, "message": "Error JSON key", "data": {}})
-
+    # 先获取json里id的值，若不存在，默认值为-1
     if "id" in data.keys():
         id = data["id"]
     else:
@@ -555,6 +555,10 @@ def property():
         "user2_qq": "",
         "publish_time": "",
         "update_time": "",
+        "pic_num":-1,
+        "pic_url1":"",
+        "pic_url2":"",
+        "pic_url3":"",
     }
     type = data["type"]
     subtype = data["subtype"]
@@ -665,6 +669,18 @@ def property():
                         data["update_time"] = data["publish_time"]
                     property_dict["update_time"] = data["update_time"]
                     continue
+                elif key == "pic_num":
+                    num_str = str(data["pic_num"])
+                    if num_str.isdigit():
+                        num = int(num_str)
+                        for i in num:
+                            filed = "pic_url"+str(i)  # 字段名
+                            pic_data = data[filed]
+                            # todo 上传到COS并取回url
+
+                    else:
+                        # status -203 键值对数据类型错误
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
                 else:
                     property_dict[key] = data[key]
                     print("Unkown key and value:[{},{}]".format(key,data[key]))
