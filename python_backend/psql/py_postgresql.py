@@ -305,15 +305,134 @@ def GetProperty(property_type:int,key:str,**property_dict)->tuple:
     print("datalist：", date_list)
     return (num,date_list)
 
+# 学生自营平台
+def CheckShopName(shopname:str)->bool:
+    """
+    检查商店名是否存在，若不存在返回真
+    :param shopname:
+    :return:存在或无法查询返回假，不存在返回真
+    """
+    cur = conn.cursor()
+    sql = "SELECT COUNT(shop_name) AS num FROM shop WHERE shop_name = '{}'".format(shopname)
+    try:
+        cur.execute(sql)
+        conn.commit()
+    except Exception as e:
+        print(e)
+        log_psql.error(e)
+        return False
 
+    row = cur.fetchone()
+    if row[0] == 1:
+        return True
+    else:
+        return False
 
+def CheckShopNum(user_id:int,num:int=3)->bool:
+    """
+        检查用户开店数量，若店铺数量小于可创建数，返回真，否则假
+        :param user_id: 用户id
+        :param num: 可创建店铺数量，默认为3
+        :return: 若店铺数量小于可创建数，返回真，否则假
+        """
+    cur = conn.cursor()
+    sql = "SELECT COUNT(user_id) AS num FROM shop WHERE user_id = {}".format(user_id)
+    try:
+        cur.execute(sql)
+        conn.commit()
+    except Exception as e:
+        print(e)
+        log_psql.error(e)
+        return False
 
+    row = cur.fetchone()
+    if row[0] <= num :
+        return True
+    else:
+        return False
 
+def GetShopOwner(shop_id:int)->int:
+    """
+    获取店铺所有者id
+    :param shop_id:店铺id
+    :return: 返回用户id
+    """
+    cur = conn.cursor()
+    sql = "SELECT user_id FROM shop WHERE shop_id = {}".format(shop_id)
+    try:
+        num = cur.execute(sql)
+        conn.commit()
+    except Exception as e:
+        print(e)
+        log_psql.error(e)
+        return -1
+    if num == 1:
+        row = cur.fetchone()
+        user_id = row[0]
+        return user_id
+    if num == 0:  # 无此店铺
+        return -1
+    else:
+        print("店铺id：{} 有多条记录！".format(shop_id))
+        log_psql.error("店铺id：{} 有多条记录！".format(shop_id))
+        return -1
+
+def CreatShop(shop_name:str,user_id:int)->dict:
+    """
+    创建一个店铺
+    :param shopname: 店铺名
+    :return: 返回结果字典
+    """
+    cur = conn.cursor()
+    if CheckShopName(shop_name) == False:
+        # status 100 店铺名已被注册
+        return {"status": 100, "message": "The shop name was used","data":{}}
+    if CheckShopNum(user_id) == False:
+        # status 101 店铺数量已超上限
+        return {"status":101,"message":"The number of shops has been capped","data":{}}
+    shop_id = int(time.time()*10**8)
+    creat_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    sql = "INSERT INTO shop VALUES ({0},{1},{2},{3},{4})".format(shop_id,shop_name,"",user_id,creat_time)
+    try:
+        cur.execute(sql)
+        conn.commit()
+    except Exception as e:
+        print(e)
+        log_psql.error(e)
+        # status -200 数据库操作失败。
+        return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    # status 0 创建店铺成功！返回shop_id
+    return {"status":0,"message":"successful","data":{"shop_id":shop_id}}
+
+def UpdateShop(shop_id:int,content:str,user_id:int)->dict:
+    """
+    更新店铺的内容
+    :param shopid: 店铺id
+    :param content: 店铺内容
+    :param user_id: token中用户id
+    :return: json_dict
+    """
+    cur = conn.cursor()
+    if GetShopOwner(shop_id) != user_id:
+        # status 100 无权更新他人的店铺信息
+        return {"status":100,"message":"No right to update","data":{}}
+    sql = "UPDATE shop SET content = '{0}' WHERE shop_id = {1}}".format(content,shop_id)
+    try:
+        cur.execute()
+        conn.commit()
+    except Exception as e:
+        print(e)
+        log_psql.error(e)
+        # status -200 数据库操作失败。
+        return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    # status 0 更新店铺信息成功！无返回
+    return {"status": 0, "message": "successful", "data": {}}
 
 
 if __name__ == '__main__':
     Initialize("../config.ini",os.path.dirname(os.path.abspath(__file__)))
-    result = CheckToken("9763393e42ef2b8f051caefbec8a522f31a38663a7180d69d1a9cb1addaa76ac")
+    # result = CheckToken("9763393e42ef2b8f051caefbec8a522f31a38663a7180d69d1a9cb1addaa76ac")
+    result = CheckShopName("微凉的第一个店铺")
     print(result)
     # find_dict = {
     #     "state": -1,
@@ -332,6 +451,6 @@ if __name__ == '__main__':
     #     "update_time": "m",
     # }
     # InsertFindProperty(**find_dict)
-    print(GetFindProperty("我丢了个许淳皓"))
+    # print(GetProperty(1,"我丢了个许淳皓"))
 
     conn.close()

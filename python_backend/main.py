@@ -691,13 +691,13 @@ def property():
                 result = PSQL.InsertProperty(**property_dict)
             except:
                 # status -200 数据库操作失败。
-                return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
+                return json.dumps({"id": id, "status": -200, "message": "Failure to operate database", "data": {}})
             if result == True :
                 # status 0 添加记录成功
                 return json.dumps({"id": id, "status": 0, "message": "successful", "data": {"uid":uid}})
             else:
                 # status -200 数据库操作失败。
-                return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
+                return json.dumps({"id": id, "status": -200, "message": "Failure to operate database", "data": {}})
         elif subtype == "update":
             # todo update
             # property_dict 字典模版已放在外部
@@ -841,7 +841,7 @@ def property():
                 print("Unknown Error:",e)
                 log_main.error(e)
                 # status -200 数据库操作失败。
-                return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
+                return json.dumps({"id": id, "status": -200, "message": "Failure to operate database", "data": {}})
 
             if result == True:
                 # status 0 更新记录成功
@@ -849,7 +849,7 @@ def property():
             else:
                 print("操作失败")
                 # status -200 数据库操作失败。
-                return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
+                return json.dumps({"id": id, "status": -200, "message": "Failure to operate database", "data": {}})
             # todo 设计数据更新api
         elif subtype == "delete":
             # lost_dict字典模版已放在外部
@@ -884,14 +884,14 @@ def property():
                 print("Unknown Error:",e)
                 log_main.error(e)
                 # status -200 数据库操作失败。
-                return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
+                return json.dumps({"id": id, "status": -200, "message": "Failure to operate database", "data": {}})
             if result == True:
                 # status 0 删除记录成功
                 return json.dumps({"id": id, "status": 0, "message": "successful", "data": {}})
             else:
                 print("操作失败")
                 # status -200 数据库操作失败。
-                return json.dumps({"id": id, "status": -200, "message": "Connect Database Failed", "data": {}})
+                return json.dumps({"id": id, "status": -200, "message": "Failure to operate database", "data": {}})
             # todo 设计数据删除api
         else:
             # status -2 json的value错误。
@@ -1005,6 +1005,74 @@ def get_property():
         print("GET find proerty,totally: {} record".format(record_num))
         # status 0 成功处理数据
         return json.dumps({"id": -1, "status": 0, "message": "successful", "data": data_list},ensure_ascii=False)
+
+@app.route("/shop")
+def shop():
+    try:
+        token = request.args["token"]
+        print("token:",token)
+    except Exception as e:
+        print("Missing necessary args")
+        log_main.error("Missing necessary agrs")
+        # status -100 缺少必要的参数
+        return json.dumps({"id":-1,"status":-100,"message":"Missing necessary args","data":{}})
+    token_check_result = PSQL.CheckToken(token)
+    if token_check_result == False:
+        # status -101 token不正确
+        return json.dumps({"id": -1, "status": -101, "message": "Error token", "data": {}})
+    # 验证身份完成，处理数据
+    data = request.json
+    print(data)
+
+    # 先获取json里id的值，若不存在，默认值为-1
+    try:
+        keys = data.keys()
+    except Exception as e:
+        # status -1 json的key错误。此处id是因为没有进行读取，所以返回默认的-1。
+        return json.dumps({"id": -1, "status": -1, "message": "Error JSON key", "data": {}})
+
+    if "id" in data.keys():
+        id = data["id"]
+    else:
+        id = -1
+
+    ## 判断指定所需字段是否存在，若不存在返回status -1 json。
+    for key in ["type", "subtype", "data"]:
+        if not key in data.keys():
+            # status -1 json的key错误。
+            return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+    type = data["type"]
+    subtype = data["subtype"]
+    ## -------正式处理事务-------
+    data = data["data"]
+    if type == "shop":  ## 店铺api
+        if subtype == "creat":
+            if "shopname" not in data.keys():
+                # status -1 json的key错误。
+                return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+            shop_name = data["shopname"]
+            user_id = PSQL.GetUserID(token=token)
+            if user_id == None or user_id == "":
+                # status -102 Necessary args can't be empty
+                return json.dumps(
+                    {"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
+            json_dict = PSQL.CreatShop(shop_name=shop_name,user_id=user_id)
+            return json.dumps(json_dict)
+        elif subtype == "update":
+            for key in data.keys():
+                if key not in ["content","shopid"]:
+                    # status -1 json的key错误。
+                    return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+            shop_id = data["shopid"]
+            content = data["content"]
+            user_id = PSQL.GetUserID(token)
+            if user_id == None or user_id == "":
+                # status -102 Necessary args can't be empty
+                return json.dumps(
+                    {"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
+            json_dict = PSQL.UpdateShop(shop_id,content,user_id)
+            return json.dumps(json_dict)
+
 
 
 # @app.route("/")

@@ -368,7 +368,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 {
   "id":"请求时的ID",
   "status":-200, # 错误码
-  "message":"Connect Database Failed",
+  "message":"Failure to operate database",
   "data":{},
 }
 ```
@@ -380,7 +380,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 | -100   | Missing necessary args             | api地址中缺少token参数              |
 | -101   | Error token                        | token不正确                         |
 | -102   | Get userid failed for the token    | 使用该token获取userid失败           |
-| -200   | Connect Database Failed            | 数据库操作失败，检查SQL语句是否正确 |
+| -200   | Failure to operate database            | 数据库操作失败，检查SQL语句是否正确 |
 | -201   | Necessary key-value can't be empty | 关键键值对值不可为空                |
 | -202   | Missing necessary data key-value   | 缺少关键的键值对                    |
 | -203   | Arg's value type error             | 键值对数据类型错误                  |
@@ -448,7 +448,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 {
   "id":"请求时的ID",
   "status":-200, # 错误码
-  "message":"Connect Database Failed",
+  "message":"Failure to operate database",
   "data":{},
 }
 ```
@@ -460,7 +460,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 | -100   | Missing necessary args             | api地址中缺少token参数              |
 | -101   | Error token                        | token不正确                         |
 | -102   | Get userid failed for the token    | 使用该token获取userid失败           |
-| -200   | Connect Database Failed            | 数据库操作失败，检查SQL语句是否正确 |
+| -200   | Failure to operate database            | 数据库操作失败，检查SQL语句是否正确 |
 | -201   | Necessary key-value can't be empty | 关键键值对值不可为空                |
 | -202   | Missing necessary data key-value   | 缺少关键的键值对                    |
 | -203   | Arg's value type error             | 键值对数据类型错误                  |
@@ -515,7 +515,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 {
   "id":"请求时的ID",
   "status":-200, # 错误码
-  "message":"Connect Database Failed",
+  "message":"Failure to operate database",
   "data":{},
 }
 ```
@@ -527,7 +527,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 | -100   | Missing necessary args             | api地址中缺少token参数              |
 | -101   | Error token                        | token不正确                         |
 | -102   | Get userid failed for the token    | 使用该token获取userid失败           |
-| -200   | Connect Database Failed            | 数据库操作失败，检查SQL语句是否正确 |
+| -200   | Failure to operate database            | 数据库操作失败，检查SQL语句是否正确 |
 | -201   | Necessary key-value can't be empty | 关键键值对值不可为空                |
 | -202   | Missing necessary data key-value   | 缺少关键的键值对                    |
 | -203   | Arg's value type error             | 键值对数据类型错误                  |
