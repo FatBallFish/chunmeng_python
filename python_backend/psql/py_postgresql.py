@@ -74,7 +74,7 @@ def CheckToken(token:str)->bool:
         print("[CheckToken]Illegal quantity of token")
         return False
 
-def GetUserID(token:str)->str:
+def GetUserID(token:str)->int:
     """
     通过token获取用户id
     :param token: 用户token
@@ -101,10 +101,10 @@ def GetUserID(token:str)->str:
     elif num == 0:
         print("[CheckToken]Error token")
         log_psql.info("Error token")
-        return ""
+        return 0
     else:
         print("[CheckToken]Illegal quantity of token")
-        return ""
+        return 0
 
 # 下面的全部要修改
 def InsertProperty(**property_dict)->bool:
@@ -183,7 +183,7 @@ def UpdateProperty(**property_dict)->bool:
     else:
         update_sql = update_sql.rpartition(",")[0]
     # print("DICT:",find_dict)
-    condition_sql = condition_sql + " AND user_id = '" + str(property_dict["user_id"]) + "'"
+    condition_sql = condition_sql + " AND user_id = {}".format(property_dict["user_id"])
     # print("update_sql",update_sql)
     # print("condition_sql:",condition_sql)
     sql = "UPDATE property SET {0} WHERE {1}".format(update_sql, condition_sql)
@@ -281,7 +281,7 @@ def GetProperty(property_type:int,key:str,**property_dict)->tuple:
             "title": "",
             "content": "",
             "occurrence_time": "",
-            "user_id": "",
+            "user_id": 0,
             "user_name": "",
             "user_phone": "",
             "user_qq": "",

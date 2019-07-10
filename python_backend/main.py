@@ -545,7 +545,7 @@ def property():
         "title": "",
         "content": "",
         "occurrence_time": "",
-        "user_id": "",
+        "user_id": 0,
         "user_name": "",
         "user_phone": "",
         "user_qq": "",
@@ -595,7 +595,7 @@ def property():
             # user_id
             user_id = PSQL.GetUserID(token)
             print("user_id:",user_id)
-            if user_id == None or user_id == "":
+            if user_id == None or user_id == 0:
                 # status -102 Necessary args can't be empty
                 return json.dumps(
                     {"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
@@ -633,7 +633,7 @@ def property():
                     property_dict["occurrence_time"] = data["occurrence_time"]
                     continue
                 elif key == "user_id":
-                    if data["user_id"] == "":
+                    if data["user_id"] == None or data["user_id"] == "" or data["user_id"] == 0:
                         # status -201 Necessary args can't be empty
                         return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
                     property_dict["user_id"] = data["user_id"]
@@ -706,7 +706,7 @@ def property():
             # lost_dict["state"] = 0
             user_id = PSQL.GetUserID(token)
             print("user_id:", user_id)
-            if user_id == None or user_id == "":
+            if user_id == None or user_id == 0:
                 # status -102 Necessary args can't be empty
                 return json.dumps(
                     {"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
@@ -789,7 +789,7 @@ def property():
                     update_dict["occurrence_time"] = data["occurrence_time"]
                     continue
                 elif key == "user_id":
-                    if data["user_id"] == "":
+                    if data["user_id"] == None or data["user_id"] == "" or data["user_id"] == 0:
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
@@ -856,16 +856,16 @@ def property():
 
             # -------定义缺省字段初始值-------
             user_id = PSQL.GetUserID(token=token)
-            if user_id == "" or user_id == None:
+            if user_id == 0 or user_id == None:
                 # status -102 Get userid failed for the token
                 return json.dumps({"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
             print("user_id:", user_id)
             delete_dict = {}
             # 获取字段信息
             if "user_id" in data.keys():
-                delete_dict["user_id"] = str(data["user_id"])
+                delete_dict["user_id"] = data["user_id"]
             else:
-                delete_dict["user_id"] = str(user_id)
+                delete_dict["user_id"] = user_id
             if "id" in data.keys():
                 uid = str(data["id"])
                 if uid.isdigit():
@@ -921,7 +921,7 @@ def get_property():
         "title": "",
         "content": "",
         "occurrence_time": "",
-        "user_id": "",
+        "user_id": 0,
         "user_name": "",
         "user_phone": "",
         "user_qq": "",
@@ -961,7 +961,6 @@ def get_property():
             return json.dumps({"id":-1,"status":0,"message":"successful","data":data_list},ensure_ascii=False)
         except Exception as e:
             print(e)
-
     else:
         # 情况一，只有token、type和key参数
         if "type" in args_dict.keys():
@@ -1052,7 +1051,7 @@ def shop():
                 return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
             shop_name = data["shopname"]
             user_id = PSQL.GetUserID(token=token)
-            if user_id == None or user_id == "":
+            if user_id == None or user_id == 0:
                 # status -102 Necessary args can't be empty
                 return json.dumps(
                     {"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
@@ -1066,7 +1065,7 @@ def shop():
             shop_id = data["shopid"]
             content = data["content"]
             user_id = PSQL.GetUserID(token)
-            if user_id == None or user_id == "":
+            if user_id == None or user_id == 0:
                 # status -102 Necessary args can't be empty
                 return json.dumps(
                     {"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
