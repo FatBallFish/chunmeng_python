@@ -49,21 +49,15 @@ headers = {'content-type': "application/json"}
 data={
     "id":0,
     "status":0,
-    "type":"property",
-    "subtype":"update",
+    "type":"shop",
+    "subtype":"list",
     "data":{
-        "id":1556549189,
-        "type":1,
-        "state":1,
-        "lab":"卡类",
-        "title":"我丢了一张一卡通",
-        "content":"我在教学楼丢了一张校园卡",
-        "user_name":"wlc",
-        "user_phone":"13750687010",
+        "shop_name":"小",
+        "order":"shop_id DESC"
     }}
-token = "294c949e1573c562fd70ac12a58859d7a82e7c46a77c59d7c9f2559ff01cbe52"
-# response = requests.post(url="http://127.0.0.1:4081/property?token={}".format(token),data=json.dumps(data),headers=headers)
-response = requests.post(url="https://www.zustservice.cn/api/external/property?token={}".format(token),data=json.dumps(data),headers=headers)
+token = "a867191c890dcc6d69d8b2f20713c8ae02ff406aaab5d0456d6c2a8b8f8c328d"
+response = requests.post(url="http://127.0.0.1:4081/get/shop?token={}".format(token),data=json.dumps(data),headers=headers)
+# response = requests.post(url="https://www.zustservice.cn/api/external/property?token={}".format(token),data=json.dumps(data),headers=headers)
 
 ## 删除寻物启事api
 # data={

@@ -921,7 +921,7 @@ def get_property():
         "title": "",
         "content": "",
         "occurrence_time": "",
-        "user_id": 0,
+        "user_id": -1,
         "user_name": "",
         "user_phone": "",
         "user_qq": "",
@@ -1005,7 +1005,7 @@ def get_property():
         # status 0 成功处理数据
         return json.dumps({"id": -1, "status": 0, "message": "successful", "data": data_list},ensure_ascii=False)
 
-@app.route("/shop")
+@app.route("/shop",methods=["POST"])
 def shop():
     try:
         token = request.args["token"]
@@ -1022,7 +1022,6 @@ def shop():
     # 验证身份完成，处理数据
     data = request.json
     print(data)
-
     # 先获取json里id的值，若不存在，默认值为-1
     try:
         keys = data.keys()
@@ -1034,7 +1033,6 @@ def shop():
         id = data["id"]
     else:
         id = -1
-
     ## 判断指定所需字段是否存在，若不存在返回status -1 json。
     for key in ["type", "subtype", "data"]:
         if not key in data.keys():
@@ -1046,34 +1044,320 @@ def shop():
     data = data["data"]
     if type == "shop":  ## 店铺api
         if subtype == "creat":
-            if "shopname" not in data.keys():
+            if "shop_name" not in data.keys():
                 # status -1 json的key错误。
                 return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
-            shop_name = data["shopname"]
+            shop_name = data["shop_name"]
             user_id = PSQL.GetUserID(token=token)
             if user_id == None or user_id == 0:
                 # status -102 Necessary args can't be empty
                 return json.dumps(
-                    {"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
-            json_dict = PSQL.CreatShop(shop_name=shop_name,user_id=user_id)
+                    {"id": id, "status": -102, "message": "Get user_id failed for the token", "data": {}})
+            json_dict = PSQL.CreatShop(shop_name=shop_name,user_id=user_id,id=id)
             return json.dumps(json_dict)
         elif subtype == "update":
             for key in data.keys():
-                if key not in ["content","shopid"]:
+                if key not in ["shop_content","shop_id"]:
                     # status -1 json的key错误。
                     return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
-            shop_id = data["shopid"]
-            content = data["content"]
+            shop_id = data["shop_id"]
+            shop_content = data["shop_content"]
             user_id = PSQL.GetUserID(token)
             if user_id == None or user_id == 0:
                 # status -102 Necessary args can't be empty
                 return json.dumps(
-                    {"id": id, "status": -102, "message": "Get userid failed for the token", "data": {}})
-            json_dict = PSQL.UpdateShop(shop_id,content,user_id)
+                    {"id": id, "status": -102, "message": "Get user_id failed for the token", "data": {}})
+            json_dict = PSQL.UpdateShop(shop_id=shop_id,shop_content=shop_content,user_id=user_id,id=id)
             return json.dumps(json_dict)
 
+@app.route("/get/shop",methods=["POST"])
+def get_shop():
+    try:
+        token = request.args["token"]
+        print("token:",token)
+    except Exception as e:
+        print("Missing necessary args")
+        log_main.error("Missing necessary agrs")
+        # status -100 缺少必要的参数
+        return json.dumps({"id":-1,"status":-100,"message":"Missing necessary args","data":{}})
+    token_check_result = PSQL.CheckToken(token)
+    if token_check_result == False:
+        # status -101 token不正确
+        return json.dumps({"id": -1, "status": -101, "message": "Error token", "data": {}})
+    # 验证身份完成，处理数据
+    data = request.json
+    print(data)
+    # 先获取json里id的值，若不存在，默认值为-1
+    try:
+        keys = data.keys()
+    except Exception as e:
+        # status -1 json的key错误。此处id是因为没有进行读取，所以返回默认的-1。
+        return json.dumps({"id": -1, "status": -1, "message": "Error JSON key", "data": {}})
 
+    if "id" in data.keys():
+        id = data["id"]
+    else:
+        id = -1
+    ## 判断指定所需字段是否存在，若不存在返回status -1 json。
+    for key in ["type", "subtype", "data"]:
+        if not key in data.keys():
+            # status -1 json的key错误。
+            return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+    type = data["type"]
+    subtype = data["subtype"]
+    ## -------正式处理事务-------
+    data = data["data"]
+    if type == "shop":  ## 店铺api
+        if subtype == "list":
+            if "shop_name" not in data.keys():
+                # status -1 json的key错误。
+                return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+            shop_name = data["shop_name"]
+            order = ""
+            if "order" in data.keys():
+                order = data["order"]
+            json_dict = PSQL.GetShopList(shop_name=shop_name,order=order,id=id)
+            # status 0 1
+            return json.dumps(json_dict)
+        elif subtype == "info":
+            if "shop_id" in data.keys():
+                shop_id = data["shop_id"]
+                json_dict = PSQL.GetShopInfo(shop_id=shop_id,id=id)
+            elif "shop_name" in data.keys():
+                shop_name = data["shop_name"]
+                json_dict = PSQL.GetShopInfo(shop_name=shop_name,id=id)
+            return json.dumps(json_dict)
+        elif subtype == "delete":
+            pass
+            # todo Delete shop
 
+@app.route("/product",methods=["POST"])
+def product():
+    try:
+        token = request.args["token"]
+        print("token:",token)
+    except Exception as e:
+        print("Missing necessary args")
+        log_main.error("Missing necessary agrs")
+        # status -100 缺少必要的参数
+        return json.dumps({"id":-1,"status":-100,"message":"Missing necessary args","data":{}})
+    token_check_result = PSQL.CheckToken(token)
+    if token_check_result == False:
+        # status -101 token不正确
+        return json.dumps({"id": -1, "status": -101, "message": "Error token", "data": {}})
+    # 验证身份完成，处理数据
+    data = request.json
+    print(data)
+    # 先获取json里id的值，若不存在，默认值为-1
+    try:
+        keys = data.keys()
+    except Exception as e:
+        # status -1 json的key错误。此处id是因为没有进行读取，所以返回默认的-1。
+        return json.dumps({"id": -1, "status": -1, "message": "Error JSON key", "data": {}})
+
+    if "id" in data.keys():
+        id = data["id"]
+    else:
+        id = -1
+    ## 判断指定所需字段是否存在，若不存在返回status -1 json。
+    for key in ["type", "subtype", "data"]:
+        if not key in data.keys():
+            # status -1 json的key错误。
+            return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+    type = data["type"]
+    subtype = data["subtype"]
+    ## -------正式处理事务-------
+    data = data["data"]
+    user_id = PSQL.GetUserID(token)
+    key_dict = {
+        "product_id":-1,
+        "product_name": "",
+        "product_content":"",
+        "product_key":"",
+        "product_price":-1.0,
+        "product_disprice":-1.0,
+        "product_sale":-1,
+        "product_click":-1,
+        "product_collection":-1,
+        "shop_id":-1,
+        "creat_time":"",
+        "update_time":"",
+        "product_pic":"",
+    }
+    product_dict = {}
+    if type == "product":  ## 店铺api
+        if subtype == "creat":
+            # TODO 判断非空字段是否存在
+            for key in data.keys():
+                if key not in key_dict.keys():
+                    # status -1 json的key错误。
+                    return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+            for key in data.keys():
+                # print("key:[{}],type:[{}]".format(key,type(data[key])))
+                if key == "product_id":
+                    continue
+                elif key == "product_name":
+                    if not isinstance(data[key],str):
+                    # if type(data[key]) is not str:
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] == "":
+                        # status -204 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_content":
+                    if not isinstance(data[key], str):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -201, "message": "Arg's value type error", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_key":
+                    if not isinstance(data[key], str):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -201, "message": "Arg's value type error", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_price":
+                    if (not isinstance(data[key],float)) and (not isinstance(data[key],int)):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    data[key] = float(data[key])
+                    if data[key] == 0.0:
+                        # status -204 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_disprice":
+                    continue
+                elif key == "product_sale":
+                    continue
+                elif key == "product_click":
+                    continue
+                elif key == "product_collection":
+                    continue
+                elif key == "shop_id":
+                    if not isinstance(data[key],int):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] == 0:
+                        # status -204 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "creat_time":
+                    continue
+                elif key == "update_time":
+                    continue
+                elif key == "product_pic":
+                    if not isinstance(data[key], str):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] == "":
+                        pass
+                        # todo 设置一张默认图片
+                    product_dict[key] = data[key]
+                    continue
+            json_dict = PSQL.CreatProduct(user_id=user_id,id=id,**product_dict)
+            return json.dumps(json_dict)
+        elif subtype == "update":
+            for key in data.keys():
+                if key not in key_dict.keys():
+                    # status -1 json的key错误。
+                    return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+            for key in data.keys():
+                if key == "product_id":
+                    if not isinstance(data[key],int):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] == 0:
+                        # status -204 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    product_dict[key] = data[key]
+                elif key == "product_name":
+                    if not isinstance(data[key], str):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] == "":
+                        # status -204 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_content":
+                    if not isinstance(data[key], str):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -201, "message": "Arg's value type error", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_key":
+                    if not isinstance(data[key], str):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -201, "message": "Arg's value type error", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_price":
+                    if (not isinstance(data[key], float)) and (not isinstance(data[key], int)):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    data[key] = float(data[key])
+                    if data[key] == 0.0:
+                        # status -204 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_disprice":
+                    if (not isinstance(data[key],float)) and (not isinstance(data[key],int)):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    data[key] = float(data[key])
+                    if data[key] == 0.0:
+                        # status -204 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_sale":
+                    if not isinstance(data[key],int):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_click":
+                    if not isinstance(data[key],int):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_collection":
+                    if not isinstance(data[key],int):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "shop_id":
+                    if not isinstance(data[key],int):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] == 0:
+                        # status -204 Necessary args can't be empty
+                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "creat_time":
+                    continue
+                elif key == "update_time":
+                    # todo 在psql里配置
+                    continue
+                elif key == "product_pic":
+                    if not isinstance(data[key], str):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] == "":
+                        pass
+                        # todo 设置一张默认图片
+                    product_dict[key] = data[key]
+                    continue
+            json_dict = PSQL.UpdateProduct(user_id=user_id,id=id,**product_dict)
+            return json.dumps(json_dict)
 # @app.route("/")
 # def index():
 #     return render_template("img.html")

@@ -4,3 +4,4 @@ captcha/captcha/*.png
 *.log
 Api_Function
 templates
+temp
