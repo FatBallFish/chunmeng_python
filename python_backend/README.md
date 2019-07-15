@@ -7,7 +7,7 @@
 
 
 > 注：main.py文件运行时需用 -c configpath 来指定配置文件路径。
-### Json的通用格式：
+## **Json的通用格式：**
 
 ```python
 {
@@ -32,13 +32,17 @@
 
 ## **验证码类**
 
-### 验证码API地址：
+#### 登录图片验证码
 
-> https://www.zustservice.cn/api/external/captcha
+> **API类型**
 
-#### **登录图片验证码**
+**请求类型：`POST`**
 
-+ **POST发送请求的json文本**
+> **验证码API地址：**
+
+**https://www.zustservice.cn/api/external/captcha**
+
+> **POST发送请求的json文本**
 
 ```python
 {
@@ -50,7 +54,7 @@
 }
 ```
 
-+ **Python端返回成功处理情况**
+> **Python端返回成功处理情况**
 
 ```python
 {
@@ -65,16 +69,18 @@
 ```
 
 > ## 注意
-> 新版本里将返回数据`data`中的`code`字段删除了。  
->
-> 1. `id`字段需是整型数据。若是文本型数字数据，返回时自动转换成整数型数据；若是非数字型文本，则返回`-1`。`id`用于让前端在服务繁忙时能够对应服务;  
-> 2. Python成功返回时的`imgdata`为验证码base64图片数据，前端获得数据后进行转码再显示;  
-> 3. `rand`为随机字符串，前端获得验证码后需要将验证码和`rand`文本一并传给java端进行验证，`hash = MD5(code+rand)`。  
-> 4. 验证码不区分大小写，请自行将验证码转换成全部小写。
->
-> 
 
-+ **Python端返回失败处理情况**
++ 新版本里将返回数据`data`中的`code`字段删除了。  
+
++ `id`字段需是整型数据。若是文本型数字数据，返回时自动转换成整数型数据；若是非数字型文本，则返回`-1`。`id`用于让前端在服务繁忙时能够对应服务;  
+
++ Python成功返回时的`imgdata`为验证码base64图片数据，前端获得数据后进行转码再显示;  
+
++ `rand`为随机字符串，前端获得验证码后需要将验证码和`rand`文本一并传给java端进行验证，`hash = MD5(code+rand)`。  
+
++ 验证码不区分大小写，请自行将验证码转换成全部小写。
+
+> **Python端返回失败处理情况**
 
 ```python
 {
@@ -85,15 +91,23 @@
 }
 ```
 
-> `status`传递的错误码类型为整型。具体的错误码详见最下方表格。
++ `status`传递的错误码类型为整型。具体的错误码详见最下方表格。
 
 ---
 
 
 
-#### **图片验证码校验**
+#### 图片验证码校验
 
-+ **POST发送请求的json文本**
+> **API类型**
+
+**请求类型：`POST`**
+
+> **验证码API地址：**
+
+**https://www.zustservice.cn/api/external/captcha**
+
+> **POST发送请求的json文本**
 
 ```python
 {
@@ -106,10 +120,10 @@
 ```
 
 > ## 注意
->
-> `hash`字段的数据要求是用户填写的验证码内容与rand文本进行MD5加密获得。即`hash = MD5(code + rand)`
 
-+ **Python端返回成功处理情况**
++ `hash`字段的数据要求是用户填写的验证码内容与rand文本进行MD5加密获得。即`hash = MD5(code + rand)`
+
+> **Python端返回成功处理情况**
 
 ```python
 {
@@ -120,7 +134,7 @@
 }
 ```
 
-+ **Python端返回失败处理情况**
+> **Python端返回失败处理情况**
 
 ```python
 {
@@ -131,9 +145,9 @@
 }
 ```
 
-> `status`传递的错误码类型为整型。具体的错误码详见最下方表格。
++ `status`传递的错误码类型为整型。具体的错误码详见最下方表格。
 
-##### 局部status表
+> **局部status表**
 
 | status | message                                        |
 | ------ | ---------------------------------------------- |
@@ -142,9 +156,17 @@
 
 ---
 
-#### **注册手机验证码**
+#### 注册手机验证码
 
-+ **POST发送请求的json文本**
+> **API类型**
+
+**请求类型：`POST`**
+
+> **验证码API地址：**
+
+**https://www.zustservice.cn/api/external/captcha**
+
+> **POST发送请求的json文本**
 
 ```python
 {
@@ -160,11 +182,11 @@
 ```
 
 > ## 注意
-> 1. `phone`字段需用文本型传递，且只能为中国大陆手机号，不支持国外手机号
->
-> 2. `hash`字段的数据要求是用户填写的验证码内容与rand文本进行MD5加密获得。即`hash = MD5(code + rand)`
 
-+ **Python端返回成功处理情况**
++ phone`字段需用文本型传递，且只能为中国大陆手机号，不支持国外手机号`
++ hash`字段的数据要求是用户填写的验证码内容与rand文本进行MD5加密获得。即`hash = MD5(code + rand)`
+
+> **Python端返回成功处理情况**
 
 ```python
 {
@@ -178,12 +200,13 @@
 ```
 
 > ## 注意：
-> 新版本里将返回数据`data`中的`code`字段删除了。  
-> 1.Python成功返回时的addr为验证码文件名，由MD5加盐加密获得。  
-> 2.`rand`为随机字符串，前端获得验证码后需要将验证码和rand文本一并传给java端进行验证，`hash = MD5(code+rand)`。  
-> **3.手机验证码的时效为3min，由后端处理。验证码超时后端会返回`status = -4`的错误。**
 
-+ **Python端返回失败处理情况**
++ 新版本里将返回数据`data`中的`code`字段删除了。  
++ Python成功返回时的addr为验证码文件名，由MD5加盐加密获得。  
++ `rand`为随机字符串，前端获得验证码后需要将验证码和rand文本一并传给java端进行验证，`hash = MD5(code+rand)`。  
++ **手机验证码的时效为3min，由后端处理。验证码超时后端会返回`status = -4`的错误。**
+
+> **Python端返回失败处理情况**
 
 ```python
 {
@@ -194,8 +217,9 @@
 }
 ```
 > ## 注意
-> `status`传递的错误码类型为整型。具体的错误码参照**腾讯云短信服务API文档**。
-> [短信错误码
+
++ `status`传递的错误码类型为整型。具体的错误码参照**腾讯云短信服务API文档**。
+  [短信错误码
 
 
 
@@ -205,13 +229,17 @@
 
 ## **头像类**
 
-### 头像上传API地址：
+#### 上传头像API
 
-> https://www.zustservice.cn/api/external/portrait
+> **API类型**
 
-#### **上传头像API**
+**请求类型：`POST`**
 
-- **POST发送请求的json文本**
+> **头像上传API地址：**
+
+**https://www.zustservice.cn/api/external/portrait**
+
+> **POST发送请求的json文本**
 
 ```python
 {
@@ -228,7 +256,7 @@
 }
 ```
 
-- **Python端返回成功处理情况**
+> **Python端返回成功处理情况**
 
 ```python
 {
@@ -242,13 +270,16 @@
 ```
 
 > ## 注意
->
-> 1. 目前所有的头像图片是专门的COS对象储存服务器里
-> 2. 图片文件大小限制在1024kb以下
-> 3. type字段要准确
-> 4. 目前的api不会返回上传的图片路径，如果处理成功会返回百度的logo图片地址
 
-- **Python端返回失败处理情况**
++ 目前所有的头像图片是专门的COS对象储存服务器里
+
++ 图片文件大小限制在1024kb以下
+
++ type字段要准确
+
++ 目前的api不会返回上传的图片路径，如果处理成功会返回百度的logo图片地址
+
+> **Python端返回失败处理情况**
 
 ```python
 {
@@ -259,35 +290,41 @@
 }
 ```
 
+#### 获取头像API
 
+> **API类型**
 
-#### 头像获取API地址：
+**请求类型：`GET`**
 
-> https://www.zustservice.cn/api/external/get/portrait/< id >
+> **头像获取API地址：**
 
-#### **获取头像API**
+**https://www.zustservice.cn/api/external/get/portrait/< id >**
 
-- **GET发送请求的链接参数**
+> **GET发送请求的链接参数**
 
 ```python
 https://www.zustservice.cn/api/external/get/portrait/<id>
-    <id>:账号id
 ```
 
-- **Python端返回成功处理情况**
++ `<id>`：账号id
+
+> **Python端返回成功处理情况**
 
 ```python
 返回图片的bytes数据
 ```
 
 > ## 注意
->
-> 1. 目前所有的头像图片是放在专门的COS对象储存服务器里，非码三秃的域名引用图片返回ban图片
-> 2. id参数类型正确但不存在，返回默认头像
-> 3. id参数类型不正确，返回error图片
-> 4. 若无任何返回则是后端炸了。
 
-- **Python端返回失败处理情况**
++ 目前所有的头像图片是放在专门的COS对象储存服务器里，非码三秃的域名引用图片返回ban图片
+
++ id参数类型正确但不存在，返回默认头像
+
++ id参数类型不正确，返回error图片
+
++ 若无任何返回则是后端炸了。
+
+> **Python端返回失败处理情况**
 
 ```python
 1.非码三秃域名获取图片时：返回ban图片
@@ -299,13 +336,17 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 ## **寻物启事·失物招领类**
 
-### POST启事API地址：
+#### 添加启事文章API
 
-> https://www.zustservice.cn/api/external/property?token={token值}
+> **API类型**
 
-#### **添加启事文章API**
+**请求类型：`POST`**
 
-- **POST发送请求的json文本**
+> **POST启事API地址**
+
+**https://www.zustservice.cn/api/external/property?token={token值}**
+
+> **POST发送请求的json文本**
 
 ```python
 {
@@ -327,7 +368,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 }
 ```
 
-+ data字段表
+> **data字段表**
 
 |        参数         | 可否为空 | 可否缺省 |      数据类型       |           例子            | 字段长度限制 |                            备注                            |
 | :-----------------: | :------: | -------- | :-----------------: | :-----------------------: | :----------: | :--------------------------------------------------------: |
@@ -353,9 +394,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 |    **pic_url2**     |  **√**   | **√**    |     **string**      |                           |   **1024**   |                       **图片2地址**                        |
 |    **pic_url3**     |  **√**   | **√**    |     **string**      |                           |   **1024**   |                       **图片3地址**                        |
 
-
-
-- **Python端返回成功处理情况**
+> **Python端返回成功处理情况**
 
 ```python
 {
@@ -366,7 +405,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 }
 ```
 
-- **Python端返回失败处理情况**
+> **Python端返回失败处理情况**
 
 ```python
 {
@@ -377,7 +416,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 }
 ```
 
-#### 局部status表
+> **局部status表**
 
 | status | message                            | 内容                                |
 | ------ | ---------------------------------- | ----------------------------------- |
@@ -392,9 +431,17 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 
 
-#### **更新启事文章API**
+#### 更新启事文章API
 
-- **POST发送请求的json文本**
+> **API类型**
+
+**请求类型：`POST`**
+
+> **POST启事API地址**
+
+**https://www.zustservice.cn/api/external/property?token={token值}**
+
+> **POST发送请求的json文本**
 
 ```python
 {
@@ -410,7 +457,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 }
 ```
 
-- data字段表
+> **data字段表**
 
 |        参数         | 可否为空 | 可否缺省 |      数据类型       |           例子            | 字段长度限制 |                           备注                           |
 | :-----------------: | :------: | -------- | :-----------------: | :-----------------------: | :----------: | :------------------------------------------------------: |
@@ -431,11 +478,11 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 |    **user2_qq**     |  **√**   | **√**    |     **string**      |      **“15448486”**       |    **15**    |                       **响应者qq**                       |
 |     update_time     |    √     | √        |   datetime-string   |   "2019-04-22 16:17:42"   |              | 更新时间，日期时间型文本，为空或缺省默认为服务器当前时间 |
 
-> 1. update API中`id`字段和`user_id`不可进行修改，只能做查询的条件
->
-> 2. update API执行成功的条件是`id`存在且id对应的`user_id`与传递的`user_id`或者`token`所对应的`user_id`一致，才能成功删除。若失败返回-200错误码。
++ update API中`id`字段和`user_id`不可进行修改，只能做查询的条件
 
-- **Python端返回成功处理情况**
++ update API执行成功的条件是`id`存在且id对应的`user_id`与传递的`user_id`或者`token`所对应的`user_id`一致，才能成功删除。若失败返回-200错误码。
+
+> **Python端返回成功处理情况**
 
 ```python
 {
@@ -446,7 +493,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 }
 ```
 
-- **Python端返回失败处理情况**
+> **Python端返回失败处理情况**
 
 ```python
 {
@@ -457,7 +504,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 }
 ```
 
-#### 局部status表
+> **局部status表**
 
 | status | message                            | 内容                                |
 | ------ | ---------------------------------- | ----------------------------------- |
@@ -472,9 +519,17 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 
 
-#### **删除启事文章API**
+#### 删除启事文章API
 
-- **POST发送请求的json文本**
+> **API类型**
+
+**请求类型：`POST`**
+
+> **POST启事API地址**
+
+**https://www.zustservice.cn/api/external/property?token={token值}**
+
+> **POST发送请求的json文本**
 
 ```python
 {
@@ -489,20 +544,20 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 }
 ```
 
-- data字段表
+> **data字段表**
 
 |  参数   | 可否为空 | 可否缺省 | 数据类型 |     例子     | 字段长度限制 |                    备注                    |
 | :-----: | :------: | -------- | :------: | :----------: | :----------: | :----------------------------------------: |
 |   id    |          |          |  bigint  |              |  -2^31~2^31  |              文章id，不可修改              |
 | user_id |          | √        |  string  | "1180310086" |      15      | 发起者用户id，不填写后端自动读取，不可修改 |
 
-> 1. delete API 参数只能是以上两个，其他字段哪怕传递过来也自动忽略
->
-> 2. delete API执行成功的条件是`id`存在且id对应的`user_id`与传递的`user_id`或者`token`所对应的`user_id`一致，才能成功删除。若失败返回-200错误码。
++ delete API 参数只能是以上两个，其他字段哪怕传递过来也自动忽略
+
++ delete API执行成功的条件是`id`存在且id对应的`user_id`与传递的`user_id`或者`token`所对应的`user_id`一致，才能成功删除。若失败返回-200错误码。
 
 
 
-- **Python端返回成功处理情况**
+> **Python端返回成功处理情况**
 
 ```python
 {
@@ -513,7 +568,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 }
 ```
 
-- **Python端返回失败处理情况**
+> **Python端返回失败处理情况**
 
 ```python
 {
@@ -524,7 +579,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 }
 ```
 
-#### 局部status表
+> **局部status表**
 
 | status | message                            | 内容                                |
 | ------ | ---------------------------------- | ----------------------------------- |
@@ -538,13 +593,17 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 
 
-### GET启事API地址：
+#### GET启事API地址
 
-> https://www.zustservice.cn/api/external/get/property
+> **API类型**
 
-> **默认按照更新时间的降序排列**
+**请求类型：`GET`**
 
-+ 参数表
+> **GET启事API地址**
+
+**https://www.zustservice.cn/api/external/get/property**
+
+>  **参数表**
 
 | 参数  |   缺省   |                           说明                            |           备注           |
 | :---: | :------: | :-------------------------------------------------------: | :----------------------: |
@@ -556,7 +615,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 |  lab  | 可选参数 |                     寻物启事标签检索                      |    不可与key参数共用     |
 |  ...  | 可选参数 |            其他字段详情请参照上方的data字段表             |    不可与key参数共用     |
 
-- **Python端返回成功处理情况**
+> **Python端返回成功处理情况**
 
 ```python
 {
@@ -567,7 +626,9 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 }
 ```
 
-- **Python端返回失败处理情况**
++ 默认按照更新时间的降序排列
+
+> Python端返回失败处理情况**
 
 ```python
 {
@@ -578,16 +639,17 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 }
 ```
 
-> 1. 与其他api返回的数据不同的是，data返回的是一个列表，而非一个字典，注意区分处理。
->
-> 2. 语法正确但数据库无记录的话，data返回一个空列表，即`data:[]`
-> 3. 此查询语句可进行关键字查询、精确查询
->    1. 关键字查询：在`lab`、`title`、`content`中模糊查找符合关键字的数据
->    2. 精确查询，在指定的字段进行查询，其中`id`，`status`以及`lost_time`、`publish_time`、`update_time`等字段为精确查找，其余字段为模糊查找
++ 与其他api返回的数据不同的是，data返回的是一个列表，而非一个字典，注意区分处理。
 
++ 语法正确但数据库无记录的话，data返回一个空列表，即`data:[]`
 
++ 此查询语句可进行关键字查询、精确查询
 
-#### 局部status表
++ 关键字查询：在`lab`、`title`、`content`中模糊查找符合关键字的数据
+
++ 精确查询，在指定的字段进行查询，其中`id`，`status`以及`lost_time`、`publish_time`、`update_time`等字段为精确查找，其余字段为模糊查找
+
+> **局部status表**
 
 | status |        message         |                内容                |
 | :----: | :--------------------: | :--------------------------------: |
@@ -600,29 +662,167 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 ------
 
-## 学生自营平台类
+## **学生自营平台类**
 
-|     name     | data type | length | not null | primary key |
-| :----------: | :-------: | ------ | -------- | ----------- |
-|   shop_id    |           |        |          |             |
-| shop_content |           |        |          |             |
-|  shop_level  |           |        |          |             |
-|  shop_type   |           |        |          |             |
-|              |           |        |          |             |
-|              |           |        |          |             |
+### **店铺（shop） API**
 
+#### 创建店铺
 
+> **API类型**
 
-## 全局Status表
+**请求类型：`POST`**
 
-| 参数 |     Message      |         内容          |
-| :--: | :--------------: | :-------------------: |
-|  0   |        OK        |     函数处理正确      |
-|  -1  |  Error JSON key  |  json文本必需key缺失  |
-|  -2  | Error JSON value |   json文本value错误   |
-|  -3  |  Error data key  | data数据中必需key缺失 |
-|  -4  |    Error Hash    |   Hash校验文本错误    |
-| -404 |  Unknown Error   |    未知的Redis错误    |
+> **POST店铺API地址**
+
+**https://www.zustservice.cn/api/external/shop?token={token值}**
+
+> **data字段表**
+
+|     name     | data type | length | not null | primary key | 注释     |
+| :----------: | :-------: | :----: | -------- | ----------- | -------- |
+|   shop_id    |  big int  |   9    | √        | √           | 店铺id   |
+|  shop_name   |  string   |  100   | √        | √           | 店铺名称 |
+| shop_content |  string   |        |          |             | 店铺内容 |
+|   user_id    |  big int  |   11   | √        |             | 店主id   |
+|  creat_time  | datetime  |        | √        |             | 创建时间 |
+
+> **json请求格式**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"shop",
+    "subtype":"creat",
+    "data":{
+        "shop_name":"码三秃的店铺", # 店铺名称
+        "user_id":1180310086 # 用户id
+    }
+}
+```
+
++ `shop_id`在该API里不需要传入，哪怕传入也做无效处理，`shop_id`为随机生成的9位id
++ `shop_name`为必传字段，且不为空，且后期不可修改
++ `shop_content`为选填字段，不填默认为空
++ `user_id`修改为`int`类型变量
++ `creat_time`在该API里不需要传入，哪怕传入也做无效处理，`creat_time`为系统当前时间
+
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":{"shop_id":811729970 # 长整数型}
+}
+```
+
++ 返回9位的`shop_id`
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
+> **局部 Status 状态表**
+
+| status |               message               |          内容          |
+| :----: | :---------------------------------: | :--------------------: |
+|  100   |       The shop name was used        |    店铺名称已被使用    |
+|  101   | The number of shops has been capped | 该账号下店铺数量已上限 |
+
++ 其他`status`码请看[全局Status表](#全局Status表)
+
+#### 更新店铺
+
+> **API类型**
+
+**请求类型：`POST`**
+
+> **POST店铺API地址**
+
+**https://www.zustservice.cn/api/external/shop?token={token值}**
+
+> **data字段表**
+
+|     name     | data type | length | not null | primary key | 注释     |
+| :----------: | :-------: | :----: | -------- | ----------- | -------- |
+|   shop_id    |  big int  |   9    | √        | √           | 店铺id   |
+|  shop_name   |  string   |  100   | √        | √           | 店铺名称 |
+| shop_content |  string   |        |          |             | 店铺内容 |
+|   user_id    |  big int  |   11   | √        |             | 店主id   |
+|  creat_time  | datetime  |        | √        |             | 创建时间 |
+
+> **json请求格式**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"shop",
+    "subtype":"creat",
+    "data":{
+        "shop_id":"811729970", # 店铺id
+        "shop_content":"这是码三秃家的店铺" # 店铺内容
+    }
+}
+```
+
+- `shop_id`为必传字段
+- `shop_content`为必传字段
+- 若用户登录所用`token`对应的`user_id`不是店长id，则无法修改店铺信息
+
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":{}
+}
+```
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
+> **局部 Status 状态表**
+
+| status |      message       |         内容         |
+| :----: | :----------------: | :------------------: |
+|  100   | No right to update | 当前所处用户无权操作 |
+
++ 其他`status`码请看[全局Status表](#全局Status表)
+
+## **全局Status表**
+
+| 参数 |             Message             |                内容                 | 请求类型  |
+| :--: | :-----------------------------: | :---------------------------------: | --------- |
+|  0   |               OK                |            函数处理正确             | POST、GET |
+|  -1  |         Error JSON key          |         json文本必需key缺失         | POST      |
+|  -2  |        Error JSON value         |          json文本value错误          | POST      |
+|  -3  |         Error data key          |        data数据中必需key缺失        | POST      |
+|  -4  |           Error Hash            |          Hash校验文本错误           | POST      |
+| -100 |     Missing necessary args      |       api地址中缺少token参数        | POST、GET |
+| -101 |           Error token           |             token不正确             | POST、GET |
+| -102 | Get userid failed for the token |      使用该token获取userid失败      | POST、GET |
+| -200 |   Failure to operate database   | 数据库操作失败，检查SQL语句是否正确 | POST、GET |
+| -404 |          Unknown Error          |           未知的Redis错误           | POST      |
 
 ------
 
