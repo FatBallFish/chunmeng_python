@@ -22,6 +22,11 @@
   - [**店铺（shop） API**](#店铺shop-api)
     - [创建店铺](#创建店铺)
     - [更新店铺](#更新店铺)
+    - [获取店铺列表](#获取店铺列表)
+    - [获取店铺信息](#获取店铺信息)
+  - [**商品（product） API**](#商品product-api)
+    - [创建商品](#创建商品)
+    - [更新商品](#更新商品)
 - [**全局Status表**](#全局Status表)
 
 > 注：main.py文件运行时需用 -c configpath 来指定配置文件路径。
@@ -690,13 +695,11 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 > **data字段表**
 
-|     name     | data type | length | not null | primary key | 注释     |
-| :----------: | :-------: | :----: | -------- | ----------- | -------- |
-|   shop_id    |  big int  |   9    | √        | √           | 店铺id   |
-|  shop_name   |  string   |  100   | √        | √           | 店铺名称 |
-| shop_content |  string   |        |          |             | 店铺内容 |
-|   user_id    |  big int  |   11   | √        |             | 店主id   |
-|  creat_time  | datetime  |        | √        |             | 创建时间 |
+|     name     | data type | length | 不可空 | 可缺省 | 注释     |
+| :----------: | :-------: | :----: | :----: | :----: | -------- |
+|  shop_name   |  string   |  100   |   √    |        | 店铺名称 |
+| shop_content |  string   |        |        |   √    | 店铺内容 |
+|   user_id    |  big int  |   11   |   √    |        | 店主id   |
 
 > **json请求格式**
 
@@ -764,13 +767,10 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 > **data字段表**
 
-|     name     | data type | length | not null | primary key | 注释     |
-| :----------: | :-------: | :----: | -------- | ----------- | -------- |
-|   shop_id    |  big int  |   9    | √        | √           | 店铺id   |
-|  shop_name   |  string   |  100   | √        | √           | 店铺名称 |
-| shop_content |  string   |        |          |             | 店铺内容 |
-|   user_id    |  big int  |   11   | √        |             | 店主id   |
-|  creat_time  | datetime  |        | √        |             | 创建时间 |
+|     name     | data type | length | 不可空 | 可缺省 | 注释     |
+| :----------: | :-------: | :----: | :----: | :----: | -------- |
+|   shop_id    |  big int  |   9    |   √    |        | 店铺id   |
+| shop_content |  string   |        |        |        | 店铺内容 |
 
 > **json请求格式**
 
@@ -820,6 +820,353 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 |  100   | No right to update | 当前所处用户无权操作 |
 
 + 其他`status`码请看[全局Status表](#全局Status表)
+
+#### 获取店铺列表
+
+> **API类型**
+
+**请求类型：`POST`**
+
+> **POST店铺API地址**
+
+**https://www.zustservice.cn/api/external/shop?token={token值}**
+
+> **data字段表**
+
+|   name    | data type | length | 不可空 | 可缺省 | 注释                                                         |
+| :-------: | :-------: | :----: | :----: | :----: | ------------------------------------------------------------ |
+| shop_name |  string   |  100   |   √    |        | 店铺名关键字，模糊查找，返回包含该字段内容的所有记录         |
+|   order   |  string   |        |        |   √    | 排序规则，SQL语法规则。<br />`ASC` 为升序，`DESC` 为降序，可用`AND`、`OR`和`( )`组合。<br />例子：`creat_time DESC`<br />详细可排序字段表请看下方`返回JSON.data表` |
+
+> **json请求格式**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"shop",
+    "subtype":"list",
+    "data":{
+        "shop_name":"小", # 店铺名关键字
+        "order":"shop_id DESC" # 排序规则
+    }
+}
+```
+
+- `shop_name`为必传字段
+- `order`为选传字段，不填默认按照记录添加顺序排序
+
+> **返回JSON.data表**
+
+|     name     | data type | length | 注释     |
+| :----------: | :-------: | :----: | -------- |
+|   shop_id    |  big int  |   9    | 店铺id   |
+|  shop_name   |  string   |  100   | 店铺名称 |
+| shop_content |  string   |        | 店铺内容 |
+|   user_id    |  big int  |   11   | 店主id   |
+|  creat_time  | datetime  |        | 创建时间 |
+
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data": [
+        {"shop_id": 811729970, "shop_name": "小码三秃", "shop_content": "码三秃团队的店铺2", "user_id": 1180310086, "user_name": "王凌超", "creat_time": "2019-07-14 17:15:08"}, 
+        {"shop_id": 656019061, "shop_name": "五小灵童", "shop_content": "", "user_id": 1180310086, "user_name": "王凌超", "creat_time": "2019-07-14 17:15:44"}
+    ]
+}
+```
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
+> **局部 Status 状态表**
+
+| status |    message    |  内容  |
+| :----: | :-----------: | :----: |
+|   1    | Empty records | 空记录 |
+
+- 其他`status`码请看[全局Status表](#全局Status表)
+
+#### 获取店铺信息
+
+> **API类型**
+
+**请求类型：`POST`**
+
+> **POST店铺API地址**
+
+**https://www.zustservice.cn/api/external/shop?token={token值}**
+
+> **data字段表**
+
+|   name    | data type | length | 不可空 | 可缺省 | 注释             |
+| :-------: | :-------: | :----: | :----: | :----: | ---------------- |
+|  shop_id  |  big int  |   9    |   √    |   √    | 店铺id，二选一   |
+| shop_name |  string   |  100   |   √    |   √    | 店铺名称，二选一 |
+
+> **json请求格式**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"shop",
+    "subtype":"info",
+    "data":{
+        "shop_id":"小码三秃", # 店铺名
+    }
+}
+```
+
+- 此请求为全字匹配检索，不同于上一个模糊检索。
+- `shop_name`、`shop_name`两者必传一个字段
+- 若两个字段都传，则使用`shop_id`进行检索
+
+> **返回JSON.data表**
+
+|     name     | data type | length | 注释     |
+| :----------: | :-------: | :----: | -------- |
+|   shop_id    |  big int  |   9    | 店铺id   |
+|  shop_name   |  string   |  100   | 店铺名称 |
+| shop_content |  string   |        | 店铺内容 |
+|   user_id    |  big int  |   11   | 店主id   |
+|  creat_time  | datetime  |        | 创建时间 |
+
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data": {
+        "shop_id": 811729970, 
+        "shop_name": "小码三秃", 
+        "shop_content": "码三秃团队的店铺2", 
+        "user_id": 1180310086, 
+        "creat_time": "2019-07-14 17:15:08"
+    }
+}
+```
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
+> **局部 Status 状态表**
+
+| status |    message    |  内容  |
+| :----: | :-----------: | :----: |
+|   1    | Empty records | 空记录 |
+
+- 其他`status`码请看[全局Status表](#全局Status表)
+
+### **商品（product） API**
+
+#### 创建商品
+
+> **API类型**
+
+**请求类型：`POST`**
+
+> **POST商品API地址**
+
+**https://www.zustservice.cn/api/external/product?token={token值}**
+
+> **data字段表**
+
+|     name     | data type | length | 不可空 | 可缺省 | 注释     |
+| :----------: | :-------: | :----: | :------: | :---------: | -------- |
+| product_name |  string   |  100   | √        |            | 商品名称 |
+| product_content |  string   |        |          | √ | 商品内容 |
+| product_key | string     | 255 |          | √ | 商品关键字|
+| product_price | float |  | √ | | 商品价格 |
+|     shop_id     |  big int  |   9    |   √    |        | 店铺id     |
+| product_pic | string | |  | √ | 商品封面 |
+
+> **json请求格式**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"product",
+    "subtype":"creat",
+    "data":{
+        "product_name":"测试商品1", # 商品名称
+        "product_key":"测试商品", # 商品关键字
+        "producy_content":"测试", # 商品内容
+        "product_price":"100.5", # 商品价格
+        "shop_id":811729970 # 店铺id
+    }
+}
+```
+
+- `product_id`在该API里不需要传入，哪怕传入也做无效处理，`product_id`为随机生成的7位id
+- `product_name`、`product_price`、`shop_id`为必传字段，且不为空
+- 若`shop_id`所对应的店主id并非token所对应的`user_id`，则该请求无效
+- `user_id`修改为`int`类型变量
+- `creat_time`、`update_time`在该API里不需要传入，哪怕传入也做无效处理，`update_time`为系统当前时间
+
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":{"product_id":4517733 # 长整数型}
+}
+```
+
+- 返回7位的`product_id`
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
+> **局部 Status 状态表**
+
+| status |       message       |                             内容                             |
+| :----: | :-----------------: | :----------------------------------------------------------: |
+|  100   | No right to operate | 无权操作，可能有以下原因：<br />1. 操作者不是店铺所有人<br />2. shop_id 错误 |
+
+- 其他`status`码请看[全局Status表](#全局Status表)
+
+#### 更新商品
+
+> **API类型**
+
+**请求类型：`POST`**
+
+> **POST店铺API地址**
+
+**https://www.zustservice.cn/api/external/shop?token={token值}**
+
+> **data字段表**
+
+|        name        | data type | length | 不可空 | 可缺省 | 注释       |
+| :----------------: | :-------: | :----: | :----: | :----: | ---------- |
+|     product_id     |  big int  |   7    |   √    |        | 商品id     |
+|    product_name    |  string   |  100   |   √    |   √    | 商品名称   |
+|  product_content   |  string   |        |        |   √    | 商品内容   |
+|    product_key     |  string   |  255   |        |   √    | 商品关键字 |
+|   product_price    |   float   |        |   √    |   √    | 商品价格   |
+|  product_disprice  |   float   |        |        |   √    | 商品折扣价 |
+|    product_sale    |    int    |        |        |   √    | 商品销量   |
+|   product_click    |    int    |        |        |   √    | 商品点击量 |
+| product_collection |    int    |        |        |   √    | 商品收藏量 |
+|      shop_id       |  big int  |   9    |   √    |        | 店铺id     |
+|    product_pic     |  string   |        |        |   √    | 商品封面   |
+
+> **json请求格式**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"product",
+    "subtype":"creat",
+    "data":{
+        "product_id":4517733, # 商品id
+        "product_key":"测试|商品", # 商品关键字
+        "producy_content":"这是一个测试商品", # 商品内容
+        "product_price":"101.5", # 商品价格
+        "shop_id":811729970 # 店铺id
+    }
+}
+```
+
+- `product_id`、`shop_id`在必传字段，且不为空，仅做匹配使用，不可修改
+- 若`product_id`所属的`shop_id`并非请求所给的`user_id`，则该请求无效
+- 若请求所给的`shop_id`所对应的`user_id`并非token所对应的`user_id`，则该请求无效
+- `product_name`、`product_price`、`shop_id`为必传字段，且不为空
+- `user_id`修改为`int`类型变量
+- `creat_time`、`update_time`在该API里不需要传入，哪怕传入也做无效处理，`update_time`为系统当前时间
+
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":{}
+}
+```
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
+> **局部 Status 状态表**
+
+| status |       message       |                             内容                             |
+| :----: | :-----------------: | :----------------------------------------------------------: |
+|  100   | No right to operate | 无权操作，可能有以下原因：<br />1. 操作者不是店铺所有人<br />2.商品并不属于该店铺<br />2. shop_id 或 produc_id 错误 |
+
+- 其他`status`码请看[全局Status表](#全局Status表)
+
+#### 获取商品信息（暂未完善，下面的无效）
+
+> **API类型**
+
+**请求类型：`POST`**
+
+> **GET店铺API地址**
+
+**https://www.zustservice.cn/api/external/get/shop?token={token值}**
+
+> **data字段表**
+
+|        name        | data type | length | 不可空 | 可缺省 | 注释       |
+| :----------------: | :-------: | :----: | :----: | :----: | ---------- |
+|     product_id     |  big int  |   7    |   √    |   √    | 商品id     |
+|    product_name    |  string   |  100   |   √    |   √    | 商品名称   |
+|  product_content   |  string   |        |        |        | 商品内容   |
+|    product_key     |  string   |  255   |        |        | 商品关键字 |
+|   product_price    |   float   |        |   √    |        | 商品价格   |
+|  product_disprice  |   float   |        |        |        | 商品折扣价 |
+|    product_sale    |    int    |        |        |        | 商品销量   |
+|   product_click    |    int    |        |        |        | 商品点击量 |
+| product_collection |    int    |        |        |        | 商品收藏量 |
+|      shop_id       |  big int  |   9    |   √    |        | 店铺id     |
+|     creat_time     | datetime  |        |   √    |        | 创建时间   |
+|    update_time     | datetime  |        |        |        | 更新时间   |
+|    product_pic     |  string   |        |        |        | 商品封面   |
 
 ## **全局Status表**
 

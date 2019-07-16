@@ -50,14 +50,13 @@ data={
     "id":0,
     "status":0,
     "type":"shop",
-    "subtype":"list",
+    "subtype":"info",
     "data":{
-        "shop_name":"小",
-        "order":"shop_id DESC"
+        "shop_name":"小码三秃",
     }}
-token = "a867191c890dcc6d69d8b2f20713c8ae02ff406aaab5d0456d6c2a8b8f8c328d"
+token = "f25c67a05694f68c2923a94216a7ff8b2939d65265195e15e433cda7dbf27ea2"
 response = requests.post(url="http://127.0.0.1:4081/get/shop?token={}".format(token),data=json.dumps(data),headers=headers)
-# response = requests.post(url="https://www.zustservice.cn/api/external/property?token={}".format(token),data=json.dumps(data),headers=headers)
+# response = requests.post(url="https://www.zustservice.cn/api/external/get/shop?token={}".format(token),data=json.dumps(data),headers=headers)
 
 ## 删除寻物启事api
 # data={

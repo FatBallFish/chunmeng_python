@@ -569,7 +569,7 @@ def GetShopInfo(shop_name:str="",shop_id:int=0,id:int=-1)->dict:
         shop_info["shop_name"] = row[1]
         shop_info["shop_content"] = row[2]
         shop_info["user_id"] = row[3]
-        shop_info["creat_time"] = row[4]
+        shop_info["creat_time"] = str(row[4])
         # status 0 成功获取店铺信息
         return {"id": id, "status": 0, "message": "successful", "data": shop_info}
 
