@@ -1189,21 +1189,21 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 > **返回JSON.data表**
 
-|        name        | data type | length | 不可空 | 可缺省 | 注释       |
-| :----------------: | :-------: | :----: | :----: | :----: | ---------- |
-|     product_id     |  big int  |   7    |   √    |   √    | 商品id     |
-|    product_name    |  string   |  100   |   √    |   √    | 商品名称   |
-|  product_content   |  string   |        |        |        | 商品内容   |
-|    product_key     |  string   |  255   |        |        | 商品关键字 |
-|   product_price    |   float   |        |   √    |        | 商品价格   |
-|  product_disprice  |   float   |        |        |        | 商品折扣价 |
-|    product_sale    |    int    |        |        |        | 商品销量   |
-|   product_click    |    int    |        |        |        | 商品点击量 |
-| product_collection |    int    |        |        |        | 商品收藏量 |
-|      shop_id       |  big int  |   9    |   √    |        | 店铺id     |
-|     creat_time     | datetime  |        |   √    |        | 创建时间   |
-|    update_time     | datetime  |        |        |        | 更新时间   |
-|    product_pic     |  string   |        |        |        | 商品封面   |
+|        name        | data type | length | 注释       |
+| :----------------: | :-------: | :----: | ---------- |
+|     product_id     |  big int  |   7    | 商品id     |
+|    product_name    |  string   |  100   | 商品名称   |
+|  product_content   |  string   |        | 商品内容   |
+|    product_key     |  string   |  255   | 商品关键字 |
+|   product_price    |   float   |        | 商品价格   |
+|  product_disprice  |   float   |        | 商品折扣价 |
+|    product_sale    |    int    |        | 商品销量   |
+|   product_click    |    int    |        | 商品点击量 |
+| product_collection |    int    |        | 商品收藏量 |
+|      shop_id       |  big int  |   9    | 店铺id     |
+|     creat_time     | datetime  |        | 创建时间   |
+|    update_time     | datetime  |        | 更新时间   |
+|    product_pic     |  string   |        | 商品封面   |
 
 > **Python端返回成功处理情况**
 
