@@ -46,17 +46,36 @@ headers = {'content-type': "application/json"}
 #         "loser_qq":"893721708",
 #         "publish_time":"",
 #     }}
+
 data={
     "id":0,
     "status":0,
-    "type":"shop",
-    "subtype":"info",
+    "type":"product",
+    "subtype":"list",
     "data":{
-        "shop_name":"小码三秃",
+        "product_name":"测试商品",
+        "product_key":"测试",
+        "shop_id":811729970,
+        "type":"all",
+        "order":"creat_time ASC"
     }}
 token = "f25c67a05694f68c2923a94216a7ff8b2939d65265195e15e433cda7dbf27ea2"
-response = requests.post(url="http://127.0.0.1:4081/get/shop?token={}".format(token),data=json.dumps(data),headers=headers)
+response = requests.post(url="http://127.0.0.1:4081/get/product?token={}".format(token),data=json.dumps(data),headers=headers)
 # response = requests.post(url="https://www.zustservice.cn/api/external/get/shop?token={}".format(token),data=json.dumps(data),headers=headers)
+
+#
+# data={
+#     "id":0,
+#     "status":0,
+#     "type":"shop",
+#     "subtype":"list",
+#     "data":{
+#         "shop_name":"小",
+#         "order":"creat_time ASC"
+#     }}
+# token = "f25c67a05694f68c2923a94216a7ff8b2939d65265195e15e433cda7dbf27ea2"
+# response = requests.post(url="http://127.0.0.1:4081/get/shop?token={}".format(token),data=json.dumps(data),headers=headers)
+# # response = requests.post(url="https://www.zustservice.cn/api/external/get/shop?token={}".format(token),data=json.dumps(data),headers=headers)
 
 ## 删除寻物启事api
 # data={

@@ -508,6 +508,8 @@ def GetShopList(shop_name:str,order:str="",id:int=-1)->dict:
         log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    print(sql)
+    # todo 这里的num无效
     if num == 0:
         # status 1 空记录
         return {"id": id, "status": 1, "message": "Empty records", "data": {}}
@@ -609,7 +611,7 @@ def CreatProduct(user_id:int,id:int=-1,**product_dict):
     :return: json字典
     """
     cur = conn.cursor()
-    for key in ["product_name","shop_id"]:
+    for key in ["product_name","shop_id","product_status"]:
         if key not in product_dict.keys():
             # status -202 缺少关键的键值对
             return {"id":id,"status":-202,"message":"Missing necessary data key-value","data":{}}
@@ -699,6 +701,10 @@ def UpdateProduct(user_id:int,id:int=-1,**product_dict):
     for key in product_dict.keys():
         if key == "product_id":
             continue
+        if key == "shop_id":
+            continue
+        if key == "creat_time":
+            continue
         if type(product_dict[key]) == int or type(product_dict[key]) == float:
             sql = sql + key + " = " + str(product_dict[key]) + " ,"
             # value_sql = value_sql + str(product_dict[key]) + ","
@@ -728,6 +734,78 @@ def UpdateProduct(user_id:int,id:int=-1,**product_dict):
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     # status 0 成功上架产品,返回产品id
     return {"id": id, "status": 0, "message": "successful", "data": {}}
+
+def GetProductList(product_name:str="",product_key:str="",shop_id:int=0,order:str="",type:str="up",id:int=-1):
+    """
+获取商品列表
+    :param product_name: 商品名称关键字，为空代表检索全部
+    :param shop_id: 店铺id，如果此值非 0 则与 product_name 进行 与 运算
+    :param order: 排序规则，SQL语句
+    :param type: 可被检索的商品类型，up 已上架商品，down 已下架商品， del 已删除商品，all除已删除外全部商品。默认 up
+    :param id: 事件传递id
+    :return: json结果字典
+    """
+    cur = conn.cursor()
+    sql = "SELECT * FROM product WHERE"
+    if product_name != "":
+        sql = sql + " product_name LIKE '%{}%' AND".format(product_name)
+    if product_key != "":
+        sql = sql + " product_key LIKE '%{}%' AND".format(product_key)
+    if shop_id != 0 :
+        sql = sql + " shop_id = {} AND".format(shop_id)
+    if type == "up":
+        sql = sql + " product_status = 1 "
+    elif type == "down":
+        sql = sql + " product_status = 0 "
+    elif type == "all":
+        sql = sql + " (product_status = 1 OR product_status = 0) "
+    elif type == "del":
+        sql = sql + " product_status = 2 "
+    else:
+        # status -204 键值对数据错误
+        return {"id":id,"status":-204,"message":"Arg's value error","data":{}}
+    if order != "":
+        sql = sql + "ORDER BY {}".format(order)
+    try:
+        num = cur.execute(sql)
+        conn.commit()
+    except Exception as e:
+        print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+        # status -200 数据库操作失败。
+        return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    print(sql)
+    # todo 这里的num无效
+    if num == 0:
+        # status 1 空记录
+        return {"id": id, "status": 1, "message": "Empty records", "data": {}}
+    else:
+        product_list = []
+        rows = cur.fetchall()
+        for row in rows:
+            product_dict = {}
+            product_dict["product_id"] = row[0]
+            product_dict["product_name"] = row[1]
+            product_dict["product_content"] = row[2]
+            product_dict["product_key"] = row[3]
+            print(row[4],row[5])
+            product_dict["product_price"] = float(row[4])
+            if row[5] == None:
+                product_dict["product_disprice"] = row[5]
+            else:
+                product_dict["product_disprice"] = float(row[5])
+            product_dict["product_sale"] = row[6]
+            product_dict["product_click"] = row[7]
+            product_dict["product_collection"] = row[8]
+            product_dict["shop_id"] = row[9]
+            product_dict["creat_time"] = str(row[10])
+            product_dict["update_time"] = str(row[11])
+            product_dict["product_pic"] = row[12]
+            product_dict["product_status"] = row[13]
+            product_list.append(product_dict)
+        # status 0 成功获取店铺列表，返回列表数组
+        return {"id": id, "status": 0, "message": "successful", "data": product_list}
+
 
 if __name__ == '__main__':
     Initialize("../config.ini",os.path.dirname(os.path.abspath(__file__)))

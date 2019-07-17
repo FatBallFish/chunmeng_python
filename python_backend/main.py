@@ -1183,6 +1183,7 @@ def product():
         "creat_time":"",
         "update_time":"",
         "product_pic":"",
+        "product_status":-1,
     }
     product_dict = {}
     if type == "product":  ## 店铺api
@@ -1258,6 +1259,14 @@ def product():
                         # todo 设置一张默认图片
                     product_dict[key] = data[key]
                     continue
+                elif key == "product_status":
+                    if not isinstance(data[key],int):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] not in [0,1,2]:
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    product_dict[key] = data[key]
             json_dict = PSQL.CreatProduct(user_id=user_id,id=id,**product_dict)
             return json.dumps(json_dict)
         elif subtype == "update":
@@ -1356,7 +1365,72 @@ def product():
                         # todo 设置一张默认图片
                     product_dict[key] = data[key]
                     continue
+                elif key == "product_status":
+                    if not isinstance(data[key],int):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] not in [0,1,2]:
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    product_dict[key] = data[key]
             json_dict = PSQL.UpdateProduct(user_id=user_id,id=id,**product_dict)
+            return json.dumps(json_dict)
+
+@app.route("/get/product",methods=["POST"])
+def get_product():
+    try:
+        token = request.args["token"]
+        print("token:",token)
+    except Exception as e:
+        print("Missing necessary args")
+        log_main.error("Missing necessary agrs")
+        # status -100 缺少必要的参数
+        return json.dumps({"id":-1,"status":-100,"message":"Missing necessary args","data":{}})
+    token_check_result = PSQL.CheckToken(token)
+    if token_check_result == False:
+        # status -101 token不正确
+        return json.dumps({"id": -1, "status": -101, "message": "Error token", "data": {}})
+    # 验证身份完成，处理数据
+    data = request.json
+    print(data)
+    # 先获取json里id的值，若不存在，默认值为-1
+    try:
+        keys = data.keys()
+    except Exception as e:
+        # status -1 json的key错误。此处id是因为没有进行读取，所以返回默认的-1。
+        return json.dumps({"id": -1, "status": -1, "message": "Error JSON key", "data": {}})
+
+    if "id" in data.keys():
+        id = data["id"]
+    else:
+        id = -1
+    ## 判断指定所需字段是否存在，若不存在返回status -1 json。
+    for key in ["type", "subtype", "data"]:
+        if not key in data.keys():
+            # status -1 json的key错误。
+            return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+    type = data["type"]
+    subtype = data["subtype"]
+    ## -------正式处理事务-------
+    data = data["data"]
+    if type == "product":
+        if subtype == "list":
+            product_name = ""
+            if "product_name" in data.keys():
+                product_name = data["product_name"]
+            product_key = ""
+            if "product_key" in data.keys():
+                product_key = data["product_key"]
+            type = "up"
+            if "type" in data.keys():
+                type = data["type"]
+            shop_id = 0
+            if "shop_id" in data.keys():
+                shop_id = data["shop_id"]
+            order = ""
+            if "order" in data.keys():
+                order = data["order"]
+            json_dict = PSQL.GetProductList(product_name=product_name,product_key=product_key,shop_id=shop_id,order=order,type=type,id=id)
             return json.dumps(json_dict)
 # @app.route("/")
 # def index():

@@ -1,4 +1,4 @@
-
+`
 
 # Python端 API文档
 
@@ -27,6 +27,7 @@
   - [**商品（product） API**](#商品product-api)
     - [创建商品](#创建商品)
     - [更新商品](#更新商品)
+    - [获取商品列表](#获取商品列表)
 - [**全局Status表**](#全局Status表)
 
 > 注：main.py文件运行时需用 -c configpath 来指定配置文件路径。
@@ -836,7 +837,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 |   name    | data type | length | 不可空 | 可缺省 | 注释                                                         |
 | :-------: | :-------: | :----: | :----: | :----: | ------------------------------------------------------------ |
 | shop_name |  string   |  100   |   √    |        | 店铺名关键字，模糊查找，返回包含该字段内容的所有记录         |
-|   order   |  string   |        |        |   √    | 排序规则，SQL语法规则。<br />`ASC` 为升序，`DESC` 为降序，可用`AND`、`OR`和`( )`组合。<br />例子：`creat_time DESC`<br />详细可排序字段表请看下方`返回JSON.data表` |
+|   order   |  string   |        |        |   √    | 排序规则，SQL语法规则：`字段+排序模式`。<br />字段：请看下方`返回JSON.data表`<br />排序模式：`ASC` 为升序，`DESC` 为降序<br />可用`AND`、`OR`和`( )`进行组合。<br />例子：`creat_time DESC` |
 
 > **json请求格式**
 
@@ -1002,6 +1003,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 | product_price | float |  | √ | | 商品价格 |
 |     shop_id     |  big int  |   9    |   √    |        | 店铺id     |
 | product_pic | string | |  | √ | 商品封面 |
+| product_status | int | | √ |  | 产品状态：<br />0.下架（默认）<br />1.上架<br />2.被删除 |
 
 > **json请求格式**
 
@@ -1016,13 +1018,14 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
         "product_key":"测试商品", # 商品关键字
         "producy_content":"测试", # 商品内容
         "product_price":"100.5", # 商品价格
-        "shop_id":811729970 # 店铺id
+        "shop_id":811729970, # 店铺id
+        "product_status":0
     }
 }
 ```
 
 - `product_id`在该API里不需要传入，哪怕传入也做无效处理，`product_id`为随机生成的7位id
-- `product_name`、`product_price`、`shop_id`为必传字段，且不为空
+- `product_name`、`product_price`、`shop_id`、`product_status`为必传字段，且不为空
 - 若`shop_id`所对应的店主id并非token所对应的`user_id`，则该请求无效
 - `user_id`修改为`int`类型变量
 - `creat_time`、`update_time`在该API里不需要传入，哪怕传入也做无效处理，`update_time`为系统当前时间
@@ -1071,19 +1074,20 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 > **data字段表**
 
-|        name        | data type | length | 不可空 | 可缺省 | 注释       |
-| :----------------: | :-------: | :----: | :----: | :----: | ---------- |
-|     product_id     |  big int  |   7    |   √    |        | 商品id     |
-|    product_name    |  string   |  100   |   √    |   √    | 商品名称   |
-|  product_content   |  string   |        |        |   √    | 商品内容   |
-|    product_key     |  string   |  255   |        |   √    | 商品关键字 |
-|   product_price    |   float   |        |   √    |   √    | 商品价格   |
-|  product_disprice  |   float   |        |        |   √    | 商品折扣价 |
-|    product_sale    |    int    |        |        |   √    | 商品销量   |
-|   product_click    |    int    |        |        |   √    | 商品点击量 |
-| product_collection |    int    |        |        |   √    | 商品收藏量 |
-|      shop_id       |  big int  |   9    |   √    |        | 店铺id     |
-|    product_pic     |  string   |        |        |   √    | 商品封面   |
+|        name        | data type | length | 不可空 | 可缺省 | 注释                                                     |
+| :----------------: | :-------: | :----: | :----: | :----: | -------------------------------------------------------- |
+|     product_id     |  big int  |   7    |   √    |        | 商品id                                                   |
+|    product_name    |  string   |  100   |   √    |   √    | 商品名称                                                 |
+|  product_content   |  string   |        |        |   √    | 商品内容                                                 |
+|    product_key     |  string   |  255   |        |   √    | 商品关键字                                               |
+|   product_price    |   float   |        |   √    |   √    | 商品价格                                                 |
+|  product_disprice  |   float   |        |        |   √    | 商品折扣价                                               |
+|    product_sale    |    int    |        |        |   √    | 商品销量                                                 |
+|   product_click    |    int    |        |        |   √    | 商品点击量                                               |
+| product_collection |    int    |        |        |   √    | 商品收藏量                                               |
+|      shop_id       |  big int  |   9    |   √    |        | 店铺id                                                   |
+|    product_pic     |  string   |        |        |   √    | 商品封面                                                 |
+|   product_status   |    int    |        |   √    |        | 产品状态：<br />0.下架（默认）<br />1.上架<br />2.被删除 |
 
 > **json请求格式**
 
@@ -1094,16 +1098,18 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
     "type":"product",
     "subtype":"creat",
     "data":{
-        "product_id":4517733, # 商品id
-        "product_key":"测试|商品", # 商品关键字
-        "producy_content":"这是一个测试商品", # 商品内容
-        "product_price":"101.5", # 商品价格
-        "shop_id":811729970 # 店铺id
+        "product_id":4517733,
+        "shop_id":811729970,
+        "product_status":1,
+        "product_name":"头秃生发水",
+        "product_content":"<h1>Duang~</h1>",
+        "product_key":"生发|秃"
     }
 }
 ```
 
-- `product_id`、`shop_id`在必传字段，且不为空，仅做匹配使用，不可修改
+- `product_id`、`shop_id`为必传字段，且不为空，仅做匹配使用，不可修改
+- `product_status`为必传字段，且不为空
 - 若`product_id`所属的`shop_id`并非请求所给的`user_id`，则该请求无效
 - 若请求所给的`shop_id`所对应的`user_id`并非token所对应的`user_id`，则该请求无效
 - `product_name`、`product_price`、`shop_id`为必传字段，且不为空
@@ -1140,7 +1146,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 
 - 其他`status`码请看[全局Status表](#全局Status表)
 
-#### 获取商品信息（暂未完善，下面的无效）
+#### 获取商品列表
 
 > **API类型**
 
@@ -1151,6 +1157,37 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 **https://www.zustservice.cn/api/external/get/shop?token={token值}**
 
 > **data字段表**
+
+|     name     | data type | length | 不可空 | 可缺省 |                             注释                             |
+| :----------: | :-------: | :----: | :----: | :----: | :----------------------------------------------------------: |
+| product_name |  string   |  100   |        |   √    |                   商品名称，默认为全部商品                   |
+| product_key  |  string   |  255   |        |   √    |                     商品关键字，默认为空                     |
+|   shop_id    |  big int  |   9    |   √    |   √    |                    店铺id，默认为全体店铺                    |
+|     type     |    int    |        |   √    |   √    | 商品状态，默认为`up`：<br />`down`：下架中<br />`up`：上架中<br />`all`：上架+下架商品<br />`del`：已删除 |
+|    order     |  string   |        |        |   √    | 排序规则，默认按记录添加顺序排序<br />SQL语法规则：`字段+排序模式`。<br />字段：请看下方`返回JSON.data表`<br />排序模式：`ASC` 为升序，`DESC` 为降序<br />可用`AND`、`OR`和`( )`进行组合。<br />例子：`creat_time DESC` |
+
+> **json请求格式**
+
+```python
+{
+    "id":0,
+    "status":0,
+    "type":"product",
+    "subtype":"list",
+    "data":{
+        "product_name":"测试商品",
+        "product_key":"测试",
+        "shop_id":811729970,
+        "type":"all",
+        "order":"creat_time ASC"
+    }
+}
+```
+
++ `product_name`、`product_key`两者为模糊查找
++ `product_name`、`product_key`、`shop_id`三者条件为 `AND`关系
+
+> **返回JSON.data表**
 
 |        name        | data type | length | 不可空 | 可缺省 | 注释       |
 | :----------------: | :-------: | :----: | :----: | :----: | ---------- |
@@ -1168,20 +1205,52 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 |    update_time     | datetime  |        |        |        | 更新时间   |
 |    product_pic     |  string   |        |        |        | 商品封面   |
 
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":[
+        {"product_id": 7368397, "product_name": "测试商品2", "product_content": "这是一个测试商品", "product_key": "测试|商品", "product_price": 100.5, "product_disprice": null, "product_sale": 0, "product_click": 0, "product_collection": 0, "shop_id": 811729970, "creat_time": "2019-07-14 23:58:52", "update_time": "None", "product_pic": null, "product_status": 0}
+    ]
+}
+```
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
 ## **全局Status表**
 
-| 参数 |             Message             |                内容                 | 请求类型  |
-| :--: | :-----------------------------: | :---------------------------------: | --------- |
-|  0   |               OK                |            函数处理正确             | POST、GET |
-|  -1  |         Error JSON key          |         json文本必需key缺失         | POST      |
-|  -2  |        Error JSON value         |          json文本value错误          | POST      |
-|  -3  |         Error data key          |        data数据中必需key缺失        | POST      |
-|  -4  |           Error Hash            |          Hash校验文本错误           | POST      |
-| -100 |     Missing necessary args      |       api地址中缺少token参数        | POST、GET |
-| -101 |           Error token           |             token不正确             | POST、GET |
-| -102 | Get userid failed for the token |      使用该token获取userid失败      | POST、GET |
-| -200 |   Failure to operate database   | 数据库操作失败，检查SQL语句是否正确 | POST、GET |
-| -404 |          Unknown Error          |           未知的Redis错误           | POST      |
+
+
+
+
+| 参数 |              Message               |                内容                 | 请求类型  |
+| :--: | :--------------------------------: | :---------------------------------: | --------- |
+|  0   |                 OK                 |            函数处理正确             | POST、GET |
+|  -1  |           Error JSON key           |         json文本必需key缺失         | POST      |
+|  -2  |          Error JSON value          |          json文本value错误          | POST      |
+|  -3  |           Error data key           |        data数据中必需key缺失        | POST      |
+|  -4  |             Error Hash             |          Hash校验文本错误           | POST      |
+| -100 |       Missing necessary args       |       api地址中缺少token参数        | POST、GET |
+| -101 |            Error token             |             token不正确             | POST、GET |
+| -102 |  Get userid failed for the token   |      使用该token获取userid失败      | POST、GET |
+| -200 |    Failure to operate database     | 数据库操作失败，检查SQL语句是否正确 | POST、GET |
+| -201 | Necessary key-value can't be empty |        关键键值对值不可为空         | POST      |
+| -202 |  Missing necessary data key-value  |          缺少关键的键值对           | POST      |
+| -203 |       Arg's value type error       |         键值对数据类型错误          | POST      |
+| -204 |         Arg's value error          |           键值对数据错误            | POST      |
+| -404 |           Unknown Error            |           未知的Redis错误           | POST      |
 
 ------
 
