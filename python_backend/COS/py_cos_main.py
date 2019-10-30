@@ -3,8 +3,11 @@ from qcloud_cos import CosConfig
 from qcloud_cos import CosS3Client
 from qcloud_cos import CosServiceError
 from qcloud_cos import CosClientError
-
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.jobstores.redis import RedisJobStore
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 import sys,os,configparser
+
 import logging
 
 # 腾讯云COSV5Python SDK, 目前可以支持Python2.6与Python2.7以及Python3.x
@@ -20,22 +23,29 @@ COS 模块初始化，此函数应在所有函数之前调用
     :param cfg_path: 配置文件地址。
     :param main_path: 程序主目录地址。
     """
+    global cf
     cf = configparser.ConfigParser()
     cf.read(cfg_path)
 
     # 设置用户属性, 包括secret_id, secret_key, region
     # appid已在配置中移除,请在参数Bucket中带上appid。Bucket由bucketname-appid组成
-    global secret_id, secret_key, region, token, config, client,bucket
+    global secret_id, secret_key, region, token, config, client,bucket,cache_time
     try:
         secret_id = str(cf.get("COS","secret_id"))  # 替换为用户的secret_id
         secret_key = str(cf.get("COS","secret_key"))  # 替换为用户的secret_key
         region = str(cf.get("COS","region"))  # 替换为用户的region
         token = None  # 使用临时秘钥需要传入Token，默认为空,可不填
         bucket =  str(cf.get("COS","bucket"))
+        cache_time_str = str(cf.get("COS", "cache_time"))  # 本地缓存清理时间，以天为计,若参数出错默认为3
+        if cache_time_str.isdigit():
+            cache_time = int(cache_time_str)
+        else:
+            cache_time = 3
         print("[COS]secret_id:",secret_id)
         print("[COS]secret_key:",secret_key)
         print("[COS]region:", region)
         print("[COS]bucket:", bucket)
+        print("[COS]cache_time:{}".format(cache_time))
         config = CosConfig(Region=region, SecretId=secret_id, SecretKey=secret_key, Token=token)  # 获取配置对象
         client = CosS3Client(config)
     except Exception as e:
@@ -46,28 +56,127 @@ COS 模块初始化，此函数应在所有函数之前调用
     global Main_filepath
     Main_filepath = main_path
     # print(Main_filepath)
+
+    global server_mode
+    server_mode = online_check()
+    if server_mode:
+        cf.set("COS", "server_mode", "1")
+        print("[COS]Online Server is available")
+        log_cos.info("Cos Server is available")
+    else:
+        cf.set("COS", "server_mode", "0")
+        os.makedirs(os.path.join(Main_filepath, "data", "local", "portrait"), exist_ok=True)
+        os.makedirs(os.path.join(Main_filepath, "data", "local", "article"), exist_ok=True)
+        print("[COS]Online Server is unavailable , using local storage server")
+        log_cos.warning("Cos is unavailable , using local storage mode")
+
+    # 初始化缓存清理 schedule
+    global scheduler
+    jobstores = {
+        'redis': RedisJobStore(0, host="localhost", port=6379, password=""),
+        'default': SQLAlchemyJobStore(url='sqlite:///data/jobs.sqlite')
+    }
+    job_defaults = {
+        'coalesce': False,
+        'max_instances': 3
+    }
+    # BackgroundScheduler: 适合于要求任何在程序后台运行的情况，当希望调度器在应用后台执行时使用。
+    scheduler = BackgroundScheduler(jobstores=jobstores, job_defaults=job_defaults, daemonic=False)
+    scheduler.remove_all_jobs()
+    scheduler.add_job(Auto_DelLocalCache, 'interval', days=cache_time)
+    ### weeks,days,hours,minutes,seconds,start_date,end_date,timezone,jitter(最多提前或延迟作业几秒钟)
+    scheduler.start()
+    print("[COS]Start Background schedule")
     log_cos.info("Module COS loaded")
+
+
+# 线程，定时删除本地缓存
+def Auto_DelLocalCache():
+    root_path = os.path.join(Main_filepath,"data","local")
+    try:
+        del_file(root_path)
+    except Exception as e:
+        print("[COS_Schedule]{}".format(e))
+        log_cos.error(e)
+    else:
+        print("[COS_Schedule]Succcessful to clear local cache")
+        log_cos.info("[COS_Schedule]Succcessful to clear local cache")
+
+
+def online_check()->bool:
+    # return False
+    # os.makedirs(os.path.join(Main_filepath, "data", "local", "portrait"), exist_ok=True)
+    # os.makedirs(os.path.join(Main_filepath, "data", "local", "article"), exist_ok=True)
+    os.makedirs(os.path.join(Main_filepath,"data","local","portrait"),exist_ok=True)
+    os.makedirs(os.path.join(Main_filepath, "data", "local", "product"), exist_ok=True)
+    os.makedirs(os.path.join(Main_filepath, "data", "local", "shop"), exist_ok=True)
+    os.makedirs(os.path.join(Main_filepath, "data", "local", "property"), exist_ok=True)
+    response = client.list_buckets()
+    # print(response)
+    buckets = response["Buckets"]["Bucket"]
+    for j_bucket in buckets:
+        bucket_name = j_bucket["Name"]
+        if bucket_name == bucket:
+            server_mode = True
+            cf.set("COS", "server_mode", "1")
+            cf.write(open(os.path.join(Main_filepath,"config.ini"), "w"))
+            return True
+    else:
+        server_mode = False
+        cf.set("COS", "server_mode", "0")
+        cf.write(open(os.path.join(Main_filepath,"config.ini"), "w"))
+        return False
+
+
+# 递归删除缓存文件
+def del_file(path):
+    ls = os.listdir(path)
+    for file in ls:
+        c_path = os.path.join(path,file)
+        if os.path.isfile(c_path):
+            try:
+                os.remove(c_path)
+            except Exception as e:
+                raise e
+        else:
+            try:
+                del_file(c_path)
+            except Exception as e:
+                raise e
+
+
 # 文件流 简单上传
 def file_upload(filename:str,key:str,storageclass:str='STANDARD',contentype:str='text/html; charset=utf-8') -> str:
     """
 简单上传·文件流模式，以fp的形式打开文件流读取数据并上传。
-    :param bucket: 	Bucket 名称，由 bucketname-appid 构成
     :param filename: 要被上传的文件名（完整路径）
     :param key: 对象键（Key）是对象在存储桶中的唯一标识
     :param storageclass: 设置文件的存储类型，STANDARD,STANDARD_IA，默认值：STANDARD
     :param contentype: 内容类型，设置 Content-Type，默认值：text/html; charset=utf-8
     :return 返回被上传的文件的MD5值
     """
-    with open(filename, 'rb') as fp:
-        response = client.put_object(
-            Bucket=bucket,  # Bucket由bucketname-appid组成
-            Body=fp,
-            Key=key,
-            StorageClass=storageclass,
-            ContentType=contentype
-        )
-        # print(response['ETag'])
-        return response['ETag']
+    if online_check() == True:
+        with open(filename, 'rb') as fp:
+            response = client.put_object(
+                Bucket=bucket,  # Bucket由bucketname-appid组成
+                Body=fp,
+                Key=key,
+                StorageClass=storageclass,
+                ContentType=contentype
+            )
+            # print(response['ETag'])
+            return response['ETag']
+    else:
+        try:
+            with open(filename,'rb') as fp:
+                file_data = fp.read()
+            with open(os.path.join(Main_filepath,"data","local",key),"wb") as fp2:
+                fp2.write(file_data)
+            return MD5.md5(file_data,b"")
+        except:
+            return ""
+
+
 # 字节流 简单上传
 def bytes_upload(body:bytes,key:str) -> str:
     """
@@ -77,13 +186,42 @@ def bytes_upload(body:bytes,key:str) -> str:
     :param key: 对象键（Key）是对象在存储桶中的唯一标识
     :return: 返回被上传的文件的MD5值
     """
-    response = client.put_object(
-        Bucket=bucket,
-        Body=body,
-        Key=key
-    )
-    # print(response['ETag'])
-    return response['ETag']
+    if online_check() == True:
+        try:
+            response = client.put_object(
+                Bucket=bucket,
+                Body=body,
+                Key=key
+            )
+        except Exception as e:
+            print(type(e))
+            log_cos.warning("{}:{}".format(e,type(e)))
+            # 容灾处理，上传失败时先放置在本地。
+            try:
+                with open(os.path.join(Main_filepath, "data", "local", key), "wb") as fp:
+                    fp.write(body)
+                return MD5.md5_bytes(body, b"")
+            except:
+                raise e
+        else:
+            # 容灾处理，本地缓存
+            try:
+                with open(os.path.join(Main_filepath,"data","local",key),"wb") as fp:
+                    fp.write(body)
+                return MD5.md5_bytes(body,b"")
+            except:
+                pass
+            print(response['ETag'])
+            return response['ETag']
+    else:
+        try:
+            with open(os.path.join(Main_filepath,"data","local",key),"wb") as fp:
+                fp.write(body)
+            return MD5.md5_bytes(body,b"")
+        except:
+            raise Exception("<Code>Faild</Code><Message>lalala</Message>",CosServiceError)
+
+
 # 本地路径 简单上传
 def local_upload():
     response = client.put_object_from_local_file(
@@ -92,6 +230,8 @@ def local_upload():
         Key=file_name,
     )
     print(response['ETag'])
+
+
 # 设置HTTP头部 简单上传
 def http_upload():
     response = client.put_object(
@@ -101,6 +241,8 @@ def http_upload():
         ContentType='text/html; charset=utf-8'
     )
     print(response['ETag'])
+
+
 # 设置自定义头部 简单上传
 def custom_upload():
     response = client.put_object(
@@ -113,6 +255,8 @@ def custom_upload():
         }
     )
     print(response['ETag'])
+
+
 # 高级上传接口(推荐)
 def high_upload_socket():
     response = client.upload_file(
@@ -123,6 +267,8 @@ def high_upload_socket():
         MAXThread=10
     )
     print(response['ETag'])
+
+
 # 文件下载 获取文件到本地
 def local_dwonload(key:str,outfilename:str)->bool:
     """
@@ -132,16 +278,28 @@ def local_dwonload(key:str,outfilename:str)->bool:
     :param outfilename: 将要保存的文件路径
     :return: 返回处理结果，成功返回True，失败返回False
     """
-    response = client.get_object(
-        Bucket=bucket,
-        Key=key,
-    )
-    try:
-        response['Body'].get_stream_to_file(outfilename)
-        return True
-    except Exception as e:
-        print("")
-        return False
+    if online_check() == True:
+        response = client.get_object(
+            Bucket=bucket,
+            Key=key,
+        )
+        try:
+            response['Body'].get_stream_to_file(outfilename)
+            return True
+        except Exception as e:
+            print(e)
+            return False
+    else:
+        try:
+            with open(os.path.join(Main_filepath, "data", "local", key), "rb") as fp:
+                file_data = fp.read()
+            with open(outfilename,"wb") as fp2:
+                fp2.write(file_data)
+            return True
+        except:
+            return False
+
+
 # 文件下载 获取文件流
 def bytes_download(key:str)->bytes:
     """
@@ -150,14 +308,37 @@ def bytes_download(key:str)->bytes:
     :param key: 对象键（Key）是对象在存储桶中的唯一标识
     :return: 返回文件bytes数据
     """
-    response = client.get_object(
-        Bucket=bucket,
-        Key=key,
-    )
-    fp = response['Body'].get_raw_stream()
-    data = fp.read()
-    # print(fp.read(2))
-    return data
+    if online_check() == True:
+        try:
+            response = client.get_object(
+                Bucket=bucket,
+                Key=key,
+            )
+            fp = response['Body'].get_raw_stream()
+            data = fp.read()
+        except Exception as e:
+            # print(type(e))
+            # 容灾处理，若网络取不到则取本地，都取不到再返回默认头像
+            try:
+                with open(os.path.join(Main_filepath, "data", "local", key),"rb") as fp:
+                    file_data = fp.read()
+                return file_data
+            except:
+                raise e
+        # print(fp.read(2))
+        # 容灾处理，下载时自动缓存
+        with open(os.path.join(Main_filepath, "data", "local", key), "wb") as fp2:
+            fp2.write(data)
+        return data
+    else:
+        try:
+            with open(os.path.join(Main_filepath, "data", "local", key),"rb") as fp:
+                file_data = fp.read()
+            return file_data
+        except:
+            raise Exception("<Code>NoSuchKey</Code><Message>The specified key does not exist.</Message>",CosServiceError)
+
+
 # 文件下载 设置Response HTTP 头部
 def http_download():
     response = client.get_object(
@@ -168,6 +349,8 @@ def http_download():
     print(response['Content-Type'])
     fp = response['Body'].get_raw_stream()
     print(fp.read(2))
+
+
 # 文件下载 指定下载范围
 def area_download():
     response = client.get_object(

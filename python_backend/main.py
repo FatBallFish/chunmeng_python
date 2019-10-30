@@ -1,56 +1,56 @@
 # coding=utf-8
-from flask import Flask,request,render_template
+from flask import Flask, request, render_template
 from img import py_captcha_main as ImgCaptcha
 from sms import py_sms_main as SmsCaptcha
 from COS import py_cos_main as COS
 from psql import py_postgresql as PSQL
 from configparser import ConfigParser
-import random,MD5
-import json,redis
+import random, MD5
+import json, redis
 import logging
-import sys,getopt
-import threading,time
+import sys, getopt
+import threading, time
 import os
 import base64
 
-
 app = Flask(__name__)
-imgcaptcha_list = []  #{"hash":hash,"TTL":180}
-smscaptcha_list = []  #{"hash":hash,"TTL":180}
+imgcaptcha_list = []  # {"hash":hash,"TTL":180}
+smscaptcha_list = []  # {"hash":hash,"TTL":180}
 
 LOG_FORMAT = "[%(asctime)-15s] - [%(name)10s]\t- [%(levelname)s]\t- [%(funcName)-20s:%(lineno)3s]\t- [%(message)s]"
 DATA_FORMAT = "%Y.%m.%d %H:%M:%S %p "
 log_outpath = "./my.log"
 Main_filepath = os.path.dirname(os.path.abspath(__file__))
-print("Main FilePath:",Main_filepath)
+print("Main FilePath:", Main_filepath)
 
-def Initialize(argv:list):
+
+def Initialize(argv: list):
     """
 模块初始化，此函数应在所有命令之前调用
     :param argv: 命令行参数表
     """
     # print("Enter the function")
-    global r,config_addr
+    global r, config_addr
     try:
-        opts,args = getopt.getopt(argv,"hc:",["config","help"])
+        opts, args = getopt.getopt(argv, "hc:", ["config", "help"])
     except getopt.GetoptError:
         print("test.py -c <ConfigFilePath> -h <help>")
         sys.exit(2)
-    for opt,arg in opts:
+    for opt, arg in opts:
         # print("opt,arg",opt,arg)
-        if opt in ("-h","--help"):
-            print("-"*80)
+        if opt in ("-h", "--help"):
+            print("-" * 80)
             print("-h or --help      Show this passage.")
             print("-c or --config    Configuration file path")
-            print("-"*80)
+            print("-" * 80)
             sys.exit()
-        elif opt in("-c","--config"):
+        elif opt in ("-c", "--config"):
             config_addr = str(arg)
-            print("config_addr:",config_addr)
+            print("config_addr:", config_addr)
             break
         else:
             # log_main.warning("Useless argv:[%s|%s]",opt,arg)
-            print("Useless argv:[%s|%s]"%(opt,arg))
+            print("Useless argv:[%s|%s]" % (opt, arg))
     else:
         # log_main.error("missing config argv")
         print("missing config argv")
@@ -66,7 +66,7 @@ def Initialize(argv:list):
         sys.exit()
     sections = cf.sections()
     for section in sections:
-        if section in ["Log","Redis","SmsCaptcha"]:
+        if section in ["Log", "Redis", "SmsCaptcha"]:
             break
     else:
         ##log_main.error("Config file missing some necessary sections")
@@ -78,17 +78,19 @@ def Initialize(argv:list):
     # TODO CONFIG
     global log_main
     try:
-        global log_outpath, webhost, webport, webdebug
+        global log_outpath, webhost, webport, webdebug, allowurl
         log_outpath = cf.get("Main", "logoutpath")
         webhost = cf.get("Main", "webhost")
         webport = cf.get("Main", "webport")
         intdebug = cf.get("Main", "webdebug")
+        allowurl = str(cf.get("COS", "allowurl")).split(",")
+        print("allowurl:{}".format(allowurl))
         if intdebug == 1:
             webdebug = True
         else:
             webdebug = False
-        print("[Main]log_outpath:",log_outpath)
-        print("[Main]webhost:",webhost)
+        print("[Main]log_outpath:", log_outpath)
+        print("[Main]webhost:", webhost)
         print("[Main]webport:", webport)
         print("[Main]webdebug:", webdebug)
     except Exception as e:
@@ -99,14 +101,14 @@ def Initialize(argv:list):
     log_main = logging.getLogger(__name__)
     # 读Redis配置
     try:
-        r_host = cf.get("Redis","host")
-        r_port = cf.get("Redis","port")
+        r_host = cf.get("Redis", "host")
+        r_port = cf.get("Redis", "port")
         r_db = cf.get("Redis", "db")
-        r_pass = cf.get("Redis","pass")
-        global r_imgsetname,r_smssetname
-        r_imgsetname = cf.get("Redis","img_setname")  #TODO global setname
-        r_smssetname = cf.get("Redis","sms_setname")
-        print("[Redis]Host:",r_host)
+        r_pass = cf.get("Redis", "pass")
+        global r_imgsetname, r_smssetname
+        r_imgsetname = cf.get("Redis", "img_setname")  # TODO global setname
+        r_smssetname = cf.get("Redis", "sms_setname")
+        print("[Redis]Host:", r_host)
         print("[Redis]Port:", r_port)
         print("[Redis]DB:", r_db)
         print("[Redis]Imgsetname:", r_imgsetname)
@@ -119,7 +121,7 @@ def Initialize(argv:list):
 
     # 启动Redis 并初始化验证码库
     try:
-        r = redis.StrictRedis(host=r_host,port=r_port,db=r_db,password=r_pass)
+        r = redis.StrictRedis(host=r_host, port=r_port, db=r_db, password=r_pass)
     except Exception as e:
         log_main.error(e)
         print(e)
@@ -136,24 +138,26 @@ def Initialize(argv:list):
     except Exception as e:
         pass
     # ------模块初始化------
-    ImgCaptcha.Initialize(config_addr,Main_filepath)
-    SmsCaptcha.Initialize(config_addr,Main_filepath)
-    COS.Initialize(config_addr,Main_filepath)
-    PSQL.Initialize(config_addr,Main_filepath)
+    ImgCaptcha.Initialize(config_addr, Main_filepath)
+    SmsCaptcha.Initialize(config_addr, Main_filepath)
+    COS.Initialize(config_addr, Main_filepath)
+    PSQL.Initialize(config_addr, Main_filepath)
 
 
-class MyThread (threading.Thread):
+class MyThread(threading.Thread):
     def __init__(self, threadID, name, counter):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
         self.counter = counter
+
     def run(self):
-        log_main.info("Start thread 【%s】 to auto del outtime code"%self.name)
-        print ("开始线程：" + self.name)
+        log_main.info("Start thread 【%s】 to auto del outtime code" % self.name)
+        print("开始线程：" + self.name)
         auto_del_code()
-        log_main.info("End thread 【%s】 to auto del outtime code"%self.name)
-        print ("退出线程：" + self.name)
+        log_main.info("End thread 【%s】 to auto del outtime code" % self.name)
+        print("退出线程：" + self.name)
+
 
 def auto_del_code():
     while True:
@@ -166,7 +170,7 @@ def auto_del_code():
             if imgcaptcha["TTL"] <= 0:
                 try:
                     print("Try to remove hash [%s]" % imgcaptcha["hash"])
-                    r.srem(r_imgsetname,imgcaptcha["hash"])
+                    r.srem(r_imgsetname, imgcaptcha["hash"])
                 except Exception as e:
                     log_main.error(e)
                     print(e)
@@ -183,7 +187,7 @@ def auto_del_code():
             if smscaptcha["TTL"] <= 0:
                 try:
                     print("Try to remove hash [%s]" % smscaptcha["hash"])
-                    r.srem(r_smssetname,smscaptcha["hash"])
+                    r.srem(r_smssetname, smscaptcha["hash"])
                 except Exception as e:
                     log_main.error(e)
                     print(e)
@@ -194,6 +198,7 @@ def auto_del_code():
             # print(smscaptcha["hash"], smscaptcha["TTL"])
         time.sleep(3)
 
+
 def SafeCheck(hash):
     """
     Check imgcaptcha hash
@@ -201,13 +206,13 @@ def SafeCheck(hash):
     :return: int 0 as success , -1 as failed
     """
     flag = False
-    for imgcaptcha in imgcaptcha_list :
+    for imgcaptcha in imgcaptcha_list:
         if imgcaptcha["hash"] == hash:
             flag = True
             imgcaptcha["TTL"] = 180
         else:
             pass
-    for smscaptcha in smscaptcha_list :
+    for smscaptcha in smscaptcha_list:
         if smscaptcha["hash"] == hash:
             flag = True
             smscaptcha["TTL"] = 180
@@ -218,7 +223,8 @@ def SafeCheck(hash):
     else:
         return -1
 
-@app.route("/captcha",methods=["POST"])
+
+@app.route("/captcha", methods=["POST"])
 def captcha():
     data = request.json
     print(data)
@@ -236,10 +242,10 @@ def captcha():
         id = -1
 
     # 判断指定所需字段是否存在，若不存在返回status -1 json。
-    for key in ["type","subtype","data"]:
+    for key in ["type", "subtype", "data"]:
         if not key in data.keys():
             # status -1 json的key错误。
-            return json.dumps({"id":id,"status":-1,"message":"Error JSON key","data":{}})
+            return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
 
     # 处理json
     if data["type"] == "img":
@@ -253,10 +259,10 @@ def captcha():
                 char1 = random.choice(
                     [chr(random.randint(65, 90)), chr(random.randint(48, 57)), chr(random.randint(97, 122))])
                 rand_str += char1
-            hash = MD5.md5(code,salt=rand_str)
+            hash = MD5.md5(code, salt=rand_str)
             try:
-                r.sadd(r_imgsetname,hash)
-                imgcaptcha_list.append({"hash":hash,"TTL":180})
+                r.sadd(r_imgsetname, hash)
+                imgcaptcha_list.append({"hash": hash, "TTL": 180})
                 # todo 优化验证机制
             except Exception as e:
                 log_main.error(e)
@@ -266,7 +272,7 @@ def captcha():
                     "id": id,
                     "status": -404,
                     "message": "Unknown Error",
-                    "data":{}
+                    "data": {}
                 })
             # status 0 ImgCaptcha生成成功
             # return json.dumps({
@@ -292,10 +298,10 @@ def captcha():
             if result == 0:
                 # status 0 校验成功。
                 return json.dumps({
-                    "id":id,
-                    "status":0,
-                    "message":"successful",
-                    "data":{}
+                    "id": id,
+                    "status": 0,
+                    "message": "successful",
+                    "data": {}
                 })
             elif result == -1:
                 # status -1 验证码hash值不匹配(包括验证码过期)。
@@ -315,12 +321,12 @@ def captcha():
                 })
         else:
             # status -2 json的value错误。
-            return json.dumps({"id": id, "status":-2, "message": "Error JSON value", "data": {}})
+            return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
     elif data["type"] == "sms":
         if data["subtype"] == "generate":
             data = data["data"]
             for key in data.keys():
-                if key not in ["phone","hash"]:
+                if key not in ["phone", "hash"]:
                     # status -3 json的value错误。
                     return json.dumps({"id": id, "status": -3, "message": "Error data key", "data": {}})
             hash = data["hash"]
@@ -329,8 +335,8 @@ def captcha():
                 # status -4 json的value错误。
                 return json.dumps({"id": id, "status": -4, "message": "Error Hash", "data": {}})
             phone = str(data["phone"])
-            code = random.randint(10000,99999)
-            result = SmsCaptcha.SendCaptchaCode(phone,code,ext=str(id))
+            code = random.randint(10000, 99999)
+            result = SmsCaptcha.SendCaptchaCode(phone, code, ext=str(id))
             status = result["result"]
             message = result["errmsg"]
             if message == "OK":
@@ -343,7 +349,7 @@ def captcha():
                     rand_str += char1
                 hash = MD5.md5(code, salt=rand_str)
                 try:
-                    r.sadd(r_smssetname,hash)
+                    r.sadd(r_smssetname, hash)
                     smscaptcha_list.append({"hash": hash, "TTL": 180})
                     # todo 优化验证机制
                 except Exception as e:
@@ -381,7 +387,8 @@ def captcha():
         # status -2 json的value错误。
         return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
 
-@app.route("/portrait",methods=["POST"])
+
+@app.route("/portrait", methods=["POST"])
 def portrait():
     data = request.json
     try:
@@ -415,7 +422,7 @@ def portrait():
             type = data["type"]
             img_file = base64.b64decode(img_base64)
             try:
-                COS.bytes_upload(img_file,"portrait/{}".format(id2))
+                COS.bytes_upload(img_file, "portrait/{}".format(id2))
                 print("Add portrait for id:{}".format(id2))
                 log_main.info("Add portrait for id:{}".format(id2))
             except Exception as e:
@@ -423,16 +430,12 @@ def portrait():
                 print(e)
                 log_main.error("Failed to add portrait for id:{}".format(id2))
                 log_main.error(e)
-
-
-            # with open("./{}_{}.{}".format(id,name,type),"wb") as f:
-            #     f.write(img_file)
-            #     print("{}_{}.{}".format(id,name,type),"写出成功！")
-            # status 0 成功。
             return json.dumps({"id": id, "status": 0, "message": "Successful", "data": {
                 "url": "./api/external/get/portrait/{}".format(id2)}})
         elif subtype == "updata":
             pass
+
+
 @app.route("/get/portrait/<id>")
 def get_portrait(id):
     """
@@ -471,7 +474,7 @@ def get_portrait(id):
     # srchead = "data:;base64,"
     # import base64
     print("id:", id)
-    print("-"*10)
+    print("-" * 10)
     id = str(id)
     if id.isdigit():
         # print("Try to get portrait data:{}".format(id))
@@ -481,8 +484,8 @@ def get_portrait(id):
             print(e)
             log_main.error(e)
             try:
-                path = os.path.join(Main_filepath,"data/image/default.jpg")
-                with open(path,"rb") as f :
+                path = os.path.join(Main_filepath, "data/image/default.jpg")
+                with open(path, "rb") as f:
                     data = f.read()
                 # data = COS.bytes_download("portrait/error")
             except Exception as e:
@@ -493,7 +496,7 @@ def get_portrait(id):
     else:
         try:
             path = os.path.join(Main_filepath, "data/image/error.jpg")
-            with open(path,"rb") as f:
+            with open(path, "rb") as f:
                 data = f.read()
             # data = COS.bytes_download("portrait/error")
         except Exception as e:
@@ -502,16 +505,17 @@ def get_portrait(id):
             data = ""
         return data
 
-@app.route("/property",methods=["POST"])
+
+@app.route("/property", methods=["POST"])
 def property():
     try:
         token = request.args["token"]
-        print("token:",token)
+        print("token:", token)
     except Exception as e:
         print("Missing necessary args")
         log_main.error("Missing necessary agrs")
         # status -100 缺少必要的参数
-        return json.dumps({"id":-1,"status":-100,"message":"Missing necessary args","data":{}})
+        return json.dumps({"id": -1, "status": -100, "message": "Missing necessary args", "data": {}})
     token_check_result = PSQL.CheckToken(token)
     if token_check_result == False:
         # status -101 token不正确
@@ -539,7 +543,7 @@ def property():
             return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
     property_dict = {
         "id": -1,
-        "type":-1,
+        "type": -1,
         "state": -1,
         "lab": "",
         "title": "",
@@ -555,10 +559,10 @@ def property():
         "user2_qq": "",
         "publish_time": "",
         "update_time": "",
-        "pic_num":-1,
-        "pic_url1":"",
-        "pic_url2":"",
-        "pic_url3":"",
+        "pic_num": -1,
+        "pic_url1": "",
+        "pic_url2": "",
+        "pic_url3": "",
     }
     type = data["type"]
     subtype = data["subtype"]
@@ -581,7 +585,7 @@ def property():
                 property_type = str(data["type"])
                 if property_type.isdigit():
                     int_property_type = int(property_type)
-                    if int_property_type not in [1,2]:
+                    if int_property_type not in [1, 2]:
                         # status -204 键值对数据错误
                         return json.dumps(
                             {"id": id, "status": -204, "message": "Arg's value error", "data": {}})
@@ -594,7 +598,7 @@ def property():
             property_dict["state"] = 0
             # user_id
             user_id = PSQL.GetUserID(token)
-            print("user_id:",user_id)
+            print("user_id:", user_id)
             if user_id == None or user_id == 0:
                 # status -102 Necessary args can't be empty
                 return json.dumps(
@@ -612,19 +616,22 @@ def property():
                 if key == "lab":
                     if data["lab"] == "":
                         # status -201 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
                     property_dict["lab"] = data["lab"]
                     continue
                 elif key == "title":
                     if data["title"] == "":
                         # status -201 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
                     property_dict["title"] = data["title"]
                     continue
                 elif key == "content":
                     if data["content"] == "":
                         # status -201 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
                     property_dict["content"] = data["content"]
                     continue
                 elif key == "occurrence_time":
@@ -635,13 +642,15 @@ def property():
                 elif key == "user_id":
                     if data["user_id"] == None or data["user_id"] == "" or data["user_id"] == 0:
                         # status -201 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
                     property_dict["user_id"] = data["user_id"]
                     continue
                 elif key == "user_name":
                     if data["user_name"] == "":
                         # status -201 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
                     property_dict["user_name"] = data["user_name"]
                     continue
                 elif key == "user_phone":
@@ -674,7 +683,7 @@ def property():
                     if num_str.isdigit():
                         num = int(num_str)
                         for i in num:
-                            filed = "pic_url"+str(i)  # 字段名
+                            filed = "pic_url" + str(i)  # 字段名
                             pic_data = data[filed]
                             # todo 上传到COS并取回url
 
@@ -683,8 +692,8 @@ def property():
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
                 else:
                     property_dict[key] = data[key]
-                    print("Unkown key and value:[{},{}]".format(key,data[key]))
-                    log_main.warning("Unkown key and value:[{},{}]".format(key,data[key]))
+                    print("Unkown key and value:[{},{}]".format(key, data[key]))
+                    log_main.warning("Unkown key and value:[{},{}]".format(key, data[key]))
                     continue
 
             try:
@@ -692,9 +701,9 @@ def property():
             except:
                 # status -200 数据库操作失败。
                 return json.dumps({"id": id, "status": -200, "message": "Failure to operate database", "data": {}})
-            if result == True :
+            if result == True:
                 # status 0 添加记录成功
-                return json.dumps({"id": id, "status": 0, "message": "successful", "data": {"uid":uid}})
+                return json.dumps({"id": id, "status": 0, "message": "successful", "data": {"uid": uid}})
             else:
                 # status -200 数据库操作失败。
                 return json.dumps({"id": id, "status": -200, "message": "Failure to operate database", "data": {}})
@@ -738,7 +747,7 @@ def property():
                     property_type = str(data["type"])
                     if property_type.isdigit():
                         int_property_type = int(property_type)
-                        if int_property_type not in [1,2]:
+                        if int_property_type not in [1, 2]:
                             # status -204 键值对数据错误
                             return json.dumps(
                                 {"id": id, "status": -204, "message": "Arg's values error", "data": {}})
@@ -838,7 +847,7 @@ def property():
             try:
                 result = PSQL.UpdateProperty(**update_dict)
             except Exception as e:
-                print("Unknown Error:",e)
+                print("Unknown Error:", e)
                 log_main.error(e)
                 # status -200 数据库操作失败。
                 return json.dumps({"id": id, "status": -200, "message": "Failure to operate database", "data": {}})
@@ -881,7 +890,7 @@ def property():
             try:
                 result = PSQL.DeleteProperty(**delete_dict)
             except Exception as e:
-                print("Unknown Error:",e)
+                print("Unknown Error:", e)
                 log_main.error(e)
                 # status -200 数据库操作失败。
                 return json.dumps({"id": id, "status": -200, "message": "Failure to operate database", "data": {}})
@@ -899,7 +908,167 @@ def property():
     else:
         # status -2 json的value错误。
         return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
-@app.route("/get/property",methods=["GET"])
+
+
+@app.route("/pic", methods=["POST"])
+def pic():
+    try:
+        token = request.args["token"]
+        print("token:", token)
+    except Exception as e:
+        print("Missing necessary args")
+        log_main.error("Missing necessary agrs")
+        # status -100 缺少必要的参数
+        return json.dumps({"id": -1, "status": -100, "message": "Missing necessary args", "data": {}})
+    token_check_result = PSQL.CheckToken(token)
+    if token_check_result == False:
+        # status -101 token不正确
+        return json.dumps({"id": -1, "status": -101, "message": "Error token", "data": {}})
+    # 验证身份完成，处理数据
+    data = request.json
+    print(data)
+
+    # 先获取json里id的值，若不存在，默认值为-1
+    try:
+        keys = data.keys()
+    except Exception as e:
+        # status -1 json的key错误。此处id是因为没有进行读取，所以返回默认的-1。
+        return json.dumps({"id": -1, "status": -1, "message": "Error JSON key", "data": {}})
+
+    if "id" in data.keys():
+        id = data["id"]
+    else:
+        id = -1
+
+    ## 判断指定所需字段是否存在，若不存在返回status -1 json。
+    for key in ["type", "subtype", "data"]:
+        if not key in data.keys():
+            # status -1 json的key错误。
+            return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+    type = data["type"]
+    subtype = data["subtype"]
+    data = data["data"]
+    if type == "pic":
+        if subtype == "upload":
+            for key in ["from", "base64"]:
+                if key not in data.keys():
+                    # status -3 json的value错误。
+                    return json.dumps({"id": id, "status": -3, "message": "Error data key", "data": {}})
+            j_from = data["from"]
+            if j_from not in ["property", "shop", "product", "portrait"]:
+                # status -204 Arg's value error 键值对数据错误。
+                return json.dumps({"id": id, "status": -204, "message": "Arg's value error", "data": {}})
+            img_base64 = str(data["base64"])
+            base64_head_index = img_base64.find(";base64,")
+            if base64_head_index != -1:
+                print("进行了替换")
+                img_base64 = img_base64.partition(";base64,")[2]
+            # print("-------接收到数据-------\n", img_base64, "\n-------数据结构尾-------")
+            img_file = base64.b64decode(img_base64)
+            if "name" in data.keys():
+                pic_name = data["name"]
+                if pic_name == "":
+                    # status -204 Arg's value error 键值对数据错误。
+                    return json.dumps({"id": id, "status": -204, "message": "Arg's value error", "data": {}})
+            else:
+                pic_name = MD5.md5_bytes(img_file)
+            try:
+                COS.bytes_upload(img_file, "{}/{}".format(j_from, pic_name))
+                print("Add pic for {}:{}".format(j_from, pic_name))
+                log_main.info("Add pic for {}:{}".format(j_from, pic_name))
+            except Exception as e:
+                print("Failed to add pic for {}:{}".format(j_from, pic_name))
+                print(e)
+                log_main.error("Failed to add pic for {}:{}".format(j_from, pic_name))
+                log_main.error(e)
+                # status -500 COS upload Error
+                return {"id": id, "status": -500, "message": "COS upload Error", "data": {}}
+            # status 0 successful
+            return json.dumps({"id": id, "status": 0, "message": "Successful", "data": {
+                "url": "./api/external/get/pic/{}/{}".format(j_from, pic_name)}})
+
+        else:
+            # status -2 json的value错误。
+            return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
+    else:
+        # status -2 json的value错误。
+        return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
+
+
+@app.route("/get/pic/<j_from>/<pic_name>")
+def get_pic(j_from: str, pic_name: str):
+    try:
+        realip = request.headers.get("X-Real-Ip")
+        # print("real ip:{},type:{}".format(realip,type(realip)))
+    except Exception as e:
+        print("[get_pic]{}".format(e))
+        log_main.error("[get_pic]{}".format(e))
+    try:
+        referer = str(request.headers.get("Referer"))
+        # print("referer:{}".format(referer))
+        # print("referer:{},type:{}".format(referer, type(referer)))
+        for url in allowurl:
+            # print("Allow Url:{}".format(url))
+            # todo 服务器上有bug
+            index = referer.find(url)
+            if index != -1:
+                break
+        else:
+            log_main.warning("[get_pic]External Domain Name : {} Reference Pictures Prohibited".format(referer))
+            try:
+                path = os.path.join(Main_filepath, "data/image/ban.jpg")
+                with open(path, "rb") as f:
+                    data = f.read()
+                # data = COS.bytes_download("portrait/error")
+            except Exception as e:
+                print("[get_pic]Error:Can't load the ban img.")
+                log_main.error("Error:Can't load the ban img.")
+                data = b""
+            return data
+    except Exception as e:
+        print(e)
+        print("[get_pic]Error:Can't get real ip.")
+        log_main.error("Error:Can't get real ip.")
+        data = b""
+        return data
+    # print("The client ip is :",ip)
+    # srchead = "data:;base64,"
+    # import base64
+    # print("[get_porttrait]user_id:", user_id)
+    j_from = str(j_from)
+    pic_name = str(pic_name)
+    if j_from not in ["property", "shop", "product", "portrait"]:
+        try:
+            path = os.path.join(Main_filepath, "data/image/error.jpg")
+            with open(path, "rb") as f:
+                data = f.read()
+            # data = COS.bytes_download("portrait/error")
+        except Exception as e:
+            print("[get_porttrait]Error:Can't load the error img.")
+            log_main.error("Error:Can't load the error img.")
+            data = b""
+            return data
+    try:
+        data = COS.bytes_download("{}/{}".format(j_from, pic_name))
+    except Exception as e:
+        msg = str(e)
+        code = msg.partition("<Code>")[2].partition("</Code>")[0]
+        message = msg.partition("<Message>")[2].partition("</Message>")[0]
+        # todo 以后要做一个判断机制
+        print("[get_portrait]{}:{}".format(code, message))
+        try:
+            path = os.path.join(Main_filepath, "data/image/error.jpg")
+            with open(path, "rb") as f:
+                data = f.read()
+            # data = COS.bytes_download("portrait/error")
+        except Exception as e:
+            print("[get_porttrait]Error:Can't load the error img.")
+            log_main.error("Error:Can't load the error img.")
+            data = b""
+    return data
+
+
+@app.route("/get/property", methods=["GET"])
 def get_property():
     try:
         token = request.args["token"]
@@ -939,12 +1108,12 @@ def get_property():
     if num == 1:
         # status -104 缺少必要的参数
         return json.dumps({"id": -1, "status": -104, "message": "Missing necessary args", "data": {}})
-    if num == 2 :
+    if num == 2:
         if "type" in args_dict.keys():
             property_type = str(args_dict["type"])
             if property_type.isdigit():
                 int_property_type = int(property_type)
-                if int_property_type not in [1,2]:
+                if int_property_type not in [1, 2]:
                     # status -106 参数值错误
                     return json.dumps({"id": -1, "status": -106, "message": "Args Error", "data": {}})
                 args_dict["type"] = int_property_type
@@ -954,11 +1123,11 @@ def get_property():
         else:
             # status -104 缺少必要的参数
             return json.dumps({"id": -1, "status": -104, "message": "Missing necessary args", "data": {}})
-        record_num, data_list = PSQL.GetProperty(args_dict["type"],"")
+        record_num, data_list = PSQL.GetProperty(args_dict["type"], "")
         print("GET proerty all,totally: {} record".format(record_num))
         # status 0 成功处理数据
         try:
-            return json.dumps({"id":-1,"status":0,"message":"successful","data":data_list},ensure_ascii=False)
+            return json.dumps({"id": -1, "status": 0, "message": "successful", "data": data_list}, ensure_ascii=False)
         except Exception as e:
             print(e)
     else:
@@ -975,7 +1144,7 @@ def get_property():
             return json.dumps({"id": -1, "status": -104, "message": "Missing necessary args", "data": {}})
 
         if num == 3 and "key" in args_dict.keys():
-            record_num, data_list = PSQL.GetProperty(args_dict["type"],args_dict["key"])
+            record_num, data_list = PSQL.GetProperty(args_dict["type"], args_dict["key"])
             print("GET find proerty,totally: {} record".format(record_num))
             # status 0 成功处理数据
             return json.dumps({"id": -1, "status": 0, "message": "successful", "data": data_list}, ensure_ascii=False)
@@ -992,7 +1161,7 @@ def get_property():
                 continue
             if key not in property_dict.keys():
                 # status -100 Args Error
-                return json.dumps({"id":-1,"status":-100,"message":"Args Error","data":{}})
+                return json.dumps({"id": -1, "status": -100, "message": "Args Error", "data": {}})
             sql_dict[key] = str(args_dict[key])
             if key == "id" or key == "state":
                 if sql_dict[key].isdigit():
@@ -1000,21 +1169,22 @@ def get_property():
                 else:
                     # status -101 Args Type Error
                     return json.dumps({"id": -1, "status": -101, "message": "Args Type Error", "data": {}})
-        record_num, data_list = PSQL.GetProperty(args_dict["type"],"",**sql_dict)
+        record_num, data_list = PSQL.GetProperty(args_dict["type"], "", **sql_dict)
         print("GET find proerty,totally: {} record".format(record_num))
         # status 0 成功处理数据
-        return json.dumps({"id": -1, "status": 0, "message": "successful", "data": data_list},ensure_ascii=False)
+        return json.dumps({"id": -1, "status": 0, "message": "successful", "data": data_list}, ensure_ascii=False)
 
-@app.route("/shop",methods=["POST"])
+
+@app.route("/shop", methods=["POST"])
 def shop():
     try:
         token = request.args["token"]
-        print("token:",token)
+        print("token:", token)
     except Exception as e:
         print("Missing necessary args")
         log_main.error("Missing necessary agrs")
         # status -100 缺少必要的参数
-        return json.dumps({"id":-1,"status":-100,"message":"Missing necessary args","data":{}})
+        return json.dumps({"id": -1, "status": -100, "message": "Missing necessary args", "data": {}})
     token_check_result = PSQL.CheckToken(token)
     if token_check_result == False:
         # status -101 token不正确
@@ -1053,11 +1223,11 @@ def shop():
                 # status -102 Necessary args can't be empty
                 return json.dumps(
                     {"id": id, "status": -102, "message": "Get user_id failed for the token", "data": {}})
-            json_dict = PSQL.CreatShop(shop_name=shop_name,user_id=user_id,id=id)
+            json_dict = PSQL.CreatShop(shop_name=shop_name, user_id=user_id, id=id)
             return json.dumps(json_dict)
         elif subtype == "update":
             for key in data.keys():
-                if key not in ["shop_content","shop_id"]:
+                if key not in ["shop_content", "shop_id"]:
                     # status -1 json的key错误。
                     return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
             shop_id = data["shop_id"]
@@ -1067,19 +1237,20 @@ def shop():
                 # status -102 Necessary args can't be empty
                 return json.dumps(
                     {"id": id, "status": -102, "message": "Get user_id failed for the token", "data": {}})
-            json_dict = PSQL.UpdateShop(shop_id=shop_id,shop_content=shop_content,user_id=user_id,id=id)
+            json_dict = PSQL.UpdateShop(shop_id=shop_id, shop_content=shop_content, user_id=user_id, id=id)
             return json.dumps(json_dict)
 
-@app.route("/get/shop",methods=["POST"])
+
+@app.route("/get/shop", methods=["POST"])
 def get_shop():
     try:
         token = request.args["token"]
-        print("token:",token)
+        print("token:", token)
     except Exception as e:
         print("Missing necessary args")
         log_main.error("Missing necessary agrs")
         # status -100 缺少必要的参数
-        return json.dumps({"id":-1,"status":-100,"message":"Missing necessary args","data":{}})
+        return json.dumps({"id": -1, "status": -100, "message": "Missing necessary args", "data": {}})
     token_check_result = PSQL.CheckToken(token)
     if token_check_result == False:
         # status -101 token不正确
@@ -1116,31 +1287,32 @@ def get_shop():
             order = ""
             if "order" in data.keys():
                 order = data["order"]
-            json_dict = PSQL.GetShopList(shop_name=shop_name,order=order,id=id)
+            json_dict = PSQL.GetShopList(shop_name=shop_name, order=order, id=id)
             # status 0 1
             return json.dumps(json_dict)
         elif subtype == "info":
             if "shop_id" in data.keys():
                 shop_id = data["shop_id"]
-                json_dict = PSQL.GetShopInfo(shop_id=shop_id,id=id)
+                json_dict = PSQL.GetShopInfo(shop_id=shop_id, id=id)
             elif "shop_name" in data.keys():
                 shop_name = data["shop_name"]
-                json_dict = PSQL.GetShopInfo(shop_name=shop_name,id=id)
+                json_dict = PSQL.GetShopInfo(shop_name=shop_name, id=id)
             return json.dumps(json_dict)
         elif subtype == "delete":
             pass
             # todo Delete shop
 
-@app.route("/product",methods=["POST"])
+
+@app.route("/product", methods=["POST"])
 def product():
     try:
         token = request.args["token"]
-        print("token:",token)
+        print("token:", token)
     except Exception as e:
         print("Missing necessary args")
         log_main.error("Missing necessary agrs")
         # status -100 缺少必要的参数
-        return json.dumps({"id":-1,"status":-100,"message":"Missing necessary args","data":{}})
+        return json.dumps({"id": -1, "status": -100, "message": "Missing necessary args", "data": {}})
     token_check_result = PSQL.CheckToken(token)
     if token_check_result == False:
         # status -101 token不正确
@@ -1170,20 +1342,20 @@ def product():
     data = data["data"]
     user_id = PSQL.GetUserID(token)
     key_dict = {
-        "product_id":-1,
+        "product_id": -1,
         "product_name": "",
-        "product_content":"",
-        "product_key":"",
-        "product_price":-1.0,
-        "product_disprice":-1.0,
-        "product_sale":-1,
-        "product_click":-1,
-        "product_collection":-1,
-        "shop_id":-1,
-        "creat_time":"",
-        "update_time":"",
-        "product_pic":"",
-        "product_status":-1,
+        "product_content": "",
+        "product_key": "",
+        "product_price": -1.0,
+        "product_disprice": -1.0,
+        "product_sale": -1,
+        "product_click": -1,
+        "product_collection": -1,
+        "shop_id": -1,
+        "creat_time": "",
+        "update_time": "",
+        "product_pic": "",
+        "product_status": -1,
     }
     product_dict = {}
     if type == "product":  ## 店铺api
@@ -1198,98 +1370,14 @@ def product():
                 if key == "product_id":
                     continue
                 elif key == "product_name":
-                    if not isinstance(data[key],str):
-                    # if type(data[key]) is not str:
+                    if not isinstance(data[key], str):
+                        # if type(data[key]) is not str:
                         # status -203 Arg's value type error
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
                     if data[key] == "":
                         # status -204 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    product_dict[key] = data[key]
-                    continue
-                elif key == "product_content":
-                    if not isinstance(data[key], str):
-                        # status -203 Arg's value type error
-                        return json.dumps({"id": id, "status": -201, "message": "Arg's value type error", "data": {}})
-                    product_dict[key] = data[key]
-                    continue
-                elif key == "product_key":
-                    if not isinstance(data[key], str):
-                        # status -203 Arg's value type error
-                        return json.dumps({"id": id, "status": -201, "message": "Arg's value type error", "data": {}})
-                    product_dict[key] = data[key]
-                    continue
-                elif key == "product_price":
-                    if (not isinstance(data[key],float)) and (not isinstance(data[key],int)):
-                        # status -203 Arg's value type error
-                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
-                    data[key] = float(data[key])
-                    if data[key] == 0.0:
-                        # status -204 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    product_dict[key] = data[key]
-                    continue
-                elif key == "product_disprice":
-                    continue
-                elif key == "product_sale":
-                    continue
-                elif key == "product_click":
-                    continue
-                elif key == "product_collection":
-                    continue
-                elif key == "shop_id":
-                    if not isinstance(data[key],int):
-                        # status -203 Arg's value type error
-                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
-                    if data[key] == 0:
-                        # status -204 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    product_dict[key] = data[key]
-                    continue
-                elif key == "creat_time":
-                    continue
-                elif key == "update_time":
-                    continue
-                elif key == "product_pic":
-                    if not isinstance(data[key], str):
-                        # status -203 Arg's value type error
-                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
-                    if data[key] == "":
-                        pass
-                        # todo 设置一张默认图片
-                    product_dict[key] = data[key]
-                    continue
-                elif key == "product_status":
-                    if not isinstance(data[key],int):
-                        # status -203 Arg's value type error
-                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
-                    if data[key] not in [0,1,2]:
-                        # status -203 Arg's value type error
-                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
-                    product_dict[key] = data[key]
-            json_dict = PSQL.CreatProduct(user_id=user_id,id=id,**product_dict)
-            return json.dumps(json_dict)
-        elif subtype == "update":
-            for key in data.keys():
-                if key not in key_dict.keys():
-                    # status -1 json的key错误。
-                    return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
-            for key in data.keys():
-                if key == "product_id":
-                    if not isinstance(data[key],int):
-                        # status -203 Arg's value type error
-                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
-                    if data[key] == 0:
-                        # status -204 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
-                    product_dict[key] = data[key]
-                elif key == "product_name":
-                    if not isinstance(data[key], str):
-                        # status -203 Arg's value type error
-                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
-                    if data[key] == "":
-                        # status -204 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
                     product_dict[key] = data[key]
                     continue
                 elif key == "product_content":
@@ -1311,44 +1399,136 @@ def product():
                     data[key] = float(data[key])
                     if data[key] == 0.0:
                         # status -204 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
                     product_dict[key] = data[key]
                     continue
                 elif key == "product_disprice":
-                    if (not isinstance(data[key],float)) and (not isinstance(data[key],int)):
+                    continue
+                elif key == "product_sale":
+                    continue
+                elif key == "product_click":
+                    continue
+                elif key == "product_collection":
+                    continue
+                elif key == "shop_id":
+                    if not isinstance(data[key], int):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] == 0:
+                        # status -204 Necessary args can't be empty
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "creat_time":
+                    continue
+                elif key == "update_time":
+                    continue
+                elif key == "product_pic":
+                    if not isinstance(data[key], str):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] == "":
+                        pass
+                        # todo 设置一张默认图片
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_status":
+                    if not isinstance(data[key], int):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] not in [0, 1, 2]:
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    product_dict[key] = data[key]
+            json_dict = PSQL.CreatProduct(user_id=user_id, id=id, **product_dict)
+            return json.dumps(json_dict)
+        elif subtype == "update":
+            for key in data.keys():
+                if key not in key_dict.keys():
+                    # status -1 json的key错误。
+                    return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+            for key in data.keys():
+                if key == "product_id":
+                    if not isinstance(data[key], int):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] == 0:
+                        # status -204 Necessary args can't be empty
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    product_dict[key] = data[key]
+                elif key == "product_name":
+                    if not isinstance(data[key], str):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    if data[key] == "":
+                        # status -204 Necessary args can't be empty
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_content":
+                    if not isinstance(data[key], str):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -201, "message": "Arg's value type error", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_key":
+                    if not isinstance(data[key], str):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -201, "message": "Arg's value type error", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_price":
+                    if (not isinstance(data[key], float)) and (not isinstance(data[key], int)):
                         # status -203 Arg's value type error
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
                     data[key] = float(data[key])
                     if data[key] == 0.0:
                         # status -204 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                    product_dict[key] = data[key]
+                    continue
+                elif key == "product_disprice":
+                    if (not isinstance(data[key], float)) and (not isinstance(data[key], int)):
+                        # status -203 Arg's value type error
+                        return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                    data[key] = float(data[key])
+                    if data[key] == 0.0:
+                        # status -204 Necessary args can't be empty
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
                     product_dict[key] = data[key]
                     continue
                 elif key == "product_sale":
-                    if not isinstance(data[key],int):
+                    if not isinstance(data[key], int):
                         # status -203 Arg's value type error
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
                     product_dict[key] = data[key]
                     continue
                 elif key == "product_click":
-                    if not isinstance(data[key],int):
+                    if not isinstance(data[key], int):
                         # status -203 Arg's value type error
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
                     product_dict[key] = data[key]
                     continue
                 elif key == "product_collection":
-                    if not isinstance(data[key],int):
+                    if not isinstance(data[key], int):
                         # status -203 Arg's value type error
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
                     product_dict[key] = data[key]
                     continue
                 elif key == "shop_id":
-                    if not isinstance(data[key],int):
+                    if not isinstance(data[key], int):
                         # status -203 Arg's value type error
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
                     if data[key] == 0:
                         # status -204 Necessary args can't be empty
-                        return json.dumps({"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
+                        return json.dumps(
+                            {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
                     product_dict[key] = data[key]
                     continue
                 elif key == "creat_time":
@@ -1366,26 +1546,27 @@ def product():
                     product_dict[key] = data[key]
                     continue
                 elif key == "product_status":
-                    if not isinstance(data[key],int):
+                    if not isinstance(data[key], int):
                         # status -203 Arg's value type error
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
-                    if data[key] not in [0,1,2]:
+                    if data[key] not in [0, 1, 2]:
                         # status -203 Arg's value type error
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
                     product_dict[key] = data[key]
-            json_dict = PSQL.UpdateProduct(user_id=user_id,id=id,**product_dict)
+            json_dict = PSQL.UpdateProduct(user_id=user_id, id=id, **product_dict)
             return json.dumps(json_dict)
 
-@app.route("/get/product",methods=["POST"])
+
+@app.route("/get/product", methods=["POST"])
 def get_product():
     try:
         token = request.args["token"]
-        print("token:",token)
+        print("token:", token)
     except Exception as e:
         print("Missing necessary args")
         log_main.error("Missing necessary agrs")
         # status -100 缺少必要的参数
-        return json.dumps({"id":-1,"status":-100,"message":"Missing necessary args","data":{}})
+        return json.dumps({"id": -1, "status": -100, "message": "Missing necessary args", "data": {}})
     token_check_result = PSQL.CheckToken(token)
     if token_check_result == False:
         # status -101 token不正确
@@ -1430,8 +1611,11 @@ def get_product():
             order = ""
             if "order" in data.keys():
                 order = data["order"]
-            json_dict = PSQL.GetProductList(product_name=product_name,product_key=product_key,shop_id=shop_id,order=order,type=type,id=id)
+            json_dict = PSQL.GetProductList(product_name=product_name, product_key=product_key, shop_id=shop_id,
+                                            order=order, type=type, id=id)
             return json.dumps(json_dict)
+
+
 # @app.route("/")
 # def index():
 #     return render_template("img.html")
@@ -1439,6 +1623,6 @@ def get_product():
 if __name__ == '__main__':
     # -------------------主程序初始化-------------------
     Initialize(sys.argv[1:])
-    thread_auto = MyThread(1,"AutoRemoveExpireCode",1)
+    thread_auto = MyThread(1, "AutoRemoveExpireCode", 1)
     thread_auto.start()
-    app.run(webhost,port=webport,debug=webdebug)
+    app.run(webhost, port=webport, debug=webdebug)

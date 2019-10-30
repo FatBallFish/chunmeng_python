@@ -14,10 +14,13 @@
 - [**头像类**](#头像类)
   - [上传头像API](#上传头像API)
   - [获取头像API](#获取头像API)
+  - [上传图片](#上传图片)
+  - [获取图片](#获取图片)
 - [**寻物启事·失物招领类**](#寻物启事·失物招领类)
   - [添加启事文章API](#添加启事文章API)
   - [更新启事文章API](#更新启事文章API)
   - [删除启事文章API](#删除启事文章API)
+  - [GET启事API地址](#GET启事API地址)
 - [**学生自营平台类**](#学生自营平台类)
   - [**店铺（shop） API**](#店铺shop-api)
     - [创建店铺](#创建店铺)
@@ -245,7 +248,7 @@
 
 
 
-## **头像类**
+## **图片类**
 
 #### 上传头像API
 
@@ -347,6 +350,116 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 ```python
 1.非码三秃域名获取图片时：返回ban图片
 2.id参数不正确或者指定id图片不存在：返回error图片
+3.如果没有返回任何东西，就是后端炸了
+```
+
+#### 上传图片
+
+> **API类型**
+
+**请求类型：`POST`**
+
+> **头像上传API地址：**
+
+**https://www.zustservice.cn/api/external/pic**
+
+> **POST发送请求的json文本**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"pic",
+    "subtype":"upload",
+    "data":{
+        "from":"property"
+        "base64":"图片base64数据"
+        "name":"lalalala"
+    }
+}
+```
+
+> **data字段表**
+
+|  参数  | 可否为空 | 可否缺省 | 数据类型 |       例子        | 字段长度限制 |                             备注                             |
+| :----: | :------: | :------: | :------: | :---------------: | :----------: | :----------------------------------------------------------: |
+|  from  |          |          |  string  |     property      |              | 图片来源，只有以下可选项：<br />"property":寻物启事&失物招领<br />"shop":店铺<br />"product":产品<br /> "portrait":头像<br /> |
+| base64 |          |          |  string  | iVBORw0KGgoAA.... |              |                        图片base64数据                        |
+|  name  |          |    √     |  string  |       pro1        |              | 如果name不设置的话将自动取图片MD5值作为图片名字，该名字将用于后期获取图片用。<br />**如果头像使用此api进行上传的话可以将name设置成用户学号** |
+
+
+
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":{
+        "url":"./api/external/get/pic/property/a5466a1ce75e8043ab3bf5689fdec4aa",
+    }
+}
+```
+
+> ## 注意
+
++ 目前所有的头像图片是专门的COS对象储存服务器里
+
++ 图片文件大小限制在1024kb以下
+
++ type字段要准确
+
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-500, # 错误码
+  "message":"COS upload Error",
+  "data":{},
+}
+```
+
+#### 获取图片
+
+> **API类型**
+
+**请求类型：`GET`**
+
+> **头像获取API地址：**
+
+**https://www.zustservice.cn/api/external/get/pic/<j_from>/< name >**
+
+> **GET发送请求的链接例子**
+
+```python
+https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf5689fdec4aa
+```
+
++ `<j_from>`：图片来源
++ `<name>`：图片名称
+
+> **Python端返回成功处理情况**
+
+```python
+返回图片的bytes数据
+```
+
+> ## 注意
+
++ 目前所有的头像图片是放在专门的COS对象储存服务器里，非码三秃的域名引用图片返回ban图片
+
++ id参数类型不正确，返回error图片
+
++ 若无任何返回则是后端炸了。
+
+> **Python端返回失败处理情况**
+
+```python
+1.非码三秃域名获取图片时：返回ban图片
+2.参数不正确或者名称所对应的的图片不存在：返回error图片
 3.如果没有返回任何东西，就是后端炸了
 ```
 
@@ -1251,6 +1364,7 @@ https://www.zustservice.cn/api/external/get/portrait/<id>
 | -203 |       Arg's value type error       |         键值对数据类型错误          | POST      |
 | -204 |         Arg's value error          |           键值对数据错误            | POST      |
 | -404 |           Unknown Error            |           未知的Redis错误           | POST      |
+| -500 |          COS upload Error          |           COS储存上传失败           | POST      |
 
 ------
 

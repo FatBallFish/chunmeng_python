@@ -47,20 +47,20 @@ headers = {'content-type': "application/json"}
 #         "publish_time":"",
 #     }}
 
-data={
-    "id":0,
-    "status":0,
-    "type":"product",
-    "subtype":"list",
-    "data":{
-        "product_name":"测试商品",
-        "product_key":"测试",
-        "shop_id":811729970,
-        "type":"all",
-        "order":"creat_time ASC"
-    }}
-token = "f25c67a05694f68c2923a94216a7ff8b2939d65265195e15e433cda7dbf27ea2"
-response = requests.post(url="http://127.0.0.1:4081/get/product?token={}".format(token),data=json.dumps(data),headers=headers)
+# data={
+#     "id":0,
+#     "status":0,
+#     "type":"product",
+#     "subtype":"list",
+#     "data":{
+#         "product_name":"测试商品",
+#         "product_key":"测试",
+#         "shop_id":811729970,
+#         "type":"all",
+#         "order":"creat_time ASC"
+#     }}
+# token = "f25c67a05694f68c2923a94216a7ff8b2939d65265195e15e433cda7dbf27ea2"
+# response = requests.post(url="http://127.0.0.1:4081/get/product?token={}".format(token),data=json.dumps(data),headers=headers)
 # response = requests.post(url="https://www.zustservice.cn/api/external/get/shop?token={}".format(token),data=json.dumps(data),headers=headers)
 
 #
@@ -91,8 +91,24 @@ response = requests.post(url="http://127.0.0.1:4081/get/product?token={}".format
 # # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
 
 
-
-
+## 上传图片
+with open("./temp/temp.png","rb") as f:
+      file_data = f.read()
+# print(file_data)
+img_base64 = str(base64.b64encode(file_data),"utf-8")
+print("base64:\n{}".format(img_base64))
+data={"id":0,
+      "status":0,
+      "type":"pic",
+      "subtype":"upload",
+      "data":{
+          "from":"property",
+          "base64":img_base64,
+          "name":"test1"
+}}
+token = "36217bba0c734b85f53e7d8b7ef96c7469a67a44440ff89def5d8dcce5e60a54"
+response = requests.post(url="http://127.0.0.1:4081/pic?token={}".format(token),data=json.dumps(data),headers=headers)
+# response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
 
 print(response.text)
 # data_json = response.json()
