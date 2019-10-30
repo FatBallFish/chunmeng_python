@@ -84,7 +84,7 @@ COS 模块初始化，此函数应在所有函数之前调用
     global scheduler
     jobstores = {
         'redis': RedisJobStore(0, host="localhost", port=6379, password=""),
-        'default': SQLAlchemyJobStore(url='sqlite:///data/jobs.sqlite')
+        'default': SQLAlchemyJobStore(url='sqlite:///tmp/data/jobs.sqlite')
     }
     job_defaults = {
         'coalesce': False,
