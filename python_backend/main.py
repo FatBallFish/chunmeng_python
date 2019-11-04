@@ -448,25 +448,36 @@ def get_portrait(id):
         realip = request.headers.get("X-Real-Ip")
         # print("real ip:{},type:{}".format(realip,type(realip)))
     except Exception as e:
-        print(e)
+        print("[get_portrait]{}".format(e))
+        log_main.error("[get_portrait]{}".format(e))
     try:
         referer = str(request.headers.get("Referer"))
+        # print("referer:{}".format(referer))
         # print("referer:{},type:{}".format(referer, type(referer)))
-        index1 = referer.find("https://www.zustservice.cn/")
-        index2 = referer.find("http://localhost/")
-        if index1 == -1 and index2 == -1:
-            print("External Domain Name : {} Reference Pictures Prohibited".format(referer))
+        for url in allowurl:
+            # print("Allow Url:{}".format(url))
+            # todo 服务器上有bug
+            index = referer.find(url)
+            if index != -1:
+                break
+        else:
+            log_main.warning("[get_portrait]External Domain Name : {} Reference Pictures Prohibited".format(referer))
             try:
                 path = os.path.join(Main_filepath, "data/image/ban.jpg")
                 with open(path, "rb") as f:
                     data = f.read()
                 # data = COS.bytes_download("portrait/error")
             except Exception as e:
-                print("Error:Can't load the ban img.")
+                print("[get_portrait]Error:Can't load the ban img.")
                 log_main.error("Error:Can't load the ban img.")
-                data = ""
+                data = b""
+            return data
+    except Exception as e:
+        print(e)
+        print("[get_portrait]Error:Can't get real ip.")
+        log_main.error("Error:Can't get real ip.")
+        data = b""
         return data
-
     except Exception as e:
         print(e)
 
