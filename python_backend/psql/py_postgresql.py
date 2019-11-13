@@ -328,6 +328,10 @@ def GetProperty(property_type:int,key:str,**property_dict)->tuple:
             "user2_qq": "",
             "publish_time": "",
             "update_time": "",
+            "pic_num":0,
+            "pic_url1":"",
+            "pic_url2":"",
+            "pic_url3":"",
         }
         i = 0
         for key in property_dict:

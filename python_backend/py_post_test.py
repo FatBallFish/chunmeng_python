@@ -1,5 +1,5 @@
 # coding=utf-8
-import requests,json
+import requests, json
 import base64
 
 headers = {'content-type': "application/json"}
@@ -8,26 +8,48 @@ headers = {'content-type': "application/json"}
 # response = requests.post(url="http://127.0.0.1:4081/captcha",data=json.dumps(data),headers=headers)
 
 
+# 添加寻物启事api
 
-## 添加寻物启事api
-# data={
-#     "id":0,
-#     "status":0,
-#     "type":"property",
-#     "subtype":"add",
-#     "data":{
-#         "type":2,
-#         "lab":"人类",
-#         "title":"代领一个许淳皓",
-#         "content":"我在路上捡到一个许淳皓",
-#         "occurrence_time":"2019-04-22 16:17:42",
-#         "user_name":"王凌超",
-#         "user_phone":"",
-#         "user_qq":"893721708",
-#         "publish_time":"",
+data = {
+    "id": 0,
+    "status": 0,
+    "type": "property",
+    "subtype": "add",
+    "data": {
+        "content": "丢丢丢",
+        "lab": "card",
+        "occurrence_time": "",
+        "pic_num": 3,
+        "pic_url1": "./api/external/get/pic/property/eafe254797d819bfd0f1d5782ae1e6b8",
+        "pic_url2": "./api/external/get/pic/property/efea3e8dd4c701ce6b468f5584c130f6",
+        "pic_url3": "./api/external/get/pic/property/5dbe81d1a473450506117c4abc924a35",
+        "publish_time": "",
+        "title": "丢",
+        "type": 2,
+        "user_name": "123",
+        "user_phone": "321",
+        "user_qq": "123456",
+        }}
+
+# data = {
+#     "id": 0,
+#     "status": 0,
+#     "type": "property",
+#     "subtype": "add",
+#     "data": {
+#         "type": 2,
+#         "lab": "人类",
+#         "title": "代领一个许淳皓",
+#         "content": "我在路上捡到一个许淳皓",
+#         "occurrence_time": "2019-04-22 16:17:42",
+#         "user_name": "王凌超",
+#         "user_phone": "",
+#         "user_qq": "893721708",
+#         "publish_time": "",
 #     }}
-# token = "294c949e1573c562fd70ac12a58859d7a82e7c46a77c59d7c9f2559ff01cbe52"
-# response = requests.post(url="https://www.zustservice.cn/api/external/property?token={}".format(token),data=json.dumps(data),headers=headers)
+token = "a55026d26b842ce685bd9d1e7692aa8a0c24063f3db20123d1322c559f16e1a2"
+response = requests.post(url="http://127.0.0.1:4081/property?token={}".format(token),data=json.dumps(data), headers=headers)
+# response = requests.post(url="https://www.zustservice.cn/api/external/property?token={}".format(token),data=json.dumps(data), headers=headers)
 
 ## 更新寻物启事api
 # data={
@@ -91,25 +113,32 @@ headers = {'content-type': "application/json"}
 # # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
 
 
-## 上传图片
-with open("./temp/temp.png","rb") as f:
-      file_data = f.read()
-# print(file_data)
-img_base64 = str(base64.b64encode(file_data),"utf-8")
-print("base64:\n{}".format(img_base64))
-data={"id":0,
-      "status":0,
-      "type":"pic",
-      "subtype":"upload",
-      "data":{
-          "from":"property",
-          "base64":img_base64,
-          "name":"test1"
-}}
-token = "36217bba0c734b85f53e7d8b7ef96c7469a67a44440ff89def5d8dcce5e60a54"
-response = requests.post(url="http://127.0.0.1:4081/pic?token={}".format(token),data=json.dumps(data),headers=headers)
-# response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+# ## 上传图片
+# with open("./temp/temp.png","rb") as f:
+#       file_data = f.read()
+# # print(file_data)
+# img_base64 = str(base64.b64encode(file_data),"utf-8")
+# print("base64:\n{}".format(img_base64))
+# data={"id":0,
+#       "status":0,
+#       "type":"pic",
+#       "subtype":"upload",
+#       "data":{
+#           "from":"property",
+#           "base64":img_base64,
+#           "name":"test1"
+# }}
+# token = "36217bba0c734b85f53e7d8b7ef96c7469a67a44440ff89def5d8dcce5e60a54"
+# response = requests.post(url="http://127.0.0.1:4081/pic?token={}".format(token),data=json.dumps(data),headers=headers)
+# # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
 
+# # 测试集
+# data={"name":"wlc",
+#       "email":"893721708",
+#       "address":"杭州",
+#       "message":"我的留言3",
+# }
+# response = requests.post(url="http://127.0.0.1:8000/message_form/".format(),data=json.dumps(data),headers=headers)
 print(response.text)
 # data_json = response.json()
 # data = data_json["data"]

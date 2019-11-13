@@ -602,6 +602,7 @@ def property():
                             {"id": id, "status": -204, "message": "Arg's value error", "data": {}})
                     property_dict["type"] = int_property_type  # 1表示寻物启事，2表示失物招领
                 else:
+                    print("type is empty")
                     # status -201 Necessary key-value can't be empty
                     return json.dumps(
                         {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
@@ -619,6 +620,7 @@ def property():
             property_dict["update_time"] = time.localtime()
             # -------开始读取其他信息-------
             for key in data.keys():
+                print("{}:{}".format(key,data[key]))
                 if key not in property_dict.keys():
                     # status -1 json的key错误。
                     return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
@@ -626,6 +628,7 @@ def property():
                     continue
                 if key == "lab":
                     if data["lab"] == "":
+                        print("lab is empty")
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
@@ -633,6 +636,7 @@ def property():
                     continue
                 elif key == "title":
                     if data["title"] == "":
+                        print("title is empty")
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
@@ -640,6 +644,7 @@ def property():
                     continue
                 elif key == "content":
                     if data["content"] == "":
+                        print("content is empty")
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
@@ -652,6 +657,7 @@ def property():
                     continue
                 elif key == "user_id":
                     if data["user_id"] == None or data["user_id"] == "" or data["user_id"] == 0:
+                        print("user_id is empty")
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
@@ -659,6 +665,7 @@ def property():
                     continue
                 elif key == "user_name":
                     if data["user_name"] == "":
+                        print("user_name is empty")
                         # status -201 Necessary args can't be empty
                         return json.dumps(
                             {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}})
@@ -693,20 +700,20 @@ def property():
                     num_str = str(data["pic_num"])
                     if num_str.isdigit():
                         num = int(num_str)
-                        for i in num:
-                            filed = "pic_url" + str(i)  # 字段名
-                            pic_data = data[filed]
-                            # todo 上传到COS并取回url
-
+                        for i in range(num):
+                            filed = "pic_url" + str(i+1)  # 字段名
+                            print(filed)
+                            property_dict[filed] = data[filed]
                     else:
                         # status -203 键值对数据类型错误
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+                elif key == "pic_url1" or key == "pic_url2" or key == "pic_url3":
+                    continue
                 else:
                     property_dict[key] = data[key]
                     print("Unkown key and value:[{},{}]".format(key, data[key]))
                     log_main.warning("Unkown key and value:[{},{}]".format(key, data[key]))
                     continue
-
             try:
                 result = PSQL.InsertProperty(**property_dict)
             except:
@@ -1111,6 +1118,10 @@ def get_property():
         "user2_qq": "",
         "publish_time": "",
         "update_time": "",
+        "pic_num":0,
+        "pic_url1":"",
+        "pic_url2":"",
+        "pic_url3":"",
     }
     args_dict = dict(request.args)
     # print("value:",args_dict.keys(),"type:",type(args_dict))
@@ -1250,6 +1261,12 @@ def shop():
                     {"id": id, "status": -102, "message": "Get user_id failed for the token", "data": {}})
             json_dict = PSQL.UpdateShop(shop_id=shop_id, shop_content=shop_content, user_id=user_id, id=id)
             return json.dumps(json_dict)
+        else:
+            # status -2 json的value错误。
+            return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
+    else:
+        # status -2 json的value错误。
+        return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
 
 
 @app.route("/get/shop", methods=["POST"])
@@ -1312,6 +1329,12 @@ def get_shop():
         elif subtype == "delete":
             pass
             # todo Delete shop
+        else:
+            # status -2 json的value错误。
+            return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
+    else:
+        # status -2 json的value错误。
+        return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
 
 
 @app.route("/product", methods=["POST"])
@@ -1566,6 +1589,12 @@ def product():
                     product_dict[key] = data[key]
             json_dict = PSQL.UpdateProduct(user_id=user_id, id=id, **product_dict)
             return json.dumps(json_dict)
+        else:
+            # status -2 json的value错误。
+            return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
+    else:
+        # status -2 json的value错误。
+        return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
 
 
 @app.route("/get/product", methods=["POST"])
@@ -1625,6 +1654,69 @@ def get_product():
             json_dict = PSQL.GetProductList(product_name=product_name, product_key=product_key, shop_id=shop_id,
                                             order=order, type=type, id=id)
             return json.dumps(json_dict)
+        else:
+            # status -2 json的value错误。
+            return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
+    else:
+        # status -2 json的value错误。
+        return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
+
+
+@app.route("/purchase", methods=["POST"])  # 订单api
+def purchase():
+    try:
+        token = request.args["token"]
+        print("token:", token)
+    except Exception as e:
+        print("Missing necessary args")
+        log_main.error("Missing necessary agrs")
+        # status -100 缺少必要的参数
+        return json.dumps({"id": -1, "status": -100, "message": "Missing necessary args", "data": {}})
+    token_check_result = PSQL.CheckToken(token)
+    if token_check_result == False:
+        # status -101 token不正确
+        return json.dumps({"id": -1, "status": -101, "message": "Error token", "data": {}})
+    # 验证身份完成，处理数据
+    data = request.json
+    print(data)
+    # 先获取json里id的值，若不存在，默认值为-1
+    try:
+        keys = data.keys()
+    except Exception as e:
+        # status -1 json的key错误。此处id是因为没有进行读取，所以返回默认的-1。
+        return json.dumps({"id": -1, "status": -1, "message": "Error JSON key", "data": {}})
+
+    if "id" in data.keys():
+        id = data["id"]
+    else:
+        id = -1
+    ## 判断指定所需字段是否存在，若不存在返回status -1 json。
+    for key in ["type", "subtype", "data"]:
+        if not key in data.keys():
+            # status -1 json的key错误。
+            return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+    type = data["type"]
+    subtype = data["subtype"]
+    ## -------正式处理事务-------
+    data = data["data"]
+    user_id = PSQL.GetUserID(token)
+    if type == "purchase":
+        if subtype == "apply":  # 申请订单
+            pass
+        elif subtype == "pay":  # 支付中
+            pass
+        elif subtype == "cancel":  # 取消订单
+            pass
+        elif subtype == "finish":  # 完成订单
+            pass
+        elif subtype == "get":  # 获取订单
+            pass
+        else:
+            # status -2 json的value错误。
+            return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
+    else:
+        # status -2 json的value错误。
+        return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
 
 
 # @app.route("/")
