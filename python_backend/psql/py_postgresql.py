@@ -271,11 +271,12 @@ def GetProperty(property_type:int,key:str,**property_dict)->tuple:
     :param property_dict: 信息字典，不可与key共存
     :return: 成功返回元组。（记录数，寻物启事信息列表），失败返回（0,[]）
     """
+    print("type:{}".format(property_type))
     if key == None or key == "":
         if len(property_dict.keys()) == 0:
-            sql = "SELECT * FROM property WHERE type={} ORDER BY update_time DESC ".format(property_type)
+            sql = "SELECT * FROM property WHERE type = {} ORDER BY update_time DESC ".format(property_type)
         else:
-            sql = "SELECT * FROM property WHERE "
+            sql = "SELECT * FROM property WHERE type = {} AND ".format(property_type)
             for key in property_dict.keys():
                 if type(property_dict[key]) == int:
                     sql = sql + key + "=" + str(property_dict[key]) + " AND "
@@ -293,7 +294,7 @@ def GetProperty(property_type:int,key:str,**property_dict)->tuple:
             print("Error,key can't be used when other args appeared.")
             return (-1,"")
         sql = "SELECT * FROM property " \
-              "WHERE type={0} AND(lab LIKE '%{1}%' OR title LIKE '%{1}%' OR content LIKE '%{1}%')" \
+              "WHERE type = {0} AND(lab LIKE '%{1}%' OR title LIKE '%{1}%' OR content LIKE '%{1}%')" \
               "ORDER BY update_time DESC".format(property_type,key)
     print("GetProperty_SQL:",sql)
     cur = conn.cursor()
