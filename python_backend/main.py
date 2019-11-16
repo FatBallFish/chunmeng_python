@@ -620,7 +620,7 @@ def property():
             property_dict["update_time"] = time.localtime()
             # -------开始读取其他信息-------
             for key in data.keys():
-                print("{}:{}".format(key,data[key]))
+                print("{}:{}".format(key, data[key]))
                 if key not in property_dict.keys():
                     # status -1 json的key错误。
                     return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
@@ -700,8 +700,9 @@ def property():
                     num_str = str(data["pic_num"])
                     if num_str.isdigit():
                         num = int(num_str)
+                        property_dict[key] = num
                         for i in range(num):
-                            filed = "pic_url" + str(i+1)  # 字段名
+                            filed = "pic_url" + str(i + 1)  # 字段名
                             print(filed)
                             property_dict[filed] = data[filed]
                     else:
@@ -1118,10 +1119,10 @@ def get_property():
         "user2_qq": "",
         "publish_time": "",
         "update_time": "",
-        "pic_num":0,
-        "pic_url1":"",
-        "pic_url2":"",
-        "pic_url3":"",
+        "pic_num": 0,
+        "pic_url1": "",
+        "pic_url2": "",
+        "pic_url3": "",
     }
     args_dict = dict(request.args)
     # print("value:",args_dict.keys(),"type:",type(args_dict))
