@@ -1255,12 +1255,14 @@ def shop():
                     return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
             shop_id = data["shop_id"]
             shop_content = data["shop_content"]
+            if "pic_url" in data.keys():
+                pic_url = data["pic_url"]
             user_id = PSQL.GetUserID(token)
             if user_id == None or user_id == 0:
                 # status -102 Necessary args can't be empty
                 return json.dumps(
                     {"id": id, "status": -102, "message": "Get user_id failed for the token", "data": {}})
-            json_dict = PSQL.UpdateShop(shop_id=shop_id, shop_content=shop_content, user_id=user_id, id=id)
+            json_dict = PSQL.UpdateShop(shop_id=shop_id, shop_content=shop_content, user_id=user_id,pic_url=pic_url,id=id)
             return json.dumps(json_dict)
         else:
             # status -2 json的value错误。
@@ -1326,6 +1328,8 @@ def get_shop():
             elif "shop_name" in data.keys():
                 shop_name = data["shop_name"]
                 json_dict = PSQL.GetShopInfo(shop_name=shop_name, id=id)
+            else:
+                json_dict = {"id":id,"status":204,"message":"Arg's value error","data":{}}
             return json.dumps(json_dict)
         elif subtype == "delete":
             pass

@@ -943,7 +943,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 
 > **POST店铺API地址**
 
-**https://www.zustservice.cn/api/external/shop?token={token值}**
+**https://www.zustservice.cn/api/external/get/shop?token={token值}**
 
 > **data字段表**
 
@@ -972,13 +972,14 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 
 > **返回JSON.data表**
 
-|     name     | data type | length | 注释     |
-| :----------: | :-------: | :----: | -------- |
-|   shop_id    |  big int  |   9    | 店铺id   |
-|  shop_name   |  string   |  100   | 店铺名称 |
-| shop_content |  string   |        | 店铺内容 |
-|   user_id    |  big int  |   11   | 店主id   |
-|  creat_time  | datetime  |        | 创建时间 |
+|     name     | data type | length | 注释        |
+| :----------: | :-------: | :----: | ----------- |
+|   shop_id    |  big int  |   9    | 店铺id      |
+|  shop_name   |  string   |  100   | 店铺名称    |
+| shop_content |  string   |        | 店铺内容    |
+|   user_id    |  big int  |   11   | 店主id      |
+|  creat_time  | datetime  |        | 创建时间    |
+|   pic_url    |  string   |  512   | 店铺图片url |
 
 > **Python端返回成功处理情况**
 
@@ -1021,7 +1022,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 
 > **POST店铺API地址**
 
-**https://www.zustservice.cn/api/external/shop?token={token值}**
+**https://www.zustservice.cn/api/external/get/shop?token={token值}**
 
 > **data字段表**
 
@@ -1050,13 +1051,14 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 
 > **返回JSON.data表**
 
-|     name     | data type | length | 注释     |
-| :----------: | :-------: | :----: | -------- |
-|   shop_id    |  big int  |   9    | 店铺id   |
-|  shop_name   |  string   |  100   | 店铺名称 |
-| shop_content |  string   |        | 店铺内容 |
-|   user_id    |  big int  |   11   | 店主id   |
-|  creat_time  | datetime  |        | 创建时间 |
+|     name     | data type | length | 注释        |
+| :----------: | :-------: | :----: | ----------- |
+|   shop_id    |  big int  |   9    | 店铺id      |
+|  shop_name   |  string   |  100   | 店铺名称    |
+| shop_content |  string   |        | 店铺内容    |
+|   user_id    |  big int  |   11   | 店主id      |
+|  creat_time  | datetime  |        | 创建时间    |
+|   pic_url    |  string   |  512   | 店铺图片url |
 
 > **Python端返回成功处理情况**
 

@@ -468,7 +468,7 @@ def CreatShop(shop_name:str,user_id:int,id:int=-1)->dict:
     # status 0 创建店铺成功！返回shop_id
     return {"status":0,"message":"successful","data":{"shop_id":shop_id}}
 
-def UpdateShop(shop_id:int,shop_content:str,user_id:int,id:int=-1)->dict:
+def UpdateShop(shop_id:int,shop_content:str,user_id:int,pic_url:str,id:int=-1)->dict:
     """
 更新店铺的内容
     :param shop_id: 店铺id
@@ -481,7 +481,7 @@ def UpdateShop(shop_id:int,shop_content:str,user_id:int,id:int=-1)->dict:
     if GetShopOwner(shop_id) != user_id:
         # status 100 无权更新他人的店铺信息
         return {"status":100,"message":"No right to update","data":{}}
-    sql = "UPDATE shop SET shop_content = '{0}' WHERE shop_id = {1}".format(shop_content,shop_id)
+    sql = "UPDATE shop SET shop_content = '{0}' ,`pic_url`='{1}' WHERE shop_id = {2}".format(shop_content,pic_url,shop_id)
     try:
         cur.execute(sql)
         conn.commit()
@@ -532,6 +532,7 @@ def GetShopList(shop_name:str,order:str="",id:int=-1)->dict:
             shop_dict["user_id"] = row[3]
             shop_dict["user_name"] = GetUserName(user_id=row[3])
             shop_dict["creat_time"] = str(row[4])
+            shop_dict["pic_url"] = str(row[5])
             shop_list.append(shop_dict)
         # status 0 成功获取店铺列表，返回列表数组
         return {"id":id,"status":0,"message":"successful","data":shop_list}
@@ -580,6 +581,7 @@ def GetShopInfo(shop_name:str="",shop_id:int=0,id:int=-1)->dict:
         shop_info["shop_content"] = row[2]
         shop_info["user_id"] = row[3]
         shop_info["creat_time"] = str(row[4])
+        shop_info["pic_url"] = str(row[5])
         # status 0 成功获取店铺信息
         return {"id": id, "status": 0, "message": "successful", "data": shop_info}
 
