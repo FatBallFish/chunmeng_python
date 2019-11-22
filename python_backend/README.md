@@ -949,7 +949,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 
 |   name    | data type | length | 不可空 | 可缺省 | 注释                                                         |
 | :-------: | :-------: | :----: | :----: | :----: | ------------------------------------------------------------ |
-| shop_name |  string   |  100   |   √    |        | 店铺名关键字，模糊查找，返回包含该字段内容的所有记录         |
+| shop_name |  string   |  100   |        |        | 店铺名关键字，模糊查找，返回包含该字段内容的所有记录。为空返回所有的店铺信息 |
 |   order   |  string   |        |        |   √    | 排序规则，SQL语法规则：`字段+排序模式`。<br />字段：请看下方`返回JSON.data表`<br />排序模式：`ASC` 为升序，`DESC` 为降序<br />可用`AND`、`OR`和`( )`进行组合。<br />例子：`creat_time DESC` |
 
 > **json请求格式**

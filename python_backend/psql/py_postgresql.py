@@ -502,7 +502,10 @@ def GetShopList(shop_name:str,order:str="",id:int=-1)->dict:
     :return: 返回json_dict
     """
     cur = conn.cursor()
-    sql = "SELECT * FROM shop WHERE shop_name LIKE '%{}%'".format(shop_name)
+    if shop_name == "" or shop_name == None:
+        sql = "SELECT * FROM shop"
+    else:
+        sql = "SELECT * FROM shop WHERE shop_name LIKE '%{}%'".format(shop_name)
     if order != "":
         sql = sql + " ORDER BY {}".format(order)
     try:
