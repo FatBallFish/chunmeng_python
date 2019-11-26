@@ -885,6 +885,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 | :----------: | :-------: | :----: | :----: | :----: | -------- |
 |   shop_id    |  big int  |   9    |   √    |        | 店铺id   |
 | shop_content |  string   |        |        |        | 店铺内容 |
+|   pic_url    |  string   |  512   |        |        |          |
 
 > **json请求格式**
 

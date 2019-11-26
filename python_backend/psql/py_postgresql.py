@@ -1,11 +1,13 @@
 # coding=utf-8
+from psql.py_lock import Lock
+from threading import Timer
 import psycopg2
 import sys,os,configparser
 import logging
 from configparser import ConfigParser
 import datetime
 import time,random
-
+Lock = Lock()
 log_psql = logging.getLogger("Postgres")
 def Initialize(cfg_path:str,main_path:str):
     """
@@ -14,6 +16,8 @@ def Initialize(cfg_path:str,main_path:str):
     :param main_path: 主程序运行目录
     :return:
     """
+    Lock.timeout = 3
+    Lock.timeout_def = Auto_KeepConnect
     cf = ConfigParser()
     cf.read(cfg_path)
     global host,port,user,password,db,conn
@@ -44,6 +48,32 @@ def Initialize(cfg_path:str,main_path:str):
     global Main_filepath
     Main_filepath = main_path
 
+def Auto_KeepConnect():
+    """
+    每十分钟定时断开数据库并重连，保持连接活性
+    :return:
+    """
+    global conn
+    Lock.release()
+    try:
+        DisconnectDB()
+    except:
+        pass
+    try:
+        conn = psycopg2.connect(database=db,user=user,password=password,host=host,port=port)
+    except Exception as e:
+        print("Failed to connect psql database")
+        log_psql.error("Failed to connect psql database")
+        sys.exit()
+    else:
+        print("Connect psql database successfully!")
+        log_psql.error("Connect psql database successfully!")
+    timer = Timer(600, Auto_KeepConnect)
+    timer.start()
+
+def DisconnectDB():
+    conn.close()
+
 def CheckToken(token:str)->bool:
     """
 检查token是否合法，只有当查询到token存在且唯一的时候返回True
@@ -53,11 +83,15 @@ def CheckToken(token:str)->bool:
     cur = conn.cursor()
     sql = "SELECT * FROM tokens WHERE token = '{}'".format(token)
     try:
+        Lock.acquire(CheckToken,"CheckToken")
         cur.execute(sql)
+        Lock.release()
         # cur.execute("SELECT * FROM tokens")
     except Exception as e:
+        cur.close()
         print("[CheckToken]Failed to execute sql:{}\nError:{}".format(sql,e))
         log_psql.error("[CheckToken]Failed to execute sql:{}\nError:{}".format(sql,e))
+        Auto_KeepConnect()
         return False
     # conn.commit()
     rows = cur.fetchall()
@@ -84,11 +118,15 @@ def GetUserID(token:str)->int:
     cur = conn.cursor()
     sql = "SELECT * FROM tokens WHERE token = '{}'".format(token)
     try:
+        Lock.acquire(GetUserID,"GetUserID")
         cur.execute(sql)
+        Lock.release()
         # cur.execute("SELECT * FROM tokens")
     except Exception as e:
+        cur.close()
         print("[GetUserID]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[GetUserID]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         return ""
     # conn.commit()
     rows = cur.fetchall()
@@ -124,11 +162,15 @@ def GetUserName(token:str=None,user_id:int=None)->str:
         # 无任何数据，返回空文本
         return ""
     try:
+        Lock.acquire(GetUserName,"GetUserName")
         num = cur.execute(sql)
-        conn.commit()
+        Lock.release()
+        # conn.commit()
     except Exception as e:
+        cur.close()
         print("[GetUserName]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[GetUserName]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         return ""
     if num == 0:
         return ""
@@ -171,11 +213,16 @@ def InsertProperty(**property_dict)->bool:
     # print(find_dict)
     print("新增启事:\n",sql)
     try:
+        Lock.acquire(InsertProperty,"InsertProperty")
         cur.execute(sql)
         conn.commit()
+        Lock.release()
     except Exception as e:
+        conn.rollback()
+        cur.close()
         print("[InsertProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[InsertProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         return False
     else:
         return True
@@ -221,11 +268,16 @@ def UpdateProperty(**property_dict)->bool:
     # print(find_dict)
     print("更新启事:\n", sql)
     try:
+        Lock.acquire(UpdateProperty,"UpdateProperty")
         cur.execute(sql)
         conn.commit()
+        Lock.release()
     except Exception as e:
+        conn.rollback()
+        cur.close()
         print("[UpdateProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[UpdateProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         return False
     else:
         return True
@@ -254,11 +306,16 @@ def DeleteProperty(**property_dict)->bool:
     print("删除启事:\n", delete_sql)
 
     try:
+        Lock.acquire(DeleteProperty,"DeleteProperty")
         cur.execute(delete_sql)
         conn.commit()
+        Lock.release()
     except Exception as e:
+        conn.rollback()
+        cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(delete_sql, e))
         log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(delete_sql, e))
+        Auto_KeepConnect()
         return False
     else:
         return True
@@ -299,11 +356,15 @@ def GetProperty(property_type:int,key:str,**property_dict)->tuple:
     print("GetProperty_SQL:",sql)
     cur = conn.cursor()
     try:
+        Lock.acquire(GetProperty,"GetProperty")
         cur.execute(sql)
-        conn.commit()
+        Lock.release()
+        #conn.commit()
     except Exception as e:
+        cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         return (0,[])
     rows = cur.fetchall()
     num = len(rows)
@@ -357,11 +418,15 @@ def CheckShopName(shopname:str)->bool:
     cur = conn.cursor()
     sql = "SELECT COUNT(shop_name) AS num FROM shop WHERE shop_name = '{}'".format(shopname)
     try:
+        Lock.acquire(CheckShopName,"CheckShopName")
         cur.execute(sql)
-        conn.commit()
+        Lock.release()
+        #conn.commit()
     except Exception as e:
+        cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         return False
 
     row = cur.fetchone()
@@ -381,11 +446,15 @@ def CheckShopNum(user_id:int,num:int=3)->bool:
     cur = conn.cursor()
     sql = "SELECT COUNT(user_id) AS num FROM shop WHERE user_id = {}".format(user_id)
     try:
+        Lock.acquire(CheckShopNum,"CheckShopNum")
         cur.execute(sql)
-        conn.commit()
+        Lock.release()
+        #conn.commit()
     except Exception as e:
+        cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         return False
 
     row = cur.fetchone()
@@ -403,11 +472,15 @@ def GetShopOwner(shop_id:int)->int:
     cur = conn.cursor()
     sql = "SELECT user_id FROM shop WHERE shop_id = {}".format(shop_id)
     try:
+        Lock.acquire(GetShopOwner,"GetShopOwner")
         num = cur.execute(sql)
-        conn.commit()
+        Lock.release()
+        #conn.commit()
     except Exception as e:
+        cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         return -1
     row = cur.fetchone()
     print("row:",row)
@@ -443,11 +516,15 @@ def CreatShop(shop_name:str,user_id:int,id:int=-1)->dict:
         shop_id = random.randint(10**8*2,10**9-1)  # 9位id
         check_sql = "SELECT COUNT(shop_id) as num FROM shop WHERE shop_id = {}".format(shop_id)
         try:
+            Lock.acquire(CreatShop,"CreatShop")
             cur.execute(check_sql)
-            conn.commit()
+            Lock.release()
+            #conn.commit()
         except Exception as e:
+            cur.close()
             print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(check_sql, e))
             log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(check_sql, e))
+            Auto_KeepConnect()
             # status -200 数据库操作失败。
             return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
         row = cur.fetchone()
@@ -458,11 +535,16 @@ def CreatShop(shop_name:str,user_id:int,id:int=-1)->dict:
     creat_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     sql = "INSERT INTO shop VALUES ({0},'{1}',{2},{3},'{4}')".format(shop_id,shop_name,"''",user_id,creat_time)
     try:
+        Lock.acquire(CreatShop,"CreatShop")
         cur.execute(sql)
         conn.commit()
+        Lock.release()
     except Exception as e:
+        conn.rollback()
+        cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     # status 0 创建店铺成功！返回shop_id
@@ -483,11 +565,16 @@ def UpdateShop(shop_id:int,shop_content:str,user_id:int,pic_url:str,id:int=-1)->
         return {"status":100,"message":"No right to update","data":{}}
     sql = "UPDATE shop SET shop_content = '{0}' ,`pic_url`='{1}' WHERE shop_id = {2}".format(shop_content,pic_url,shop_id)
     try:
+        Lock.acquire(UpdateShop,"UpdateShop")
         cur.execute(sql)
         conn.commit()
+        Lock.release()
     except Exception as e:
+        conn.rollbak()
+        cur.close()
         print("[UpdateShop]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[UpdateShop]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     # status 0 更新店铺信息成功！无返回
@@ -509,11 +596,15 @@ def GetShopList(shop_name:str,order:str="",id:int=-1)->dict:
     if order != "":
         sql = sql + " ORDER BY {}".format(order)
     try:
+        Lock.acquire(GetShopList,"GetShopList")
         num = cur.execute(sql)
-        conn.commit()
+        Lock.release()
+        # conn.commit()
     except Exception as e:
+        cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     print(sql)
@@ -549,21 +640,29 @@ def GetShopInfo(shop_name:str="",shop_id:int=0,id:int=-1)->dict:
     if shop_id != 0 and shop_id != None:
         sql = "SELECT * FROM shop WHERE shop_id  = {}".format(shop_id)
         try:
+            Lock.acquire(GetShopInfo,"GetShopInfo")
             num = cur.execute(sql)
-            conn.commit()
+            Lock.release()
+            #conn.commit()
         except Exception as e:
+            cur.close()
             print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
             log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+            Auto_KeepConnect()
             # status -200 数据库操作失败。
             return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     elif shop_name != "" and shop_name != None:
         sql = "SELECT * FROM shop WHERE shop_name = '{}'".format(shop_name)
         try:
+            Lock.acquire(GetShopInfo,"GetShopInfo")
             num = cur.execute(sql)
-            conn.commit()
+            Lock.release()
+            #conn.commit()
         except Exception as e:
+            cur.close()
             print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
             log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+            Auto_KeepConnect()
             # status -200 数据库操作失败。
             return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     else:
@@ -594,11 +693,15 @@ def GetProductOwner(product_id:int)->int:
     cur = conn.cursor()
     sql = "SELECT shop_id FROM product WHERE product_id = {}".format(product_id)
     try:
+        Lock.acquire(GetProductOwner,"GetProductOwner")
         num = cur.execute(sql)
-        conn.commit()
+        Lock.release()
+        # conn.commit()
     except Exception as e:
+        cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         return -1
     row = cur.fetchone()
     print("row:", row)
@@ -638,11 +741,15 @@ def CreatProduct(user_id:int,id:int=-1,**product_dict):
         product_id = random.randint(10**6*2,10**7-1)  # 7位id
         check_sql = "SELECT COUNT(product_id) as num FROM product WHERE product_id = {}".format(product_id)
         try:
+            Lock.acquire(CreatProduct,"CreatProduct")
             cur.execute(check_sql)
-            conn.commit()
+            Lock.release()
+            #conn.commit()
         except Exception as e:
+            cur.close()
             print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(check_sql, e))
             log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(check_sql, e))
+            Auto_KeepConnect()
             # status -200 数据库操作失败。
             return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
         row = cur.fetchone()
@@ -672,11 +779,16 @@ def CreatProduct(user_id:int,id:int=-1,**product_dict):
         value_sql = value_sql.rpartition(",")[0]
     sql = "INSERT INTO product ({0}) VALUES ({1})".format(key_sql,value_sql)
     try:
+        Lock.acquire(CreatProduct,"CreatProduct")
         cur.execute(sql)
         conn.commit()
+        Lock.release()
     except Exception as e:
+        conn.rollback()
+        cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(check_sql, e))
         log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(check_sql, e))
+        Auto_KeepConnect()
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     # status 0 成功上架产品,返回产品id
@@ -735,11 +847,16 @@ def UpdateProduct(user_id:int,id:int=-1,**product_dict):
     sql = sql + " WHERE product_id = {} AND shop_id = {}".format(product_id,shop_id)
     # sql = "INSERT INTO product ({0}) VALUES ({1})".format(key_sql, value_sql)
     try:
+        Lock.acquire(UpdateProduct,"UpdateProduct")
         cur.execute(sql)
         conn.commit()
+        Lock.release()
     except Exception as e:
+        conn.rollback()
+        cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     # status 0 成功上架产品,返回产品id
@@ -777,11 +894,15 @@ def GetProductList(product_name:str="",product_key:str="",shop_id:int=0,order:st
     if order != "":
         sql = sql + "ORDER BY {}".format(order)
     try:
+        Lock.acquire(GetProductList,"GetProductList")
         num = cur.execute(sql)
-        conn.commit()
+        Lock.release()
+        #conn.commit()
     except Exception as e:
-        print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
-        log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
+        cur.close()
+        print("[GetProductList]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[GetProductList]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     print(sql)
