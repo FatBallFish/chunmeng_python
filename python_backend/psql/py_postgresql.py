@@ -2,14 +2,17 @@
 from psql.py_lock import Lock
 from threading import Timer
 import psycopg2
-import sys,os,configparser
+import sys, os, configparser
 import logging
 from configparser import ConfigParser
 import datetime
-import time,random
+import time, random
+
 Lock = Lock()
 log_psql = logging.getLogger("Postgres")
-def Initialize(cfg_path:str,main_path:str):
+
+
+def Initialize(cfg_path: str, main_path: str):
     """
     初始化Postgresql模块
     :param cfg_path: 配置文件路径
@@ -20,25 +23,25 @@ def Initialize(cfg_path:str,main_path:str):
     Lock.timeout_def = Auto_KeepConnect
     cf = ConfigParser()
     cf.read(cfg_path)
-    global host,port,user,password,db,conn
+    global host, port, user, password, db, conn
     try:
-        host = str(cf.get("PSQL","host"))
-        port = int(cf.get("PSQL","port"))
-        user = str(cf.get("PSQL","user"))
+        host = str(cf.get("PSQL", "host"))
+        port = int(cf.get("PSQL", "port"))
+        user = str(cf.get("PSQL", "user"))
         password = str(cf.get("PSQL", "pass"))
         db = str(cf.get("PSQL", "db"))
-        print("[PSQL]host:",host)
+        print("[PSQL]host:", host)
         print("[PSQL]port:", port)
         print("[PSQL]user:", user)
         print("[PSQL]pass:", password)
         print("[PSQL]db:", db)
     except Exception as e:
-        log_psql.error("UnkownError:",e)
-        print("UnkownError:",e)
+        log_psql.error("UnkownError:", e)
+        print("UnkownError:", e)
         log_psql.info("Program Ended")
         sys.exit()
     try:
-        conn = psycopg2.connect(database=db,user=user,password=password,host=host,port=port)
+        conn = psycopg2.connect(database=db, user=user, password=password, host=host, port=port)
     except Exception as e:
         print("Failed to connect psql database")
         log_psql.error("Failed to connect psql database")
@@ -47,6 +50,7 @@ def Initialize(cfg_path:str,main_path:str):
         print("Connect psql database successfully!")
     global Main_filepath
     Main_filepath = main_path
+
 
 def Auto_KeepConnect():
     """
@@ -60,7 +64,7 @@ def Auto_KeepConnect():
     except:
         pass
     try:
-        conn = psycopg2.connect(database=db,user=user,password=password,host=host,port=port)
+        conn = psycopg2.connect(database=db, user=user, password=password, host=host, port=port)
     except Exception as e:
         print("Failed to connect psql database")
         log_psql.error("Failed to connect psql database")
@@ -71,10 +75,12 @@ def Auto_KeepConnect():
     timer = Timer(600, Auto_KeepConnect)
     timer.start()
 
+
 def DisconnectDB():
     conn.close()
 
-def CheckToken(token:str)->bool:
+
+def CheckToken(token: str) -> bool:
     """
 检查token是否合法，只有当查询到token存在且唯一的时候返回True
     :param token: 用户登录凭证
@@ -83,14 +89,14 @@ def CheckToken(token:str)->bool:
     cur = conn.cursor()
     sql = "SELECT * FROM tokens WHERE token = '{}'".format(token)
     try:
-        Lock.acquire(CheckToken,"CheckToken")
+        Lock.acquire(CheckToken, "CheckToken")
         cur.execute(sql)
         Lock.release()
         # cur.execute("SELECT * FROM tokens")
     except Exception as e:
         cur.close()
-        print("[CheckToken]Failed to execute sql:{}\nError:{}".format(sql,e))
-        log_psql.error("[CheckToken]Failed to execute sql:{}\nError:{}".format(sql,e))
+        print("[CheckToken]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[CheckToken]Failed to execute sql:{}\nError:{}".format(sql, e))
         Auto_KeepConnect()
         return False
     # conn.commit()
@@ -109,7 +115,8 @@ def CheckToken(token:str)->bool:
         print("[CheckToken]Illegal quantity of token")
         return False
 
-def GetUserID(token:str)->int:
+
+def GetUserID(token: str) -> int:
     """
     通过token获取用户id
     :param token: 用户token
@@ -118,7 +125,7 @@ def GetUserID(token:str)->int:
     cur = conn.cursor()
     sql = "SELECT * FROM tokens WHERE token = '{}'".format(token)
     try:
-        Lock.acquire(GetUserID,"GetUserID")
+        Lock.acquire(GetUserID, "GetUserID")
         cur.execute(sql)
         Lock.release()
         # cur.execute("SELECT * FROM tokens")
@@ -146,7 +153,8 @@ def GetUserID(token:str)->int:
         print("[CheckToken]Illegal quantity of token")
         return 0
 
-def GetUserName(token:str=None,user_id:int=None)->str:
+
+def GetUserName(token: str = None, user_id: int = None) -> str:
     """
     返回指定token或者user_id所对应的用户名，若两个参数都填写，则优先使用token
     :param token: 用户的token值
@@ -162,8 +170,8 @@ def GetUserName(token:str=None,user_id:int=None)->str:
         # 无任何数据，返回空文本
         return ""
     try:
-        Lock.acquire(GetUserName,"GetUserName")
-        num = cur.execute(sql)
+        Lock.acquire(GetUserName, "GetUserName")
+        cur.execute(sql)
         Lock.release()
         # conn.commit()
     except Exception as e:
@@ -172,15 +180,19 @@ def GetUserName(token:str=None,user_id:int=None)->str:
         log_psql.error("[GetUserName]Failed to execute sql:{}\nError:{}".format(sql, e))
         Auto_KeepConnect()
         return ""
+    rows = cur.fetchall()
+    num = len(rows)
     if num == 0:
         return ""
     else:
         # 返回第一条记录，理论上也只有一条
-        row = cur.fetchone()
+        row = rows[0]
         return row[0]
-    #todo 2019-7-11 1:04
+    # todo 2019-7-11 1:04
+
+
 # 下面的全部要修改
-def InsertProperty(**property_dict)->bool:
+def InsertProperty(**property_dict) -> bool:
     """
     新增一条新启事
     :param find_dict: 寻物启事字典
@@ -204,16 +216,16 @@ def InsertProperty(**property_dict)->bool:
         elif type(property_dict[key]) == time.struct_time:
             value_sql = value_sql + "'" + time.strftime("%Y-%m-%d %H:%M:%S", property_dict[key]) + "'" + ","
         else:
-            print("key:",key,"type:",type(property_dict[key]))
+            print("key:", key, "type:", type(property_dict[key]))
     else:
         # 删除最后多余的 , 符号
         key_sql = key_sql.rpartition(",")[0]
         value_sql = value_sql.rpartition(",")[0]
-    sql = "INSERT INTO property ({0}) VALUES ({1})".format(key_sql,value_sql)
+    sql = "INSERT INTO property ({0}) VALUES ({1})".format(key_sql, value_sql)
     # print(find_dict)
-    print("新增启事:\n",sql)
+    print("新增启事:\n", sql)
     try:
-        Lock.acquire(InsertProperty,"InsertProperty")
+        Lock.acquire(InsertProperty, "InsertProperty")
         cur.execute(sql)
         conn.commit()
         Lock.release()
@@ -227,7 +239,8 @@ def InsertProperty(**property_dict)->bool:
     else:
         return True
 
-def UpdateProperty(**property_dict)->bool:
+
+def UpdateProperty(**property_dict) -> bool:
     """
     更新寻物启事信息。
     :param property_dict: 启事字典
@@ -268,7 +281,7 @@ def UpdateProperty(**property_dict)->bool:
     # print(find_dict)
     print("更新启事:\n", sql)
     try:
-        Lock.acquire(UpdateProperty,"UpdateProperty")
+        Lock.acquire(UpdateProperty, "UpdateProperty")
         cur.execute(sql)
         conn.commit()
         Lock.release()
@@ -282,7 +295,8 @@ def UpdateProperty(**property_dict)->bool:
     else:
         return True
 
-def DeleteProperty(**property_dict)->bool:
+
+def DeleteProperty(**property_dict) -> bool:
     """
     删除寻物启事信息，只需传递 id、user_id 字段,user_id可缺省。
     :param property_dict: 寻物启事字典
@@ -306,7 +320,7 @@ def DeleteProperty(**property_dict)->bool:
     print("删除启事:\n", delete_sql)
 
     try:
-        Lock.acquire(DeleteProperty,"DeleteProperty")
+        Lock.acquire(DeleteProperty, "DeleteProperty")
         cur.execute(delete_sql)
         conn.commit()
         Lock.release()
@@ -320,7 +334,8 @@ def DeleteProperty(**property_dict)->bool:
     else:
         return True
 
-def GetProperty(property_type:int,key:str,**property_dict)->tuple:
+
+def GetProperty(property_type: int, key: str, **property_dict) -> tuple:
     """
     获取寻物启事信息
     :param type: 信息类型，1为寻物启事，2为失物招领
@@ -349,23 +364,23 @@ def GetProperty(property_type:int,key:str,**property_dict)->tuple:
     else:
         if len(property_dict.keys()) != 0:
             print("Error,key can't be used when other args appeared.")
-            return (-1,"")
+            return (-1, "")
         sql = "SELECT * FROM property " \
               "WHERE type = {0} AND(lab LIKE '%{1}%' OR title LIKE '%{1}%' OR content LIKE '%{1}%')" \
-              "ORDER BY update_time DESC".format(property_type,key)
-    print("GetProperty_SQL:",sql)
+              "ORDER BY update_time DESC".format(property_type, key)
+    print("GetProperty_SQL:", sql)
     cur = conn.cursor()
     try:
-        Lock.acquire(GetProperty,"GetProperty")
+        Lock.acquire(GetProperty, "GetProperty")
         cur.execute(sql)
         Lock.release()
-        #conn.commit()
+        # conn.commit()
     except Exception as e:
         cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
         log_psql.error("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
         Auto_KeepConnect()
-        return (0,[])
+        return (0, [])
     rows = cur.fetchall()
     num = len(rows)
     print("总共有{}条记录".format(len(rows)))
@@ -390,10 +405,10 @@ def GetProperty(property_type:int,key:str,**property_dict)->tuple:
             "user2_qq": "",
             "publish_time": "",
             "update_time": "",
-            "pic_num":0,
-            "pic_url1":"",
-            "pic_url2":"",
-            "pic_url3":"",
+            "pic_num": 0,
+            "pic_url1": "",
+            "pic_url2": "",
+            "pic_url3": "",
         }
         i = 0
         for key in property_dict:
@@ -406,10 +421,11 @@ def GetProperty(property_type:int,key:str,**property_dict)->tuple:
         date_list.append(property_dict)
         # print("datalist：",date_list)
     print("datalist：", date_list)
-    return (num,date_list)
+    return (num, date_list)
+
 
 # 学生自营平台
-def CheckShopName(shopname:str)->bool:
+def CheckShopName(shopname: str) -> bool:
     """
 检查商店名是否存在，若不存在返回真
     :param shopname:
@@ -418,10 +434,10 @@ def CheckShopName(shopname:str)->bool:
     cur = conn.cursor()
     sql = "SELECT COUNT(shop_name) AS num FROM shop WHERE shop_name = '{}'".format(shopname)
     try:
-        Lock.acquire(CheckShopName,"CheckShopName")
+        Lock.acquire(CheckShopName, "CheckShopName")
         cur.execute(sql)
         Lock.release()
-        #conn.commit()
+        # conn.commit()
     except Exception as e:
         cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
@@ -436,7 +452,8 @@ def CheckShopName(shopname:str)->bool:
     else:
         return False
 
-def CheckShopNum(user_id:int,num:int=3)->bool:
+
+def CheckShopNum(user_id: int, num: int = 3) -> bool:
     """
 检查用户开店数量，若店铺数量小于可创建数，返回真，否则假
     :param user_id: 用户id
@@ -446,10 +463,10 @@ def CheckShopNum(user_id:int,num:int=3)->bool:
     cur = conn.cursor()
     sql = "SELECT COUNT(user_id) AS num FROM shop WHERE user_id = {}".format(user_id)
     try:
-        Lock.acquire(CheckShopNum,"CheckShopNum")
+        Lock.acquire(CheckShopNum, "CheckShopNum")
         cur.execute(sql)
         Lock.release()
-        #conn.commit()
+        # conn.commit()
     except Exception as e:
         cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
@@ -458,12 +475,13 @@ def CheckShopNum(user_id:int,num:int=3)->bool:
         return False
 
     row = cur.fetchone()
-    if row[0] < num :
+    if row[0] < num:
         return True
     else:
         return False
 
-def GetShopOwner(shop_id:int)->int:
+
+def GetShopOwner(shop_id: int) -> int:
     """
 获取店铺所有者id
     :param shop_id:店铺id
@@ -472,10 +490,10 @@ def GetShopOwner(shop_id:int)->int:
     cur = conn.cursor()
     sql = "SELECT user_id FROM shop WHERE shop_id = {}".format(shop_id)
     try:
-        Lock.acquire(GetShopOwner,"GetShopOwner")
-        num = cur.execute(sql)
+        Lock.acquire(GetShopOwner, "GetShopOwner")
+        cur.execute(sql)
         Lock.release()
-        #conn.commit()
+        # conn.commit()
     except Exception as e:
         cur.close()
         print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
@@ -483,11 +501,11 @@ def GetShopOwner(shop_id:int)->int:
         Auto_KeepConnect()
         return -1
     row = cur.fetchone()
-    print("row:",row)
+    print("row:", row)
     if row == None:  # 无此店铺
         return -1
     row2 = cur.fetchone()
-    print("row2",row2)
+    print("row2", row2)
     if row2 != None:
         print("店铺id：{} 有多条记录！".format(shop_id))
         log_psql.error("店铺id：{} 有多条记录！".format(shop_id))
@@ -495,7 +513,8 @@ def GetShopOwner(shop_id:int)->int:
     user_id = row[0]
     return user_id
 
-def CreatShop(shop_name:str,user_id:int,id:int=-1)->dict:
+
+def CreatShop(shop_name: str, user_id: int, id: int = -1) -> dict:
     """
 创建一个店铺
     :param shop_name: 店铺名
@@ -506,20 +525,20 @@ def CreatShop(shop_name:str,user_id:int,id:int=-1)->dict:
     cur = conn.cursor()
     if CheckShopName(shop_name) == False:
         # status 100 店铺名已被注册
-        return {"status": 100, "message": "The shop name was used","data":{}}
+        return {"status": 100, "message": "The shop name was used", "data": {}}
     if CheckShopNum(user_id) == False:
         # status 101 店铺数量已超上限
-        return {"status":101,"message":"The number of shops has been capped","data":{}}
+        return {"status": 101, "message": "The number of shops has been capped", "data": {}}
 
     # 生成 shop_id 并判断是否重复
     while True:
-        shop_id = random.randint(10**8*2,10**9-1)  # 9位id
+        shop_id = random.randint(10 ** 8 * 2, 10 ** 9 - 1)  # 9位id
         check_sql = "SELECT COUNT(shop_id) as num FROM shop WHERE shop_id = {}".format(shop_id)
         try:
-            Lock.acquire(CreatShop,"CreatShop")
+            Lock.acquire(CreatShop, "CreatShop")
             cur.execute(check_sql)
             Lock.release()
-            #conn.commit()
+            # conn.commit()
         except Exception as e:
             cur.close()
             print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(check_sql, e))
@@ -529,13 +548,13 @@ def CreatShop(shop_name:str,user_id:int,id:int=-1)->dict:
             return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
         row = cur.fetchone()
         num = row[0]
-        if num == 0 :
+        if num == 0:
             break
 
     creat_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    sql = "INSERT INTO shop VALUES ({0},'{1}',{2},{3},'{4}')".format(shop_id,shop_name,"''",user_id,creat_time)
+    sql = "INSERT INTO shop VALUES ({0},'{1}',{2},{3},'{4}')".format(shop_id, shop_name, "''", user_id, creat_time)
     try:
-        Lock.acquire(CreatShop,"CreatShop")
+        Lock.acquire(CreatShop, "CreatShop")
         cur.execute(sql)
         conn.commit()
         Lock.release()
@@ -548,9 +567,10 @@ def CreatShop(shop_name:str,user_id:int,id:int=-1)->dict:
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     # status 0 创建店铺成功！返回shop_id
-    return {"status":0,"message":"successful","data":{"shop_id":shop_id}}
+    return {"status": 0, "message": "successful", "data": {"shop_id": shop_id}}
 
-def UpdateShop(shop_id:int,shop_content:str,user_id:int,pic_url:str,id:int=-1)->dict:
+
+def UpdateShop(shop_id: int, shop_content: str, user_id: int, pic_url: str, id: int = -1) -> dict:
     """
 更新店铺的内容
     :param shop_id: 店铺id
@@ -562,10 +582,11 @@ def UpdateShop(shop_id:int,shop_content:str,user_id:int,pic_url:str,id:int=-1)->
     cur = conn.cursor()
     if GetShopOwner(shop_id) != user_id:
         # status 100 无权更新他人的店铺信息
-        return {"status":100,"message":"No right to update","data":{}}
-    sql = "UPDATE shop SET shop_content = '{0}' ,`pic_url`='{1}' WHERE shop_id = {2}".format(shop_content,pic_url,shop_id)
+        return {"status": 100, "message": "No right to update", "data": {}}
+    sql = "UPDATE shop SET shop_content = '{0}' ,`pic_url`='{1}' WHERE shop_id = {2}".format(shop_content, pic_url,
+                                                                                             shop_id)
     try:
-        Lock.acquire(UpdateShop,"UpdateShop")
+        Lock.acquire(UpdateShop, "UpdateShop")
         cur.execute(sql)
         conn.commit()
         Lock.release()
@@ -578,9 +599,10 @@ def UpdateShop(shop_id:int,shop_content:str,user_id:int,pic_url:str,id:int=-1)->
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     # status 0 更新店铺信息成功！无返回
-    return {"id":id,"status": 0, "message": "successful", "data": {}}
+    return {"id": id, "status": 0, "message": "successful", "data": {}}
 
-def GetShopList(shop_name:str,order:str="",id:int=-1)->dict:
+
+def GetShopList(shop_name: str, order: str = "", id: int = -1) -> dict:
     """
 获取店铺列表，并以制定规则进行排序
     :param shop_name: 店铺名称关键字
@@ -596,8 +618,8 @@ def GetShopList(shop_name:str,order:str="",id:int=-1)->dict:
     if order != "":
         sql = sql + " ORDER BY {}".format(order)
     try:
-        Lock.acquire(GetShopList,"GetShopList")
-        num = cur.execute(sql)
+        Lock.acquire(GetShopList, "GetShopList")
+        cur.execute(sql)
         Lock.release()
         # conn.commit()
     except Exception as e:
@@ -609,12 +631,14 @@ def GetShopList(shop_name:str,order:str="",id:int=-1)->dict:
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     print(sql)
     # todo 这里的num无效
+    rows = cur.fetchall()
+    num = len(rows)
     if num == 0:
         # status 1 空记录
         return {"id": id, "status": 1, "message": "Empty records", "data": {}}
     else:
         shop_list = []
-        rows = cur.fetchall()
+        # rows = cur.fetchall()
         for row in rows:
             shop_dict = {}
             shop_dict["shop_id"] = row[0]
@@ -626,9 +650,10 @@ def GetShopList(shop_name:str,order:str="",id:int=-1)->dict:
             shop_dict["pic_url"] = str(row[5])
             shop_list.append(shop_dict)
         # status 0 成功获取店铺列表，返回列表数组
-        return {"id":id,"status":0,"message":"successful","data":shop_list}
+        return {"id": id, "status": 0, "message": "successful", "data": shop_list}
 
-def GetShopInfo(shop_name:str="",shop_id:int=0,id:int=-1)->dict:
+
+def GetShopInfo(shop_name: str = "", shop_id: int = 0, id: int = -1) -> dict:
     """
 获取店铺信息，不同于获取店铺列表，此命令对店铺名或店铺id进行全字匹配，且只返回一组结果。两个参数都传值选择店铺id
     :param shop_name: 店铺名称，默认为空
@@ -640,10 +665,10 @@ def GetShopInfo(shop_name:str="",shop_id:int=0,id:int=-1)->dict:
     if shop_id != 0 and shop_id != None:
         sql = "SELECT * FROM shop WHERE shop_id  = {}".format(shop_id)
         try:
-            Lock.acquire(GetShopInfo,"GetShopInfo")
-            num = cur.execute(sql)
+            Lock.acquire(GetShopInfo, "GetShopInfo")
+            cur.execute(sql)
             Lock.release()
-            #conn.commit()
+            # conn.commit()
         except Exception as e:
             cur.close()
             print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
@@ -654,10 +679,10 @@ def GetShopInfo(shop_name:str="",shop_id:int=0,id:int=-1)->dict:
     elif shop_name != "" and shop_name != None:
         sql = "SELECT * FROM shop WHERE shop_name = '{}'".format(shop_name)
         try:
-            Lock.acquire(GetShopInfo,"GetShopInfo")
-            num = cur.execute(sql)
+            Lock.acquire(GetShopInfo, "GetShopInfo")
+            cur.execute(sql)
             Lock.release()
-            #conn.commit()
+            # conn.commit()
         except Exception as e:
             cur.close()
             print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(sql, e))
@@ -668,12 +693,13 @@ def GetShopInfo(shop_name:str="",shop_id:int=0,id:int=-1)->dict:
     else:
         # status -201 关键键值对值不可为空
         return {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}}
-
+    rows = cur.fetchall()
+    num = len(rows)
     if num == 0:
         # status 1 空记录
         return {"id": id, "status": 1, "message": "Empty records", "data": {}}
     else:
-        row = cur.fetchone()
+        row = rows[0]
         shop_info = {}
         shop_info["shop_id"] = row[0]
         shop_info["shop_name"] = row[1]
@@ -684,7 +710,8 @@ def GetShopInfo(shop_name:str="",shop_id:int=0,id:int=-1)->dict:
         # status 0 成功获取店铺信息
         return {"id": id, "status": 0, "message": "successful", "data": shop_info}
 
-def GetProductOwner(product_id:int)->int:
+
+def GetProductOwner(product_id: int) -> int:
     """
 获取产品所在shop_id
     :param product_id: 产品id
@@ -693,8 +720,8 @@ def GetProductOwner(product_id:int)->int:
     cur = conn.cursor()
     sql = "SELECT shop_id FROM product WHERE product_id = {}".format(product_id)
     try:
-        Lock.acquire(GetProductOwner,"GetProductOwner")
-        num = cur.execute(sql)
+        Lock.acquire(GetProductOwner, "GetProductOwner")
+        cur.execute(sql)
         Lock.release()
         # conn.commit()
     except Exception as e:
@@ -716,7 +743,8 @@ def GetProductOwner(product_id:int)->int:
     shop_id = row[0]
     return shop_id
 
-def CreatProduct(user_id:int,id:int=-1,**product_dict):
+
+def CreatProduct(user_id: int, id: int = -1, **product_dict):
     """
 上架新商品
     :param user_id: 用户id，用于验证店铺是否属于该用户
@@ -724,27 +752,27 @@ def CreatProduct(user_id:int,id:int=-1,**product_dict):
     :return: json字典
     """
     cur = conn.cursor()
-    for key in ["product_name","shop_id","product_status"]:
+    for key in ["product_name", "shop_id", "product_status"]:
         if key not in product_dict.keys():
             # status -202 缺少关键的键值对
-            return {"id":id,"status":-202,"message":"Missing necessary data key-value","data":{}}
+            return {"id": id, "status": -202, "message": "Missing necessary data key-value", "data": {}}
     product_name = product_dict["product_name"]
     shop_id = product_dict["shop_id"]
     owner_id = GetShopOwner(shop_id)
-    print("user_id:",user_id,"owner_id:",owner_id)
+    print("user_id:", user_id, "owner_id:", owner_id)
     if user_id != owner_id:
         # status 100 操作者不是店铺所有人，无权操作。
-        return {"id":id,"status":100,"message":"No right to operate","data":{}}
+        return {"id": id, "status": 100, "message": "No right to operate", "data": {}}
 
     # 生成 product_id 并判断是否重复
     while True:
-        product_id = random.randint(10**6*2,10**7-1)  # 7位id
+        product_id = random.randint(10 ** 6 * 2, 10 ** 7 - 1)  # 7位id
         check_sql = "SELECT COUNT(product_id) as num FROM product WHERE product_id = {}".format(product_id)
         try:
-            Lock.acquire(CreatProduct,"CreatProduct")
+            Lock.acquire(CreatProduct, "CreatProduct")
             cur.execute(check_sql)
             Lock.release()
-            #conn.commit()
+            # conn.commit()
         except Exception as e:
             cur.close()
             print("[DeleteProperty]Failed to execute sql:{}\nError:{}".format(check_sql, e))
@@ -754,7 +782,7 @@ def CreatProduct(user_id:int,id:int=-1,**product_dict):
             return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
         row = cur.fetchone()
         num = row[0]
-        if num == 0 :
+        if num == 0:
             break
     product_dict["product_id"] = product_id
     product_dict["creat_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -772,14 +800,14 @@ def CreatProduct(user_id:int,id:int=-1,**product_dict):
         elif type(product_dict[key]) == time.struct_time:
             value_sql = value_sql + "'" + time.strftime("%Y-%m-%d %H:%M:%S", product_dict[key]) + "'" + ","
         else:
-            print("key:",key,"type:",type(product_dict[key]))
+            print("key:", key, "type:", type(product_dict[key]))
     else:
         # 删除最后多余的 , 符号
         key_sql = key_sql.rpartition(",")[0]
         value_sql = value_sql.rpartition(",")[0]
-    sql = "INSERT INTO product ({0}) VALUES ({1})".format(key_sql,value_sql)
+    sql = "INSERT INTO product ({0}) VALUES ({1})".format(key_sql, value_sql)
     try:
-        Lock.acquire(CreatProduct,"CreatProduct")
+        Lock.acquire(CreatProduct, "CreatProduct")
         cur.execute(sql)
         conn.commit()
         Lock.release()
@@ -792,9 +820,10 @@ def CreatProduct(user_id:int,id:int=-1,**product_dict):
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     # status 0 成功上架产品,返回产品id
-    return {"id":id,"status":0,"message":"successful","data":{"product_id":product_id}}
+    return {"id": id, "status": 0, "message": "successful", "data": {"product_id": product_id}}
 
-def UpdateProduct(user_id:int,id:int=-1,**product_dict):
+
+def UpdateProduct(user_id: int, id: int = -1, **product_dict):
     """
 更新商品信息
     :param user_id: 用户id，用于验证店铺是否属于该用户
@@ -844,10 +873,10 @@ def UpdateProduct(user_id:int,id:int=-1,**product_dict):
         # key_sql = key_sql.rpartition(",")[0]
         # value_sql = value_sql.rpartition(",")[0]
     # todo 更改sql语句
-    sql = sql + " WHERE product_id = {} AND shop_id = {}".format(product_id,shop_id)
+    sql = sql + " WHERE product_id = {} AND shop_id = {}".format(product_id, shop_id)
     # sql = "INSERT INTO product ({0}) VALUES ({1})".format(key_sql, value_sql)
     try:
-        Lock.acquire(UpdateProduct,"UpdateProduct")
+        Lock.acquire(UpdateProduct, "UpdateProduct")
         cur.execute(sql)
         conn.commit()
         Lock.release()
@@ -862,9 +891,12 @@ def UpdateProduct(user_id:int,id:int=-1,**product_dict):
     # status 0 成功上架产品,返回产品id
     return {"id": id, "status": 0, "message": "successful", "data": {}}
 
-def GetProductList(product_name:str="",product_key:str="",shop_id:int=0,order:str="",type:str="up",id:int=-1):
+
+def GetProductList(product_name: str = "", product_key: str = "", shop_id: int = 0, order: str = "", type: str = "up",
+                   id: int = -1):
     """
 获取商品列表
+    :param product_key: 商品关键字
     :param product_name: 商品名称关键字，为空代表检索全部
     :param shop_id: 店铺id，如果此值非 0 则与 product_name 进行 与 运算
     :param order: 排序规则，SQL语句
@@ -878,7 +910,7 @@ def GetProductList(product_name:str="",product_key:str="",shop_id:int=0,order:st
         sql = sql + " product_name LIKE '%{}%' AND".format(product_name)
     if product_key != "":
         sql = sql + " product_key LIKE '%{}%' AND".format(product_key)
-    if shop_id != 0 :
+    if shop_id != 0:
         sql = sql + " shop_id = {} AND".format(shop_id)
     if type == "up":
         sql = sql + " product_status = 1 "
@@ -890,14 +922,14 @@ def GetProductList(product_name:str="",product_key:str="",shop_id:int=0,order:st
         sql = sql + " product_status = 2 "
     else:
         # status -204 键值对数据错误
-        return {"id":id,"status":-204,"message":"Arg's value error","data":{}}
+        return {"id": id, "status": -204, "message": "Arg's value error", "data": {}}
     if order != "":
         sql = sql + "ORDER BY {}".format(order)
     try:
-        Lock.acquire(GetProductList,"GetProductList")
-        num = cur.execute(sql)
+        Lock.acquire(GetProductList, "GetProductList")
+        cur.execute(sql)
         Lock.release()
-        #conn.commit()
+        # conn.commit()
     except Exception as e:
         cur.close()
         print("[GetProductList]Failed to execute sql:{}\nError:{}".format(sql, e))
@@ -907,19 +939,21 @@ def GetProductList(product_name:str="",product_key:str="",shop_id:int=0,order:st
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     print(sql)
     # todo 这里的num无效
+    rows = cur.fetchall()
+    num = len(rows)
     if num == 0:
         # status 1 空记录
         return {"id": id, "status": 1, "message": "Empty records", "data": {}}
     else:
         product_list = []
-        rows = cur.fetchall()
+        # rows = cur.fetchall()
         for row in rows:
             product_dict = {}
             product_dict["product_id"] = row[0]
             product_dict["product_name"] = row[1]
             product_dict["product_content"] = row[2]
             product_dict["product_key"] = row[3]
-            print(row[4],row[5])
+            print(row[4], row[5])
             product_dict["product_price"] = float(row[4])
             if row[5] == None:
                 product_dict["product_disprice"] = row[5]
@@ -938,10 +972,233 @@ def GetProductList(product_name:str="",product_key:str="",shop_id:int=0,order:st
         return {"id": id, "status": 0, "message": "successful", "data": product_list}
 
 
+def GetProductInfo(product_id: int) -> tuple:
+    """
+获取商品信息，返回元组信息
+    :param product_id: 产品id
+    :param id: 事件传递id
+    :return: (处理结果，信息字典)
+    """
+    cur = conn.cursor()
+    sql = "SELECT * FROM product WHERE product_id = {}".format(product_id)
+    try:
+        Lock.acquire(GetProductInfo, "GetProductInfo")
+        cur.execute(sql)
+        Lock.release()
+        # conn.commit()
+    except Exception as e:
+        cur.close()
+        print("[GetProductInfo]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[GetProductInfo]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
+        # status -200 数据库操作失败。
+        return False, {}
+    print(sql)
+    rows = cur.fetchall()
+    num = len(rows)
+    print("num:{}".format(num))
+    # todo 这里的num无效
+    if num == 0:
+        # status 1 空记录
+        return False, {}
+    else:
+        row = rows[0]
+        product_dict = {}
+        product_dict["product_id"] = row[0]
+        product_dict["product_name"] = row[1]
+        product_dict["product_content"] = row[2]
+        product_dict["product_key"] = row[3]
+        print(row[4], row[5])
+        product_dict["product_price"] = float(row[4])
+        if row[5] == None:
+            product_dict["product_disprice"] = row[5]
+        else:
+            product_dict["product_disprice"] = float(row[5])
+        product_dict["product_sale"] = row[6]
+        product_dict["product_click"] = row[7]
+        product_dict["product_collection"] = row[8]
+        product_dict["shop_id"] = row[9]
+        product_dict["creat_time"] = str(row[10])
+        product_dict["update_time"] = str(row[11])
+        product_dict["product_pic"] = row[12]
+        product_dict["product_status"] = row[13]
+        # status 0 成功获取店铺列表，返回列表数组
+        return True, product_dict
+
+
+def CheckProductIfExist(product_id: int) -> bool:
+    cur = conn.cursor()
+    sql = "SELECT * FROM product WHERE product_id = {}".format(product_id)
+    try:
+        Lock.acquire(GetProductInfo, "GetProductInfo")
+        cur.execute(sql)
+        Lock.release()
+        # conn.commit()
+    except Exception as e:
+        cur.close()
+        print("[GetProductInfo]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[GetProductInfo]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
+        # status -200 数据库操作失败。
+        return False
+    rows = cur.fetchall()
+    if len(rows) == 1:
+        return True
+    else:
+        return False
+
+
+def CreatPurchase(user_id: int, purchase_id: str, purchase_type: int, product_id: int, product_num: int,
+                  product_unitprice: float,
+                  product_totalprice: float, id: int = -1):
+    """
+创建一个订单
+
+    :param user_id: 用户id，用于绑定订单与用户的关系
+    :param purchase_id: 订单id
+    :param purchase_type: 订单类型
+    :param product_id: 产品id
+    :param product_num: 产品数量
+    :param product_unitprice: 产品单价
+    :param product_totalprice: 商品总价钱
+    :param id: 事件id
+    :return: json字典
+    """
+    creat_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    cur = conn.cursor()
+
+    check_product_result = CheckProductIfExist(product_id)
+    if not check_product_result:
+        # status 100 商品id不存在。
+        return {"id": id, "status": 100, "message": "Product_id not exist", "data": {}}
+    sql = "INSERT INTO purchase_info (purchase_id,product_id,product_num,product_unitprice,product_totalprice) VALUES ('{}',{},{},{},{})".format(
+        purchase_id, product_id, product_num, product_unitprice, product_totalprice)
+    try:
+        Lock.acquire(CreatProduct, "CreatPurchase")
+        cur.execute(sql)
+        conn.commit()
+        Lock.release()
+    except Exception as e:
+        conn.rollback()
+        cur.close()
+        print("[CreatPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[CreatPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
+        # status -200 数据库操作失败。
+        return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    purchase_state = "paying"
+    sql = "INSERT INTO purchase_base (purchase_id,purchase_state,user_id,purchase_type,purchase_price,creat_time) VALUES ('{}','{}',{},{},{},'{}')".format(
+        purchase_id, purchase_state, user_id, purchase_type, product_totalprice, creat_time)
+    try:
+        Lock.acquire(CreatProduct, "CreatPurchase")
+        cur.execute(sql)
+        conn.commit()
+        Lock.release()
+    except Exception as e:
+        conn.rollback()
+        cur.close()
+        print("[CreatPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[CreatPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
+        # status -200 数据库操作失败。
+        return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    # status 0 成功生成订单，返回订单编号
+    return {"id": id, "status": 0, "message": "successful", "data": {"purchase_id": purchase_id}}
+
+
+def CheckPurchaseIfExist(purchase_id: str) -> bool:
+    cur = conn.cursor()
+    sql = "SELECT COUNT(purchase_id) as num FROM purchase_base WHERE purchase_id = '{}'".format(purchase_id)
+    try:
+        Lock.acquire(CheckPurchaseIfExist, "CheckPurchaseIfExist")
+        cur.execute(sql)
+        Lock.release()
+    except Exception as e:
+        cur.close()
+        print("[CheckPuechaseIfExist]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[CheckPuechaseIfExist]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
+        # status -200 数据库操作失败。
+        return False
+    num = cur.fetchone()[0]
+    if num == 0:
+        return False
+    return True
+
+
+def GetPurchaseInfo(user_id: int, purchase_id: str, id: int = -1) -> dict:
+    """
+获取订单信息
+    :param user_id: 用户id
+    :param purchase_id: 订单id
+    :param id: 事件id
+    :return: json字典
+    """
+    check_purchase_result = CheckPurchaseIfExist(purchase_id=purchase_id)
+    if not check_purchase_result:
+        # status 100 订单id不存在。
+        return {"id": id, "status": 100, "message": "Purchase id not exist", "data": {}}
+    cur = conn.cursor()
+    sql = "SELECT * FROM purchase_base WHERE user_id = {} AND purchase_id = '{}'".format(user_id, purchase_id)
+    try:
+        Lock.acquire(GetPurchaseInfo, "GetPurchaseInfo")
+        cur.execute(sql)
+        Lock.release()
+    except Exception as e:
+        cur.close()
+        print("[CreatPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[CreatPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
+        # status -200 数据库操作失败。
+        return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    rows = cur.fetchall()
+    num = len(rows)
+    if num == 0:
+        # status 101 订单存在但无权获取。
+        return {"id": id, "status": 101, "message": "Have no right to operate", "data": {}}
+    elif num != 1:
+        # status 102 错误的订单id数(超过1个)。
+        return {"id": id, "status": 102, "message": "Error purchase id num", "data": {}}
+    row = rows[0]
+    purchase_dict = {
+        "purchase_id": row[0],
+        "purchase_state": row[1],
+        "user_id": row[2],
+        "purchase_type": row[3],
+        "purchase_price": float(row[4]),
+        "creat_time": str(row[5]),
+    }
+    sql = "SELECT * FROM purchase_info WHERE purchase_id = '{}'".format(purchase_id)
+    try:
+        Lock.acquire(GetPurchaseInfo, "GetPurchaseInfo")
+        cur.execute(sql)
+        Lock.release()
+    except Exception as e:
+        cur.close()
+        print("[CreatPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[CreatPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
+        # status -200 数据库操作失败。
+        return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    rows = cur.fetchall()
+    cur.close()
+    num = len(rows)
+    if num == 0:
+        # status 103 意外出现在purchase_info表中purchase id 不存在。
+        return {"id": id, "status": 103, "message": "Error purchase id num", "data": {}}
+    row = rows[0]
+    purchase_dict["product_id"] = row[1]
+    purchase_dict["product_num"] = row[2]
+    purchase_dict["product_unitprice"] = float(row[3])
+    purchase_dict["product_totalprice"] = float(row[4])
+    # status 0 成功处理事件
+    return {"id": id, "status": 0, "message": "Successful", "data": purchase_dict}
+
+
 if __name__ == '__main__':
-    Initialize("../config.ini",os.path.dirname(os.path.abspath(__file__)))
+    Initialize("../config.ini", os.path.dirname(os.path.abspath(__file__)))
     # result = CheckToken("9763393e42ef2b8f051caefbec8a522f31a38663a7180d69d1a9cb1addaa76ac")
-    result = CheckShopName("微凉的第一个店铺")
+    result = GetPurchaseInfo(user_id=1180310086,purchase_id="15614165")
     print(result)
     # find_dict = {
     #     "state": -1,

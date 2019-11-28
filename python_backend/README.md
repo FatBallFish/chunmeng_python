@@ -1345,11 +1345,169 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 }
 ```
 
+
+
+### **订单（purchase） API**
+
+#### 创建订单
+
+> **API类型**
+
+**请求类型：`POST`**
+
+> **POST商品API地址**
+
+**https://www.zustservice.cn/api/external/purchase?token={token值}**
+
+> **data字段表**
+
+|        name        | data type | length | 不可空 | 可缺省 | 注释     |
+| :----------------: | :-------: | :----: | :----: | :----: | -------- |
+|     product_id     |    int    |   7    |   √    |        | 商品id   |
+|    product_num     |    int    |        |   √    |        | 商品数量 |
+| product_unitprice  |   float   |        |   √    |        | 商品单价 |
+| product_totalprice |   float   |        |   √    |        | 商品总价 |
+
+> **json请求格式**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"product",
+    "subtype":"creat",
+    "data":{
+        "product_id":4517733,
+        "product_num":1,
+        "product_unitprice":101.5,
+        "product_totalprice":101.5
+    }
+}
+```
+
+- `product_id`7位商品id
+- `creat_time`在该API里不需要传入，哪怕传入也做无效处理
+
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":{"purchase_id": "15749511524517733"}
+}
+```
+
+- 返回17位的文本型`purchase_id`
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
+| status |       message        |     内容     |
+| :----: | :------------------: | :----------: |
+|  100   | Product_id not exist | 商品id不存在 |
+
+- 其他`status`码请看[全局Status表](#全局Status表)
+
+#### 获取订单信息
+
+> **API类型**
+
+**请求类型：`POST`**
+
+> **POST店铺API地址**
+
+**https://www.zustservice.cn/api/external/purchase?token={token值}**
+
+> **data字段表**
+
+|    name     | data type | length | 不可空 | 可缺省 | 注释 |
+| :---------: | :-------: | :----: | :----: | :----: | ---- |
+| purchase_id |    str    |   17   |   √    |        |      |
+
+> **json请求格式**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"purchase",
+    "subtype":"info",
+    "data":{
+        "purchase_id":"15749511524517733", # 订单id
+    }
+}
+```
+
+> **返回JSON.data表**
+
+|        name        | data type | length | 注释                                             |
+| :----------------: | :-------: | :----: | ------------------------------------------------ |
+|    purchase_id     |  string   |   17   | 订单id                                           |
+|   purchase_state   |  string   |        | 订单状态<br>paying:支付中(默认状态)<br>待完善... |
+|      user_id       |    int    |        | 购买者id                                         |
+|   purchase_type    |    int    |        | 订单类型，默认为0                                |
+|   purchase_price   |   float   |        | 订单总价格                                       |
+|     creat_time     | datetime  |        | 创建时间                                         |
+|     product_id     |    int    |        | 产品id                                           |
+|    product_num     |    int    |        | 产品数量                                         |
+| product_unitprice  |   float   |        | 产品单价                                         |
+| product_totalprice |   float   |        | 产品总价，一般与订单总价格一致                   |
+
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data": {
+        "purchase_id": "15749511524517733", 
+        "purchase_state": "paying", 
+        "user_id": 1180310086, 
+        "purchase_type": 0, 
+        "purchase_price": 101.5, 
+        "creat_time": "2019-11-28 22:25:52", 
+        "product_id": 4517733, 
+        "product_num": 1, 
+        "product_unitprice": 101.5, 
+        "product_totalprice": 101.5
+    }
+}
+```
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
+> **局部 Status 状态表**
+
+| status |         message          |                     内容                      |
+| :----: | :----------------------: | :-------------------------------------------: |
+|  100   |  Purchase id not exist   |                 订单id不存在                  |
+|  101   | Have no right to operate |              订单存在但无权获取               |
+|  102   |  Error purchase id num   |            错误的订单id数(超过1个)            |
+|  103   |  Error purchase id num   | 意外出现在purchase_info表中purchase id 不存在 |
+
+- 其他`status`码请看[全局Status表](#全局Status表)
+
 ## **全局Status表**
-
-
-
-
 
 | 参数 |              Message               |                内容                 | 请求类型  |
 | :--: | :--------------------------------: | :---------------------------------: | --------- |

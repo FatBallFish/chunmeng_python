@@ -10,26 +10,26 @@ headers = {'content-type': "application/json"}
 
 # 添加寻物启事api
 
-data = {
-    "id": 0,
-    "status": 0,
-    "type": "property",
-    "subtype": "add",
-    "data": {
-        "content": "丢丢丢",
-        "lab": "card",
-        "occurrence_time": "",
-        "pic_num": 3,
-        "pic_url1": "./api/external/get/pic/property/eafe254797d819bfd0f1d5782ae1e6b8",
-        "pic_url2": "./api/external/get/pic/property/efea3e8dd4c701ce6b468f5584c130f6",
-        "pic_url3": "./api/external/get/pic/property/5dbe81d1a473450506117c4abc924a35",
-        "publish_time": "",
-        "title": "丢",
-        "type": 2,
-        "user_name": "123",
-        "user_phone": "321",
-        "user_qq": "123456",
-        }}
+# data = {
+#     "id": 0,
+#     "status": 0,
+#     "type": "property",
+#     "subtype": "add",
+#     "data": {
+#         "content": "丢丢丢",
+#         "lab": "card",
+#         "occurrence_time": "",
+#         "pic_num": 3,
+#         "pic_url1": "./api/external/get/pic/property/eafe254797d819bfd0f1d5782ae1e6b8",
+#         "pic_url2": "./api/external/get/pic/property/efea3e8dd4c701ce6b468f5584c130f6",
+#         "pic_url3": "./api/external/get/pic/property/5dbe81d1a473450506117c4abc924a35",
+#         "publish_time": "",
+#         "title": "丢",
+#         "type": 2,
+#         "user_name": "123",
+#         "user_phone": "321",
+#         "user_qq": "123456",
+#         }}
 
 # data = {
 #     "id": 0,
@@ -47,8 +47,8 @@ data = {
 #         "user_qq": "893721708",
 #         "publish_time": "",
 #     }}
-token = "a55026d26b842ce685bd9d1e7692aa8a0c24063f3db20123d1322c559f16e1a2"
-response = requests.post(url="http://127.0.0.1:4081/property?token={}".format(token),data=json.dumps(data), headers=headers)
+# token = "a55026d26b842ce685bd9d1e7692aa8a0c24063f3db20123d1322c559f16e1a2"
+# response = requests.post(url="http://127.0.0.1:4081/property?token={}".format(token),data=json.dumps(data), headers=headers)
 # response = requests.post(url="https://www.zustservice.cn/api/external/property?token={}".format(token),data=json.dumps(data), headers=headers)
 
 ## 更新寻物启事api
@@ -139,10 +139,43 @@ response = requests.post(url="http://127.0.0.1:4081/property?token={}".format(to
 #       "message":"我的留言3",
 # }
 # response = requests.post(url="http://127.0.0.1:8000/message_form/".format(),data=json.dumps(data),headers=headers)
-print(response.text)
+# print(response.text)
 # data_json = response.json()
 # data = data_json["data"]
 # img_b64 = data["imgdata"]
 # img_data = base64.b64decode(img_b64)
 # with open("./captcha/[%s].png" % data["code"],"wb") as f:
 #     f.write(img_data)
+
+
+# # 新增订单
+# # ["product_id", "product_num", "product_unitprice", "product_totalprice"]
+# data={
+#     "id":0,
+#     "status":0,
+#     "type":"purchase",
+#     "subtype":"apply",
+#     "data":{
+#         "product_id":4517733,
+#         "product_num":1,
+#         "product_unitprice":101.5,
+#         "product_totalprice":101.5
+#     }}
+# token = "227e950ba7ba8bc97bf600ce202b8f8f661ebca4fd46bd399a698c164ea995c4"
+# response = requests.post(url="http://127.0.0.1:4081/purchase?token={}".format(token),data=json.dumps(data),headers=headers)
+# # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+# print(response.text)
+
+# 查询订单信息
+data={
+    "id":0,
+    "status":0,
+    "type":"purchase",
+    "subtype":"info",
+    "data":{
+        "purchase_id":"15749511524517733",
+    }}
+token = "227e950ba7ba8bc97bf600ce202b8f8f661ebca4fd46bd399a698c164ea995c4"
+response = requests.post(url="http://127.0.0.1:4081/purchase?token={}".format(token),data=json.dumps(data),headers=headers)
+# response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+print(response.text)

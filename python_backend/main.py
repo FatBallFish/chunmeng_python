@@ -10,7 +10,7 @@ import json, redis
 import logging
 import sys, getopt
 import threading, time
-import os
+import os, datetime
 import base64
 
 app = Flask(__name__)
@@ -1262,7 +1262,8 @@ def shop():
                 # status -102 Necessary args can't be empty
                 return json.dumps(
                     {"id": id, "status": -102, "message": "Get user_id failed for the token", "data": {}})
-            json_dict = PSQL.UpdateShop(shop_id=shop_id, shop_content=shop_content, user_id=user_id,pic_url=pic_url,id=id)
+            json_dict = PSQL.UpdateShop(shop_id=shop_id, shop_content=shop_content, user_id=user_id, pic_url=pic_url,
+                                        id=id)
             return json.dumps(json_dict)
         else:
             # status -2 json的value错误。
@@ -1329,7 +1330,7 @@ def get_shop():
                 shop_name = data["shop_name"]
                 json_dict = PSQL.GetShopInfo(shop_name=shop_name, id=id)
             else:
-                json_dict = {"id":id,"status":204,"message":"Arg's value error","data":{}}
+                json_dict = {"id": id, "status": 204, "message": "Arg's value error", "data": {}}
             return json.dumps(json_dict)
         elif subtype == "delete":
             pass
@@ -1707,15 +1708,84 @@ def purchase():
     user_id = PSQL.GetUserID(token)
     if type == "purchase":
         if subtype == "apply":  # 申请订单
-            pass
+            for key in ["product_id", "product_num", "product_unitprice", "product_totalprice"]:
+                if key not in data.keys():
+                    # status -3 json的value错误。
+                    return json.dumps({"id": id, "status": -3, "message": "Error data key", "data": {}})
+            product_id = data["product_id"]
+            product_num = data["product_num"]
+            product_unitprice = data["product_unitprice"]
+            product_totalprice = data["product_totalprice"]
+            purchase_type = 0  # 0为默认订单，1为特殊订单
+            if "purchase_type" in data.keys():
+                purchase_type = data["purchase_type"]
+                if isinstance(purchase_type, str):
+                    if purchase_type.isdecimal():
+                        purchase_type = int(purchase_type)
+            # product_id
+            if isinstance(product_id, str):
+                if product_id.isdecimal():
+                    product_id = int(product_id)
+                else:
+                    # status -204 Arg's value error
+                    return json.dumps({"id": id, "status": -204, "message": "Arg's value error", "data": {}})
+            elif isinstance(product_id,int):
+                pass
+            else:
+                # status -203 Arg's value type error
+                return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+            # product_num
+            if isinstance(product_num, str):
+                if product_num.isdecimal():
+                    product_num = int(product_num)
+            # product_unitprice
+            if isinstance(product_unitprice, int):
+                product_unitprice = float(product_unitprice)
+            elif isinstance(product_unitprice, str):
+                if product_unitprice.isdecimal():
+                    product_unitprice = float(product_unitprice)
+                else:
+                    # status -204 Arg's value error
+                    return json.dumps({"id": id, "status": -204, "message": "Arg's value error", "data": {}})
+            elif isinstance(product_unitprice,float):
+                pass
+            else:
+                # status -203 Arg's value type error
+                return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+            # product_totalprice
+            if isinstance(product_totalprice, int):
+                product_totalprice = float(product_totalprice)
+            elif isinstance(product_totalprice, str):
+                if product_totalprice.isdecimal():
+                    product_totalprice = float(product_totalprice)
+                else:
+                    # status -204 Arg's value error
+                    return json.dumps({"id": id, "status": -204, "message": "Arg's value error", "data": {}})
+            elif isinstance(product_totalprice,float):
+                pass
+            else:
+                # status -203 Arg's value type error
+                return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
+            purchase_id = "{time}{id}".format(time=int(time.time()), id=product_id)
+            json_dict = PSQL.CreatPurchase(user_id=user_id, purchase_id=purchase_id, purchase_type=purchase_type,
+                                           product_id=product_id, product_num=product_num,
+                                           product_unitprice=product_unitprice,
+                                           product_totalprice=product_totalprice, id=id)
+            return json.dumps(json_dict)
         elif subtype == "pay":  # 支付中
             pass
         elif subtype == "cancel":  # 取消订单
             pass
         elif subtype == "finish":  # 完成订单
             pass
-        elif subtype == "get":  # 获取订单
-            pass
+        elif subtype == "info":  # 获取订单信息
+            for key in ["purchase_id"]:
+                if key not in data.keys():
+                    # status -3 json的value错误。
+                    return json.dumps({"id": id, "status": -3, "message": "Error data key", "data": {}})
+            purchase_id = data["purchase_id"]
+            json_dict = PSQL.GetPurchaseInfo(user_id=user_id, purchase_id=purchase_id,id=id)
+            return json.dumps(json_dict)
         else:
             # status -2 json的value错误。
             return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})
