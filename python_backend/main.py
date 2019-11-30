@@ -1249,8 +1249,8 @@ def shop():
             json_dict = PSQL.CreatShop(shop_name=shop_name, user_id=user_id, id=id)
             return json.dumps(json_dict)
         elif subtype == "update":
-            for key in data.keys():
-                if key not in ["shop_content", "shop_id"]:
+            for key in ["shop_content", "shop_id"]:
+                if key not in data.keys():
                     # status -1 json的key错误。
                     return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
             shop_id = data["shop_id"]
