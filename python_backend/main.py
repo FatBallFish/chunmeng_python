@@ -1255,6 +1255,7 @@ def shop():
                     return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
             shop_id = data["shop_id"]
             shop_content = data["shop_content"]
+            pic_url = ""
             if "pic_url" in data.keys():
                 pic_url = data["pic_url"]
             user_id = PSQL.GetUserID(token)
@@ -1394,7 +1395,7 @@ def product():
         "shop_id": -1,
         "creat_time": "",
         "update_time": "",
-        "product_pic": "",
+        "pic_url": "",
         "product_status": -1,
     }
     product_dict = {}
@@ -1465,7 +1466,7 @@ def product():
                     continue
                 elif key == "update_time":
                     continue
-                elif key == "product_pic":
+                elif key == "pic_url":
                     if not isinstance(data[key], str):
                         # status -203 Arg's value type error
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
@@ -1576,7 +1577,7 @@ def product():
                 elif key == "update_time":
                     # todo 在psql里配置
                     continue
-                elif key == "product_pic":
+                elif key == "pic_url":
                     if not isinstance(data[key], str):
                         # status -203 Arg's value type error
                         return json.dumps({"id": id, "status": -203, "message": "Arg's value type error", "data": {}})
@@ -1729,7 +1730,7 @@ def purchase():
                 else:
                     # status -204 Arg's value error
                     return json.dumps({"id": id, "status": -204, "message": "Arg's value error", "data": {}})
-            elif isinstance(product_id,int):
+            elif isinstance(product_id, int):
                 pass
             else:
                 # status -203 Arg's value type error
@@ -1747,7 +1748,7 @@ def purchase():
                 else:
                     # status -204 Arg's value error
                     return json.dumps({"id": id, "status": -204, "message": "Arg's value error", "data": {}})
-            elif isinstance(product_unitprice,float):
+            elif isinstance(product_unitprice, float):
                 pass
             else:
                 # status -203 Arg's value type error
@@ -1761,7 +1762,7 @@ def purchase():
                 else:
                     # status -204 Arg's value error
                     return json.dumps({"id": id, "status": -204, "message": "Arg's value error", "data": {}})
-            elif isinstance(product_totalprice,float):
+            elif isinstance(product_totalprice, float):
                 pass
             else:
                 # status -203 Arg's value type error
@@ -1773,18 +1774,34 @@ def purchase():
                                            product_totalprice=product_totalprice, id=id)
             return json.dumps(json_dict)
         elif subtype == "pay":  # 支付中
-            pass
+            for key in ["purchase_id", "method"]:
+                if key not in data.keys():
+                    # status -1 json的key错误。
+                    return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+            purchase_id = data["purchase_id"]
+            # wallet
+            method = data["method"]
+
+            json_dict = PSQL.PayPurchase(user_id=user_id, purchase_id=purchase_id, method=method, id=id)
+            return json.dumps(json_dict)
         elif subtype == "cancel":  # 取消订单
-            pass
-        elif subtype == "finish":  # 完成订单
-            pass
+            for key in ["purchase_id"]:
+                if key not in data.keys():
+                    # status -1 json的key错误。
+                    return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
+            purchase_id = data["purchase_id"]
+            json_dict = PSQL.CancelPurchase(user_id=user_id, purchase_id=purchase_id, id=id)
+            return json.dumps(json_dict)
+        elif subtype == "list":  # 获取订单列表
+            json_dict = PSQL.GetPurchaseList(user_id=user_id)
+            return json.dumps(json_dict)
         elif subtype == "info":  # 获取订单信息
             for key in ["purchase_id"]:
                 if key not in data.keys():
                     # status -3 json的value错误。
                     return json.dumps({"id": id, "status": -3, "message": "Error data key", "data": {}})
             purchase_id = data["purchase_id"]
-            json_dict = PSQL.GetPurchaseInfo(user_id=user_id, purchase_id=purchase_id,id=id)
+            json_dict = PSQL.GetPurchaseInfo(user_id=user_id, purchase_id=purchase_id, id=id)
             return json.dumps(json_dict)
         else:
             # status -2 json的value错误。

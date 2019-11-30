@@ -28,9 +28,14 @@
     - [获取店铺列表](#获取店铺列表)
     - [获取店铺信息](#获取店铺信息)
   - [**商品（product） API**](#商品product-api)
-    - [创建商品](#创建商品)
-    - [更新商品](#更新商品)
-    - [获取商品列表](#获取商品列表)
+    - [创建商品（**有字段修改**）](#创建商品)
+    - [更新商品（**有字段修改**）](#更新商品)
+    - [获取商品列表（**有字段修改**）](#获取商品列表)
+  - [**订单（purchase） API**](#订单purchase-api)
+    - [创建订单](#创建订单)
+    - [支付订单](#支付订单)
+    - [取消订单](#取消订单)
+    - [获取订单消息](#获取订单消息)
 - [**全局Status表**](#全局Status表)
 
 > 注：main.py文件运行时需用 -c configpath 来指定配置文件路径。
@@ -881,11 +886,11 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 
 > **data字段表**
 
-|     name     | data type | length | 不可空 | 可缺省 | 注释     |
-| :----------: | :-------: | :----: | :----: | :----: | -------- |
-|   shop_id    |  big int  |   9    |   √    |        | 店铺id   |
-| shop_content |  string   |        |        |        | 店铺内容 |
-|   pic_url    |  string   |  512   |        |        |          |
+|     name     | data type | length | 不可空 | 可缺省 | 注释            |
+| :----------: | :-------: | :----: | :----: | :----: | --------------- |
+|   shop_id    |  big int  |   9    |   √    |        | 店铺id          |
+| shop_content |  string   |        |        |        | 店铺内容        |
+|   pic_url    |  string   |  512   |        |        | 店铺图片url地址 |
 
 > **json请求格式**
 
@@ -894,7 +899,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
     "id":事件ID, # 整数型
     "status":0,
     "type":"shop",
-    "subtype":"creat",
+    "subtype":"update",
     "data":{
         "shop_id":"811729970", # 店铺id
         "shop_content":"这是码三秃家的店铺" # 店铺内容
@@ -1118,7 +1123,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 | product_key | string     | 255 |          | √ | 商品关键字|
 | product_price | float |  | √ | | 商品价格 |
 |     shop_id     |  big int  |   9    |   √    |        | 店铺id     |
-| product_pic | string | |  | √ | 商品封面 |
+| pic_url | string | |  | √ | 商品封面 |
 | product_status | int | | √ |  | 产品状态：<br />0.下架（默认）<br />1.上架<br />2.被删除 |
 
 > **json请求格式**
@@ -1202,7 +1207,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 |   product_click    |    int    |        |        |   √    | 商品点击量                                               |
 | product_collection |    int    |        |        |   √    | 商品收藏量                                               |
 |      shop_id       |  big int  |   9    |   √    |        | 店铺id                                                   |
-|    product_pic     |  string   |        |        |   √    | 商品封面                                                 |
+|      pic_url       |  string   |        |        |   √    | 商品封面                                                 |
 |   product_status   |    int    |        |   √    |        | 产品状态：<br />0.下架（默认）<br />1.上架<br />2.被删除 |
 
 > **json请求格式**
@@ -1319,7 +1324,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 |      shop_id       |  big int  |   9    | 店铺id     |
 |     creat_time     | datetime  |        | 创建时间   |
 |    update_time     | datetime  |        | 更新时间   |
-|    product_pic     |  string   |        | 商品封面   |
+|      pic_url       |  string   |        | 商品封面   |
 
 > **Python端返回成功处理情况**
 
@@ -1418,6 +1423,134 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 
 - 其他`status`码请看[全局Status表](#全局Status表)
 
+#### 支付订单
+
+> **API类型**
+
+**请求类型：`POST`**
+
+> **POST商品API地址**
+
+**https://www.zustservice.cn/api/external/purchase?token={token值}**
+
+> **data字段表**
+
+|    name     | data type | length | 不可空 | 可缺省 | 注释                         |
+| :---------: | :-------: | :----: | :----: | :----: | ---------------------------- |
+| purchase_id |  string   |   17   |   √    |        | 订单id                       |
+|   method    |  string   |        |   √    |        | 支付途经，目前只支持`wallet` |
+
+> **json请求格式**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"purchase",
+    "subtype":"pay",
+    "data":{
+		"purchase_id":"15749511524517733",
+        "method":"wallet"
+    }
+}
+```
+
+- `purchase_id`17位订单id
+
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":{}
+}
+```
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
+| status |              message              |         内容         |
+| :----: | :-------------------------------: | :------------------: |
+|  100   |       Purchase id not exist       |     订单id不存在     |
+|  101   |     Have no right to operate      |  订单存在但无权操作  |
+|  102   |       Balance is not enough       |     用户余额不足     |
+|  200   |       Pay method not allow        |    支付方法不允许    |
+|  201   | This purchase is not paying state | 该订单不是待支付状态 |
+
+- 其他`status`码请看[全局Status表](#全局Status表)
+
+#### 取消订单
+
+> **API类型**
+
+**请求类型：`POST`**
+
+> **POST商品API地址**
+
+**https://www.zustservice.cn/api/external/purchase?token={token值}**
+
+> **data字段表**
+
+|    name     | data type | length | 不可空 | 可缺省 | 注释   |
+| :---------: | :-------: | :----: | :----: | :----: | ------ |
+| purchase_id |  string   |   17   |   √    |        | 订单id |
+
+> **json请求格式**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"purchase",
+    "subtype":"cancel",
+    "data":{
+		"purchase_id":"15749511524517733",
+    }
+}
+```
+
+- `purchase_id`17位订单id
+
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":{}
+}
+```
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
+| status |              message              |         内容         |
+| :----: | :-------------------------------: | :------------------: |
+|  100   |       Purchase id not exist       |     订单id不存在     |
+|  101   |     Have no right to operate      |  订单存在但无权操作  |
+|  201   | This purchase is not paying state | 该订单不是待支付状态 |
+
+- 其他`status`码请看[全局Status表](#全局Status表)
+
 #### 获取订单信息
 
 > **API类型**
@@ -1458,6 +1591,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 |   purchase_type    |    int    |        | 订单类型，默认为0                                |
 |   purchase_price   |   float   |        | 订单总价格                                       |
 |     creat_time     | datetime  |        | 创建时间                                         |
+|     pay_method     |  string   |        | 支付方式，目前仅支持`wallet`                     |
 |     product_id     |    int    |        | 产品id                                           |
 |    product_num     |    int    |        | 产品数量                                         |
 | product_unitprice  |   float   |        | 产品单价                                         |
@@ -1477,6 +1611,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
         "purchase_type": 0, 
         "purchase_price": 101.5, 
         "creat_time": "2019-11-28 22:25:52", 
+        "pay_method":"wallet"
         "product_id": 4517733, 
         "product_num": 1, 
         "product_unitprice": 101.5, 
@@ -1506,6 +1641,87 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 |  103   |  Error purchase id num   | 意外出现在purchase_info表中purchase id 不存在 |
 
 - 其他`status`码请看[全局Status表](#全局Status表)
+
+#### 获取订单列表
+
+> **API类型**
+
+**请求类型：`POST`**
+
+> **POST店铺API地址**
+
+**https://www.zustservice.cn/api/external/purchase?token={token值}**
+
+> **data字段表**
+
+|    name     | data type | length | 不可空 | 可缺省 | 注释 |
+| :---------: | :-------: | :----: | :----: | :----: | ---- |
+| purchase_id |    str    |   17   |   √    |        |      |
+
+> **json请求格式**
+
+```python
+{
+    "id":事件ID, # 整数型
+    "status":0,
+    "type":"purchase",
+    "subtype":"list",
+    "data":{}
+}
+```
+
+> **返回JSON.data表**
+
+|      name      | data type | length | 注释                                             |
+| :------------: | :-------: | :----: | ------------------------------------------------ |
+|  purchase_id   |  string   |   17   | 订单id                                           |
+| purchase_state |  string   |        | 订单状态<br>paying:支付中(默认状态)<br>待完善... |
+|    user_id     |    int    |        | 购买者id                                         |
+| purchase_type  |    int    |        | 订单类型，默认为0                                |
+| purchase_price |   float   |        | 订单总价格                                       |
+|   creat_time   | datetime  |        | 创建时间                                         |
+|   pay_method   |  string   |        | 支付方式                                         |
+
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data": {
+        "purchase_id": "15749511524517733", 
+        "purchase_state": "paying", 
+        "user_id": 1180310086, 
+        "purchase_type": 0, 
+        "purchase_price": 101.5, 
+        "creat_time": "2019-11-28 22:25:52", 
+        "pay_method":"wallet"
+    }
+}
+```
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
+> **局部 Status 状态表**
+
+| status |         message          |                     内容                      |
+| :----: | :----------------------: | :-------------------------------------------: |
+|  100   |  Purchase id not exist   |                 订单id不存在                  |
+|  101   | Have no right to operate |              订单存在但无权获取               |
+|  102   |  Error purchase id num   |            错误的订单id数(超过1个)            |
+|  103   |  Error purchase id num   | 意外出现在purchase_info表中purchase id 不存在 |
+
+- 其他`status`码请看[全局Status表](
 
 ## **全局Status表**
 

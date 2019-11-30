@@ -102,6 +102,7 @@ def CheckToken(token: str) -> bool:
     # conn.commit()
     rows = cur.fetchall()
     num = len(rows)
+    cur.close()
     # for row in rows:
     #     #     print(row)
     #     # return True
@@ -138,6 +139,7 @@ def GetUserID(token: str) -> int:
     # conn.commit()
     rows = cur.fetchall()
     num = len(rows)
+    cur.close()
     # for row in rows:
     #     #     print(row)
     #     # return True
@@ -182,6 +184,7 @@ def GetUserName(token: str = None, user_id: int = None) -> str:
         return ""
     rows = cur.fetchall()
     num = len(rows)
+    cur.close()
     if num == 0:
         return ""
     else:
@@ -237,6 +240,7 @@ def InsertProperty(**property_dict) -> bool:
         Auto_KeepConnect()
         return False
     else:
+        cur.close()
         return True
 
 
@@ -293,6 +297,7 @@ def UpdateProperty(**property_dict) -> bool:
         Auto_KeepConnect()
         return False
     else:
+        cur.close()
         return True
 
 
@@ -332,6 +337,7 @@ def DeleteProperty(**property_dict) -> bool:
         Auto_KeepConnect()
         return False
     else:
+        cur.close()
         return True
 
 
@@ -383,6 +389,7 @@ def GetProperty(property_type: int, key: str, **property_dict) -> tuple:
         return (0, [])
     rows = cur.fetchall()
     num = len(rows)
+    cur.close()
     print("总共有{}条记录".format(len(rows)))
     date_list = []
     for row in rows:
@@ -446,6 +453,7 @@ def CheckShopName(shopname: str) -> bool:
         return False
 
     row = cur.fetchone()
+    cur.close()
     print("shop num:{}".format(row[0]))
     if row[0] == 0:
         return True
@@ -475,6 +483,7 @@ def CheckShopNum(user_id: int, num: int = 3) -> bool:
         return False
 
     row = cur.fetchone()
+    cur.close()
     if row[0] < num:
         return True
     else:
@@ -505,6 +514,7 @@ def GetShopOwner(shop_id: int) -> int:
     if row == None:  # 无此店铺
         return -1
     row2 = cur.fetchone()
+    cur.close()
     print("row2", row2)
     if row2 != None:
         print("店铺id：{} 有多条记录！".format(shop_id))
@@ -566,6 +576,7 @@ def CreatShop(shop_name: str, user_id: int, id: int = -1) -> dict:
         Auto_KeepConnect()
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    cur.close()
     # status 0 创建店铺成功！返回shop_id
     return {"status": 0, "message": "successful", "data": {"shop_id": shop_id}}
 
@@ -576,6 +587,7 @@ def UpdateShop(shop_id: int, shop_content: str, user_id: int, pic_url: str, id: 
     :param shop_id: 店铺id
     :param shop_content: 店铺内容
     :param user_id: token中用户id
+    :param pic_url: 店铺图片url地址
     :param id: 请求传递过来的事件id
     :return: json_dict
     """
@@ -598,6 +610,7 @@ def UpdateShop(shop_id: int, shop_content: str, user_id: int, pic_url: str, id: 
         Auto_KeepConnect()
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    cur.close()
     # status 0 更新店铺信息成功！无返回
     return {"id": id, "status": 0, "message": "successful", "data": {}}
 
@@ -633,6 +646,7 @@ def GetShopList(shop_name: str, order: str = "", id: int = -1) -> dict:
     # todo 这里的num无效
     rows = cur.fetchall()
     num = len(rows)
+    cur.close()
     if num == 0:
         # status 1 空记录
         return {"id": id, "status": 1, "message": "Empty records", "data": {}}
@@ -695,6 +709,7 @@ def GetShopInfo(shop_name: str = "", shop_id: int = 0, id: int = -1) -> dict:
         return {"id": id, "status": -201, "message": "Necessary key-value can't be empty", "data": {}}
     rows = cur.fetchall()
     num = len(rows)
+    cur.close()
     if num == 0:
         # status 1 空记录
         return {"id": id, "status": 1, "message": "Empty records", "data": {}}
@@ -736,6 +751,7 @@ def GetProductOwner(product_id: int) -> int:
         return -1
     row2 = cur.fetchone()
     print("row2", row2)
+    cur.close()
     if row2 != None:
         print("店铺id：{} 有多条记录！".format(product_id))
         log_psql.error("店铺id：{} 有多条记录！".format(product_id))
@@ -819,6 +835,7 @@ def CreatProduct(user_id: int, id: int = -1, **product_dict):
         Auto_KeepConnect()
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    cur.close()
     # status 0 成功上架产品,返回产品id
     return {"id": id, "status": 0, "message": "successful", "data": {"product_id": product_id}}
 
@@ -888,6 +905,7 @@ def UpdateProduct(user_id: int, id: int = -1, **product_dict):
         Auto_KeepConnect()
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    cur.close()
     # status 0 成功上架产品,返回产品id
     return {"id": id, "status": 0, "message": "successful", "data": {}}
 
@@ -941,6 +959,7 @@ def GetProductList(product_name: str = "", product_key: str = "", shop_id: int =
     # todo 这里的num无效
     rows = cur.fetchall()
     num = len(rows)
+    cur.close()
     if num == 0:
         # status 1 空记录
         return {"id": id, "status": 1, "message": "Empty records", "data": {}}
@@ -965,7 +984,7 @@ def GetProductList(product_name: str = "", product_key: str = "", shop_id: int =
             product_dict["shop_id"] = row[9]
             product_dict["creat_time"] = str(row[10])
             product_dict["update_time"] = str(row[11])
-            product_dict["product_pic"] = row[12]
+            product_dict["pic_url"] = row[12]
             product_dict["product_status"] = row[13]
             product_list.append(product_dict)
         # status 0 成功获取店铺列表，返回列表数组
@@ -996,6 +1015,7 @@ def GetProductInfo(product_id: int) -> tuple:
     print(sql)
     rows = cur.fetchall()
     num = len(rows)
+    cur.close()
     print("num:{}".format(num))
     # todo 这里的num无效
     if num == 0:
@@ -1042,6 +1062,7 @@ def CheckProductIfExist(product_id: int) -> bool:
         # status -200 数据库操作失败。
         return False
     rows = cur.fetchall()
+    cur.close()
     if len(rows) == 1:
         return True
     else:
@@ -1087,8 +1108,8 @@ def CreatPurchase(user_id: int, purchase_id: str, purchase_type: int, product_id
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     purchase_state = "paying"
-    sql = "INSERT INTO purchase_base (purchase_id,purchase_state,user_id,purchase_type,purchase_price,creat_time) VALUES ('{}','{}',{},{},{},'{}')".format(
-        purchase_id, purchase_state, user_id, purchase_type, product_totalprice, creat_time)
+    sql = "INSERT INTO purchase_base (purchase_id,purchase_state,user_id,purchase_type,purchase_price,creat_time,pay_method) VALUES ('{}','{}',{},{},{},'{}')".format(
+        purchase_id, purchase_state, user_id, purchase_type, product_totalprice, creat_time, "")
     try:
         Lock.acquire(CreatProduct, "CreatPurchase")
         cur.execute(sql)
@@ -1102,6 +1123,7 @@ def CreatPurchase(user_id: int, purchase_id: str, purchase_type: int, product_id
         Auto_KeepConnect()
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    cur.close()
     # status 0 成功生成订单，返回订单编号
     return {"id": id, "status": 0, "message": "successful", "data": {"purchase_id": purchase_id}}
 
@@ -1121,6 +1143,7 @@ def CheckPurchaseIfExist(purchase_id: str) -> bool:
         # status -200 数据库操作失败。
         return False
     num = cur.fetchone()[0]
+    cur.close()
     if num == 0:
         return False
     return True
@@ -1146,8 +1169,8 @@ def GetPurchaseInfo(user_id: int, purchase_id: str, id: int = -1) -> dict:
         Lock.release()
     except Exception as e:
         cur.close()
-        print("[CreatPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
-        log_psql.error("[CreatPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
+        print("[GetPurchaseInfo]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[GetPurchaseInfo]Failed to execute sql:{}\nError:{}".format(sql, e))
         Auto_KeepConnect()
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
@@ -1167,6 +1190,7 @@ def GetPurchaseInfo(user_id: int, purchase_id: str, id: int = -1) -> dict:
         "purchase_type": row[3],
         "purchase_price": float(row[4]),
         "creat_time": str(row[5]),
+        "pay_method": row[6],
     }
     sql = "SELECT * FROM purchase_info WHERE purchase_id = '{}'".format(purchase_id)
     try:
@@ -1181,8 +1205,8 @@ def GetPurchaseInfo(user_id: int, purchase_id: str, id: int = -1) -> dict:
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     rows = cur.fetchall()
-    cur.close()
     num = len(rows)
+    cur.close()
     if num == 0:
         # status 103 意外出现在purchase_info表中purchase id 不存在。
         return {"id": id, "status": 103, "message": "Error purchase id num", "data": {}}
@@ -1195,10 +1219,229 @@ def GetPurchaseInfo(user_id: int, purchase_id: str, id: int = -1) -> dict:
     return {"id": id, "status": 0, "message": "Successful", "data": purchase_dict}
 
 
+def PayPurchase(user_id: int, purchase_id: str, method: str, id: int = -1) -> dict:
+    """
+    支付订单
+    :param user_id: 用户id
+    :param purchase_id: 订单id
+    :param method: 支付途经
+    :param id: 事件id
+    :return: json_dict字典
+    """
+    check_purchase_result = CheckPurchaseIfExist(purchase_id=purchase_id)
+    if not check_purchase_result:
+        # status 100 订单id不存在。
+        return {"id": id, "status": 100, "message": "Purchase id not exist", "data": {}}
+    check_purchase_state = GetPurchaseState(purchase_id=purchase_id)
+    if check_purchase_state != "paying":
+        # status 201 该订单不是待支付状态
+        return {"id": id, "status": 201, "message": "This purchase is not paying state", "data": {}}
+    cur = conn.cursor()
+    sql = "SELECT user_id,purchase_price FROM purchase_base WHERE purchase_id = '{}'".format(purchase_id)
+    try:
+        Lock.acquire(PayPurchase, "PayPurchase")
+        cur.execute(sql)
+        Lock.release()
+    except Exception as e:
+        cur.close()
+        print("[Apply]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[Apply]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
+        # status -200 数据库操作失败。
+        return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    rows = cur.fetchall()
+    num = len(rows)
+    if num == 0:
+        # status 100 订单id不存在。
+        return {"id": id, "status": 100, "message": "Purchase id not exist", "data": {}}
+    row = rows[0]
+    p_user_id = row[0]  # 订单中的用户id
+    if user_id != p_user_id:
+        # status 101 订单存在但无权操作。
+        return {"id": id, "status": 101, "message": "Have no right to operate", "data": {}}
+    purchase_price = float(row[1])
+    if method == "wallet":
+        sql = "SELECT wealth FROM users WHERE id = {}".format(user_id)
+        try:
+            Lock.acquire(PayPurchase, "PayPurchase")
+            cur.execute(sql)
+            Lock.release()
+        except Exception as e:
+            cur.close()
+            print("[Apply]Failed to execute sql:{}\nError:{}".format(sql, e))
+            log_psql.error("[Apply]Failed to execute sql:{}\nError:{}".format(sql, e))
+            Auto_KeepConnect()
+            # status -200 数据库操作失败。
+            return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+        rows = cur.fetchall()
+        num = len(rows)
+        row = rows[0]
+        wealth = row[0]
+        if wealth is None:
+            wealth = 0
+        if wealth < purchase_price:
+            # status 102 余额不足
+            return {"id": id, "status": 102, "message": "Balance is not enough", "data": {}}
+        wealth -= purchase_price
+        sql = "UPDATE users SET wealth = {} WHERE id = {}".format(wealth, user_id)
+        try:
+            Lock.acquire(PayPurchase, "PayPurchase")
+            cur.execute(sql)
+            conn.commit()
+            Lock.release()
+        except Exception as e:
+            conn.rollback()
+            cur.close()
+            print("[Apply]Failed to execute sql:{}\nError:{}".format(sql, e))
+            log_psql.error("[Apply]Failed to execute sql:{}\nError:{}".format(sql, e))
+            Auto_KeepConnect()
+            # status -200 数据库操作失败。
+            return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+        sql = "UPDATE purchase_base SET purchase_state = '{}' , pay_method = '{}' WHERE purchase_id = '{}'".format(
+            "finish", method, purchase_id)
+        try:
+            Lock.acquire(PayPurchase, "PayPurchase")
+            cur.execute(sql)
+            conn.commit()
+            Lock.release()
+        except Exception as e:
+            conn.rollback()
+            cur.close()
+            print("[Apply]Failed to execute sql:{}\nError:{}".format(sql, e))
+            log_psql.error("[Apply]Failed to execute sql:{}\nError:{}".format(sql, e))
+            Auto_KeepConnect()
+            # status -200 数据库操作失败。
+            return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+        cur.close()
+        # status 0 成功
+        return {"id": id, "status": 0, "message": "Successful", "data": {}}
+    else:
+        # status 200 支付方法不允许
+        return {"id": id, "status": 200, "message": "Pay method not allow", "data": {}}
+
+
+def GetPurchaseState(purchase_id: str) -> str:
+    """
+    获取订单状态
+    :param purchase_id: 订单id
+    :return: 订单状态
+    """
+    check_purchase_result = CheckPurchaseIfExist(purchase_id=purchase_id)
+    if not check_purchase_result:
+        # status 100 订单id不存在。
+        return ""
+    cur = conn.cursor()
+    sql = "SELECT purchase_state FROM purchase_base WHERE purchase_id = '{}'".format(purchase_id)
+    try:
+        Lock.acquire(GetPurchaseState, "GetPurchaseState")
+        cur.execute(sql)
+        Lock.release()
+    except Exception as e:
+        cur.close()
+        print("[GetPurchaseState]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[GetPurchaseState]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
+        # status -200 数据库操作失败。
+        return ""
+    rows = cur.fetchall()
+    row = rows[0]
+    num = len(rows)
+    cur.close()
+    purchase_state = row[0]
+    return purchase_state
+
+
+def CancelPurchase(user_id: int, purchase_id: str, id: int = -1) -> dict:
+    """
+    取消订单
+    :param user_id: 用户id
+    :param purchase_id: 订单id
+    :param id: 事件id
+    :return: json字典
+    """
+    check_purchase_result = CheckPurchaseIfExist(purchase_id=purchase_id)
+    if not check_purchase_result:
+        # status 100 订单id不存在。
+        return {"id": id, "status": 100, "message": "Purchase id not exist", "data": {}}
+    check_purchase_state = GetPurchaseState(purchase_id=purchase_id)
+    if check_purchase_state != "paying":
+        # status 201 该订单不是待支付状态
+        return {"id": id, "status": 201, "message": "This purchase is not paying state", "data": {}}
+    cur = conn.cursor()
+    sql = "SELECT COUNT(purchase_id) as num FROM purchase_base WHERE purchase_id = '{}' AND user_id = {}".format(
+        purchase_id, user_id)
+    try:
+        Lock.acquire(CancelPurchase, "CancelPurchase")
+        cur.execute(sql)
+        Lock.release()
+    except Exception as e:
+        cur.close()
+        print("[CancelPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[CancelPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
+        # status -200 数据库操作失败。
+        return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    rows = cur.fetchall()
+    row = rows[0]
+    num = row[0]
+    if num == 0:
+        # status 101 订单存在但无权操作。
+        return {"id": id, "status": 101, "message": "Have no right to operate", "data": {}}
+    sql = "UPDATE purchase_base SET purchase_state = 'cancel' WHERE purchase_id = '{}' AND user_id = {}".format(
+        purchase_id, user_id)
+    try:
+        Lock.acquire(CancelPurchase, "CancelPurchase")
+        cur.execute(sql)
+        conn.commit()
+        Lock.release()
+    except Exception as e:
+        conn.rollback()
+        cur.close()
+        print("[CancelPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[CancelPurchase]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
+        # status -200 数据库操作失败。
+        return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+
+    cur.close()
+    return {"id": id, "status": 0, "message": "Successful", "data": {}}
+
+
+def GetPurchaseList(user_id: int, id: int = -1) -> dict:
+    cur = conn.cursor()
+    sql = "SELECT * FROM purchase_base WHERE user_id = {}".format(user_id)
+    try:
+        Lock.acquire(GetPurchaseList, "GetPurchaseList")
+        cur.execute(sql)
+        Lock.release()
+    except Exception as e:
+        cur.close()
+        print("[GetPurchaseList]Failed to execute sql:{}\nError:{}".format(sql, e))
+        log_psql.error("[GetPurchaseList]Failed to execute sql:{}\nError:{}".format(sql, e))
+        Auto_KeepConnect()
+        # status -200 数据库操作失败。
+        return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
+    rows = cur.fetchall()
+    num = len(rows)
+    purchase_list = []
+    for row in rows:
+        purchase_dict = {
+            "purchase_id": row[0],
+            "purchase_state": row[1],
+            "user_id": row[2],
+            "purchase_type": row[3],
+            "purchase_price": float(row[4]),
+            "creat_time": str(row[5]),
+            "pay_method": row[6],
+        }
+        purchase_list.append(purchase_dict)
+    return {"id": id, "status": 0, "message": "Successful", "data": {"num": len(purchase_list), "list": purchase_list}}
+
+
 if __name__ == '__main__':
     Initialize("../config.ini", os.path.dirname(os.path.abspath(__file__)))
     # result = CheckToken("9763393e42ef2b8f051caefbec8a522f31a38663a7180d69d1a9cb1addaa76ac")
-    result = GetPurchaseInfo(user_id=1180310086,purchase_id="15614165")
+    result = GetPurchaseInfo(user_id=1180310086, purchase_id="15614165")
     print(result)
     # find_dict = {
     #     "state": -1,

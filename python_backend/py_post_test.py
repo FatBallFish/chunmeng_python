@@ -166,16 +166,57 @@ headers = {'content-type': "application/json"}
 # # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
 # print(response.text)
 
-# 查询订单信息
+# # 查询订单信息
+# data={
+#     "id":0,
+#     "status":0,
+#     "type":"purchase",
+#     "subtype":"info",
+#     "data":{
+#         "purchase_id":"15749503434517733",
+#     }}
+# token = "4de04c69b096465c28568d002c651bcd516f5b9ad4d95ea5889791bde7079879"
+# response = requests.post(url="http://127.0.0.1:4081/purchase?token={}".format(token),data=json.dumps(data),headers=headers)
+# # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+# print(response.text)
+
+# # 支付订单
+# data={
+#     "id":0,
+#     "status":0,
+#     "type":"purchase",
+#     "subtype":"pay",
+#     "data":{
+#         "purchase_id":"15749511524517733",
+#         "method":"wallet"
+#     }}
+# token = "4de04c69b096465c28568d002c651bcd516f5b9ad4d95ea5889791bde7079879"
+# response = requests.post(url="http://127.0.0.1:4081/purchase?token={}".format(token),data=json.dumps(data),headers=headers)
+# # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+# print(response.text)
+
+# # 取消订单
+# data={
+#     "id":0,
+#     "status":0,
+#     "type":"purchase",
+#     "subtype":"cancel",
+#     "data":{
+#         "purchase_id":"15749511524517733",
+#     }}
+# token = "4de04c69b096465c28568d002c651bcd516f5b9ad4d95ea5889791bde7079879"
+# response = requests.post(url="http://127.0.0.1:4081/purchase?token={}".format(token),data=json.dumps(data),headers=headers)
+# # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+# print(response.text)
+
+# 获取订单列表
 data={
     "id":0,
     "status":0,
     "type":"purchase",
-    "subtype":"info",
-    "data":{
-        "purchase_id":"15749511524517733",
-    }}
-token = "227e950ba7ba8bc97bf600ce202b8f8f661ebca4fd46bd399a698c164ea995c4"
+    "subtype":"list",
+    "data":{}}
+token = "4de04c69b096465c28568d002c651bcd516f5b9ad4d95ea5889791bde7079879"
 response = requests.post(url="http://127.0.0.1:4081/purchase?token={}".format(token),data=json.dumps(data),headers=headers)
 # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
 print(response.text)
