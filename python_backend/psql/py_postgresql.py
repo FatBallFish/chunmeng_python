@@ -595,8 +595,8 @@ def UpdateShop(shop_id: int, shop_content: str, user_id: int, pic_url: str, id: 
     if GetShopOwner(shop_id) != user_id:
         # status 100 无权更新他人的店铺信息
         return {"status": 100, "message": "No right to update", "data": {}}
-    sql = "UPDATE shop SET shop_content = '{0}' ,`pic_url`='{1}' WHERE shop_id = {2}".format(shop_content, pic_url,
-                                                                                             shop_id)
+    sql = "UPDATE shop SET shop_content = '{0}' , pic_url = '{1}' WHERE shop_id = {2}".format(shop_content, pic_url,
+                                                                                              shop_id)
     try:
         Lock.acquire(UpdateShop, "UpdateShop")
         cur.execute(sql)

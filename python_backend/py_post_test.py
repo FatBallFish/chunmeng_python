@@ -132,21 +132,35 @@ headers = {'content-type': "application/json"}
 # response = requests.post(url="http://127.0.0.1:4081/pic?token={}".format(token),data=json.dumps(data),headers=headers)
 # # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
 
-# # 测试集
-# data={"name":"wlc",
-#       "email":"893721708",
-#       "address":"杭州",
-#       "message":"我的留言3",
-# }
-# response = requests.post(url="http://127.0.0.1:8000/message_form/".format(),data=json.dumps(data),headers=headers)
-# print(response.text)
-# data_json = response.json()
-# data = data_json["data"]
-# img_b64 = data["imgdata"]
-# img_data = base64.b64decode(img_b64)
-# with open("./captcha/[%s].png" % data["code"],"wb") as f:
-#     f.write(img_data)
+# # 创建店铺
+# # ["product_id", "product_num", "product_unitprice", "product_totalprice"]
+# data={
+#     "id":0,
+#     "status":0,
+#     "type":"shop",
+#     "subtype":"creat",
+#     "data":{
+#         "shop_name":"店铺名称",
+#         "user_id":1180310086,
+#     }}
+# token = "227e950ba7ba8bc97bf600ce202b8f8f661ebca4fd46bd399a698c164ea995c4"
+# response = requests.post(url="http://127.0.0.1:4081/shop?token={}".format(token),data=json.dumps(data),headers=headers)
 
+# 更新店铺信息
+# ["product_id", "product_num", "product_unitprice", "product_totalprice"]
+data={
+    "id":0,
+    "status":0,
+    "type":"shop",
+    "subtype":"update",
+    "data":{
+        "shop_id":656019061,
+        "shop_content":"五小灵童团队的店铺",
+    }}
+token = "a65857ae067ca9f1bbcd2316855296bb447f67b4e6ce27d675294ebf440a5110"
+response = requests.post(url="http://127.0.0.1:4081/shop?token={}".format(token),data=json.dumps(data),headers=headers)
+# response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+print(response.text)
 
 # # 新增订单
 # # ["product_id", "product_num", "product_unitprice", "product_totalprice"]
@@ -209,14 +223,14 @@ headers = {'content-type': "application/json"}
 # # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
 # print(response.text)
 
-# 获取订单列表
-data={
-    "id":0,
-    "status":0,
-    "type":"purchase",
-    "subtype":"list",
-    "data":{}}
-token = "4de04c69b096465c28568d002c651bcd516f5b9ad4d95ea5889791bde7079879"
-response = requests.post(url="http://127.0.0.1:4081/purchase?token={}".format(token),data=json.dumps(data),headers=headers)
-# response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
-print(response.text)
+# # 获取订单列表
+# data={
+#     "id":0,
+#     "status":0,
+#     "type":"purchase",
+#     "subtype":"list",
+#     "data":{}}
+# token = "4de04c69b096465c28568d002c651bcd516f5b9ad4d95ea5889791bde7079879"
+# response = requests.post(url="http://127.0.0.1:4081/purchase?token={}".format(token),data=json.dumps(data),headers=headers)
+# # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+# print(response.text)
