@@ -1108,7 +1108,7 @@ def CreatPurchase(user_id: int, purchase_id: str, purchase_type: int, product_id
         # status -200 数据库操作失败。
         return {"id": id, "status": -200, "message": "Failure to operate database", "data": {}}
     purchase_state = "paying"
-    sql = "INSERT INTO purchase_base (purchase_id,purchase_state,user_id,purchase_type,purchase_price,creat_time,pay_method) VALUES ('{}','{}',{},{},{},'{}')".format(
+    sql = "INSERT INTO purchase_base (purchase_id,purchase_state,user_id,purchase_type,purchase_price,creat_time,pay_method) VALUES ('{}','{}',{},{},{},'{}','{}')".format(
         purchase_id, purchase_state, user_id, purchase_type, product_totalprice, creat_time, "")
     try:
         Lock.acquire(CreatProduct, "CreatPurchase")

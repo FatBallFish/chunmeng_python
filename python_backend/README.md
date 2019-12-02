@@ -36,6 +36,7 @@
     - [支付订单](#支付订单)
     - [取消订单](#取消订单)
     - [获取订单消息](#获取订单消息)
+    - [获取订单列表](#获取订单列表)
 - [**全局Status表**](#全局Status表)
 
 > 注：main.py文件运行时需用 -c configpath 来指定配置文件路径。
@@ -1379,8 +1380,8 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 {
     "id":事件ID, # 整数型
     "status":0,
-    "type":"product",
-    "subtype":"creat",
+    "type":"purchase",
+    "subtype":"apply",
     "data":{
         "product_id":4517733,
         "product_num":1,
