@@ -1661,6 +1661,20 @@ def get_product():
             json_dict = PSQL.GetProductList(product_name=product_name, product_key=product_key, shop_id=shop_id,
                                             order=order, type=type, id=id)
             return json.dumps(json_dict)
+        elif subtype == "info":
+            for key in ["product_id"]:
+                if key not in data.keys():
+                    # status -3 json的value错误。
+                    return json.dumps({"id": id, "status": -3, "message": "Error data key", "data": {}})
+            product_id = data["product_id"]
+            check_result,product_dict = PSQL.GetProductInfo(product_id=product_id)
+            if not check_result:
+                # status 100 错误的商品id
+                json_dict = {"id":id,"status":100,"message":"Error Product id","data":{}}
+                return json.dumps(json_dict)
+            # status 0 成功处理事件
+            json_dict = {"id": id, "status": 0, "message": "Successful", "data": product_dict}
+            return json.dumps(json_dict)
         else:
             # status -2 json的value错误。
             return json.dumps({"id": id, "status": -2, "message": "Error JSON value", "data": {}})

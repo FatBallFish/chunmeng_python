@@ -69,6 +69,7 @@ headers = {'content-type': "application/json"}
 #         "publish_time":"",
 #     }}
 
+# 获取商品列表
 # data={
 #     "id":0,
 #     "status":0,
@@ -85,6 +86,19 @@ headers = {'content-type': "application/json"}
 # response = requests.post(url="http://127.0.0.1:4081/get/product?token={}".format(token),data=json.dumps(data),headers=headers)
 # response = requests.post(url="https://www.zustservice.cn/api/external/get/shop?token={}".format(token),data=json.dumps(data),headers=headers)
 
+# 获取商品信息
+data={
+    "id":0,
+    "status":0,
+    "type":"product",
+    "subtype":"info",
+    "data":{
+        "product_id":5873413,
+    }}
+token = "124ea47c0f4f2d1edbfdb1d0bc54c448028de0602c9b0088eac60b81de1dfd9b"
+response = requests.post(url="http://127.0.0.1:4081/get/product?token={}".format(token),data=json.dumps(data),headers=headers)
+# response = requests.post(url="https://www.zustservice.cn/api/external/get/shop?token={}".format(token),data=json.dumps(data),headers=headers)
+print(response.text)
 #
 # data={
 #     "id":0,
@@ -146,21 +160,21 @@ headers = {'content-type': "application/json"}
 # token = "227e950ba7ba8bc97bf600ce202b8f8f661ebca4fd46bd399a698c164ea995c4"
 # response = requests.post(url="http://127.0.0.1:4081/shop?token={}".format(token),data=json.dumps(data),headers=headers)
 
-# 更新店铺信息
-# ["product_id", "product_num", "product_unitprice", "product_totalprice"]
-data={
-    "id":0,
-    "status":0,
-    "type":"shop",
-    "subtype":"update",
-    "data":{
-        "shop_id":656019061,
-        "shop_content":"五小灵童团队的店铺",
-    }}
-token = "a65857ae067ca9f1bbcd2316855296bb447f67b4e6ce27d675294ebf440a5110"
-response = requests.post(url="http://127.0.0.1:4081/shop?token={}".format(token),data=json.dumps(data),headers=headers)
-# response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
-print(response.text)
+# # 更新店铺信息
+# # ["product_id", "product_num", "product_unitprice", "product_totalprice"]
+# data={
+#     "id":0,
+#     "status":0,
+#     "type":"shop",
+#     "subtype":"update",
+#     "data":{
+#         "shop_id":656019061,
+#         "shop_content":"五小灵童团队的店铺",
+#     }}
+# token = "a65857ae067ca9f1bbcd2316855296bb447f67b4e6ce27d675294ebf440a5110"
+# response = requests.post(url="http://127.0.0.1:4081/shop?token={}".format(token),data=json.dumps(data),headers=headers)
+# # response = requests.post(url="https://www.zustservice.cn/api/external/property/find?token={}".format(token),data=json.dumps(data),headers=headers)
+# print(response.text)
 
 # # 新增订单
 # # ["product_id", "product_num", "product_unitprice", "product_totalprice"]

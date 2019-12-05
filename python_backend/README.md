@@ -1192,7 +1192,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 
 > **POST店铺API地址**
 
-**https://www.zustservice.cn/api/external/shop?token={token值}**
+**https://www.zustservice.cn/api/external/product?token={token值}**
 
 > **data字段表**
 
@@ -1276,7 +1276,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 
 > **GET店铺API地址**
 
-**https://www.zustservice.cn/api/external/get/shop?token={token值}**
+**https://www.zustservice.cn/api/external/get/product?token={token值}**
 
 > **data字段表**
 
@@ -1326,6 +1326,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 |     creat_time     | datetime  |        | 创建时间   |
 |    update_time     | datetime  |        | 更新时间   |
 |      pic_url       |  string   |        | 商品封面   |
+|   product_status   |    int    |        | 商品状态   |
 
 > **Python端返回成功处理情况**
 
@@ -1351,7 +1352,100 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 }
 ```
 
+#### 获取商品信息
 
+> **API类型**
+
+**请求类型：`POST`**
+
+> **GET店铺API地址**
+
+**https://www.zustservice.cn/api/external/get/product?token={token值}**
+
+> **data字段表**
+
+|    name    | data type | length | 不可空 | 可缺省 |   注释    |
+| :--------: | :-------: | :----: | :----: | :----: | :-------: |
+| product_id |    int    |   7    |        |        | 商品7位id |
+
+> **json请求格式**
+
+```python
+{
+    "id":0,
+    "status":0,
+    "type":"product",
+    "subtype":"info",
+    "data":{
+        "product_id":5873413,
+    }
+}
+```
+
+> **返回JSON.data表**
+
+|        name        | data type | length | 注释       |
+| :----------------: | :-------: | :----: | ---------- |
+|     product_id     |  big int  |   7    | 商品id     |
+|    product_name    |  string   |  100   | 商品名称   |
+|  product_content   |  string   |        | 商品内容   |
+|    product_key     |  string   |  255   | 商品关键字 |
+|   product_price    |   float   |        | 商品价格   |
+|  product_disprice  |   float   |        | 商品折扣价 |
+|    product_sale    |    int    |        | 商品销量   |
+|   product_click    |    int    |        | 商品点击量 |
+| product_collection |    int    |        | 商品收藏量 |
+|      shop_id       |  big int  |   9    | 店铺id     |
+|     creat_time     | datetime  |        | 创建时间   |
+|    update_time     | datetime  |        | 更新时间   |
+|      pic_url       |  string   |        | 商品封面   |
+|   product_status   |    int    |        | 商品状态   |
+
+> **Python端返回成功处理情况**
+
+```python
+{
+    "id":请求时的ID, # 整数型
+    "status":0,
+    "message":"successful",
+    "data":{
+        "product_id": 5873413, 
+        "product_name": "\u65b9\u4fbf", 
+        "product_content": "\u66f4\u4e0d\u80fd", 
+        "product_key": null, 
+        "product_price": 3.54, 
+        "product_disprice": null, 
+        "product_sale": 0, 
+        "product_click": 0, 
+        "product_collection": 0, 
+        "shop_id": 474048217, 
+        "creat_time": "2019-12-02 19:13:23", 
+        "update_time": "2019-12-02 19:13:25", 
+        "pic_url": "./api/external/get/pic/shop/5dbe81d1a473450506117c4abc924a35", 
+        "product_status": 1
+    }
+}
+
+```
+
+> **Python端返回失败处理情况**
+
+```python
+{
+  "id":"请求时的ID",
+  "status":-100, # 错误码
+  "message":"Args Error",
+  "data":{},
+}
+```
+
+> **局部 Status 状态表**
+
+| status |     message      |     内容     |
+| :----: | :--------------: | :----------: |
+|  100   | Error Product id | 错误的商品id |
+
+- 其他`status`码请看[全局Status表](#全局Status表)
 
 ### **订单（purchase） API**
 
@@ -1722,7 +1816,7 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 |  102   |  Error purchase id num   |            错误的订单id数(超过1个)            |
 |  103   |  Error purchase id num   | 意外出现在purchase_info表中purchase id 不存在 |
 
-- 其他`status`码请看[全局Status表](
+- 其他`status`码请看[全局Status表](#全局Status表)
 
 ## **全局Status表**
 

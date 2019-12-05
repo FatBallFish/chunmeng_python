@@ -1040,7 +1040,7 @@ def GetProductInfo(product_id: int) -> tuple:
         product_dict["shop_id"] = row[9]
         product_dict["creat_time"] = str(row[10])
         product_dict["update_time"] = str(row[11])
-        product_dict["product_pic"] = row[12]
+        product_dict["pic_url"] = row[12]
         product_dict["product_status"] = row[13]
         # status 0 成功获取店铺列表，返回列表数组
         return True, product_dict
