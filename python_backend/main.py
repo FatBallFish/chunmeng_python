@@ -1288,6 +1288,7 @@ def get_shop():
     if token_check_result == False:
         # status -101 token不正确
         return json.dumps({"id": -1, "status": -101, "message": "Error token", "data": {}})
+    user_id = PSQL.GetUserID(token)
     # 验证身份完成，处理数据
     data = request.json
     print(data)
@@ -1313,14 +1314,13 @@ def get_shop():
     data = data["data"]
     if type == "shop":  ## 店铺api
         if subtype == "list":
-            if "shop_name" not in data.keys():
-                # status -1 json的key错误。
-                return json.dumps({"id": id, "status": -1, "message": "Error JSON key", "data": {}})
-            shop_name = data["shop_name"]
+            shop_name = ""
+            if 'shop_name' in data.keys():
+                shop_name = data["shop_name"]
             order = ""
             if "order" in data.keys():
                 order = data["order"]
-            json_dict = PSQL.GetShopList(shop_name=shop_name, order=order, id=id)
+            json_dict = PSQL.GetShopList(user_id=user_id,shop_name=shop_name, order=order, id=id)
             # status 0 1
             return json.dumps(json_dict)
         elif subtype == "info":
@@ -1667,10 +1667,10 @@ def get_product():
                     # status -3 json的value错误。
                     return json.dumps({"id": id, "status": -3, "message": "Error data key", "data": {}})
             product_id = data["product_id"]
-            check_result,product_dict = PSQL.GetProductInfo(product_id=product_id)
+            check_result, product_dict = PSQL.GetProductInfo(product_id=product_id)
             if not check_result:
                 # status 100 错误的商品id
-                json_dict = {"id":id,"status":100,"message":"Error Product id","data":{}}
+                json_dict = {"id": id, "status": 100, "message": "Error Product id", "data": {}}
                 return json.dumps(json_dict)
             # status 0 成功处理事件
             json_dict = {"id": id, "status": 0, "message": "Successful", "data": product_dict}

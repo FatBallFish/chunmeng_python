@@ -956,8 +956,10 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 
 |   name    | data type | length | 不可空 | 可缺省 | 注释                                                         |
 | :-------: | :-------: | :----: | :----: | :----: | ------------------------------------------------------------ |
-| shop_name |  string   |  100   |        |        | 店铺名关键字，模糊查找，返回包含该字段内容的所有记录。为空返回所有的店铺信息 |
+| shop_name |  string   |  100   |        |   √    | 店铺名关键字，模糊查找，返回包含该字段内容的所有记录。为空返回所有的店铺信息 |
 |   order   |  string   |        |        |   √    | 排序规则，SQL语法规则：`字段+排序模式`。<br />字段：请看下方`返回JSON.data表`<br />排序模式：`ASC` 为升序，`DESC` 为降序<br />可用`AND`、`OR`和`( )`进行组合。<br />例子：`creat_time DESC` |
+
+**注意：**如果shop_name不传或为空，那么将直接返回该用户名下所有店铺，不传shop_name的情况下，order字段将自动失效
 
 > **json请求格式**
 
@@ -1746,12 +1748,6 @@ https://www.zustservice.cn/api/external/get/pic/property/a5466a1ce75e8043ab3bf56
 > **POST店铺API地址**
 
 **https://www.zustservice.cn/api/external/purchase?token={token值}**
-
-> **data字段表**
-
-|    name     | data type | length | 不可空 | 可缺省 | 注释 |
-| :---------: | :-------: | :----: | :----: | :----: | ---- |
-| purchase_id |    str    |   17   |   √    |        |      |
 
 > **json请求格式**
 

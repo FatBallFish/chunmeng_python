@@ -615,7 +615,7 @@ def UpdateShop(shop_id: int, shop_content: str, user_id: int, pic_url: str, id: 
     return {"id": id, "status": 0, "message": "successful", "data": {}}
 
 
-def GetShopList(shop_name: str, order: str = "", id: int = -1) -> dict:
+def GetShopList(user_id: int, shop_name: str, order: str = "", id: int = -1) -> dict:
     """
 获取店铺列表，并以制定规则进行排序
     :param shop_name: 店铺名称关键字
@@ -624,12 +624,12 @@ def GetShopList(shop_name: str, order: str = "", id: int = -1) -> dict:
     :return: 返回json_dict
     """
     cur = conn.cursor()
-    if shop_name == "" or shop_name == None:
-        sql = "SELECT * FROM shop"
+    if shop_name == "" or shop_name is None:
+        sql = "SELECT * FROM shop WHERE user_id = {}".format(user_id)
     else:
         sql = "SELECT * FROM shop WHERE shop_name LIKE '%{}%'".format(shop_name)
-    if order != "":
-        sql = sql + " ORDER BY {}".format(order)
+        if order != "":
+            sql = sql + " ORDER BY {}".format(order)
     try:
         Lock.acquire(GetShopList, "GetShopList")
         cur.execute(sql)
