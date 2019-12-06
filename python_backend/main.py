@@ -1320,7 +1320,11 @@ def get_shop():
             order = ""
             if "order" in data.keys():
                 order = data["order"]
-            json_dict = PSQL.GetShopList(user_id=user_id,shop_name=shop_name, order=order, id=id)
+            mode = 0
+            if 'mode' in data.keys():
+                mode = data["mode"]
+                # 0 为店铺名查询，1为列出用户名下店铺，默认为0
+            json_dict = PSQL.GetShopList(user_id=user_id, shop_name=shop_name, order=order, mode=mode, id=id)
             # status 0 1
             return json.dumps(json_dict)
         elif subtype == "info":
